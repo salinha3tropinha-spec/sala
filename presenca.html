@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Presença Oficial — Gestão Operacional</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#090d16',
+                        darkcard: '#0f172a',
+                        bordercolor: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(30, 41, 59, 0.9);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen flex flex-col font-sans p-4 md:p-6 selection:bg-sky-500 selection:text-white">
+
+    <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-4">
+        
+        <!-- Alerta de Erro Visual -->
+        <div id="error-box" class="hidden bg-rose-950/80 border border-rose-500 text-rose-200 p-4 rounded-2xl text-xs font-mono shadow-xl"></div>
+
+        <!-- Cabeçalho Executivo -->
+        <div class="glass-panel p-5 md:p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-2xl relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-80 h-80 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div>
+                <a href="javascript:window.close();" class="text-xs text-sky-400 hover:text-sky-300 font-semibold mb-1.5 inline-flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-arrow-left"></i> Fechar esta janela
+                </a>
+                <h1 class="text-lg md:text-xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="status-dot"></span>
+                    Lista de Presença Oficial — OP <span id="op-number" class="text-sky-400 font-mono">Carregando...</span>
+                </h1>
+                <p id="view-subtitle" class="text-xs text-slate-400 mt-0.5 font-medium">Buscando dados no Supabase...</p>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+                <button onclick="exportarExcel()" class="bg-slate-800/80 hover:bg-slate-800 text-amber-400 border border-amber-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-file-excel text-sm"></i> Exportar Excel Geral
+                </button>
+                <button onclick="exportarExcelASO()" class="bg-slate-800/80 hover:bg-slate-800 text-sky-400 border border-sky-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-file-lines text-sm"></i> Exportar Excel ASO_RENOMEADO
+                </button>
+                <button id="btn-salvar" onclick="salvarChamada()" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2.5 rounded-2xl text-xs font-bold shadow-xl shadow-emerald-600/20 hover:opacity-95 transition flex items-center gap-2" title="Atalho: Ctrl + S">
+                    <i class="fa-solid fa-floppy-disk text-sm"></i> Salvar Chamada
+                </button>
+            </div>
+        </div>
+
+        <!-- Cards de Métricas e Filtro -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="glass-panel p-4 rounded-2xl flex items-center justify-between shadow-lg border-l-4 border-l-sky-500">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold mb-0.5">Total Inscritos</span>
+                    <span id="stat-total" class="text-xl font-black text-white">0</span>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 text-sm"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="glass-panel p-4 rounded-2xl flex items-center justify-between shadow-lg border-l-4 border-l-emerald-500">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold mb-0.5">Presentes</span>
+                    <span id="stat-presentes" class="text-xl font-black text-emerald-400">0</span>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 text-sm"><i class="fa-solid fa-user-check"></i></div>
+            </div>
+            <div class="glass-panel p-4 rounded-2xl flex items-center justify-between shadow-lg border-l-4 border-l-rose-500">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold mb-0.5">Ausentes / Faltas</span>
+                    <span id="stat-faltosos" class="text-xl font-black text-rose-400">0</span>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20 text-sm"><i class="fa-solid fa-user-xmark"></i></div>
+            </div>
+            <!-- Card de Busca Rápida -->
+            <div class="glass-panel p-4 rounded-2xl flex flex-col justify-center shadow-lg border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold mb-1"><i class="fa-solid fa-magnifying-glass mr-1"></i> Pesquisar Colaborador</span>
+                <input type="text" id="input-busca" oninput="filtrarColaboradores()" placeholder="Digite nome ou CPF..." class="w-auto bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500 transition">
+            </div>
+        </div>
+
+        <!-- Barra de Ações em Massa -->
+        <div class="flex items-center justify-between px-2">
+            <div class="text-xs text-slate-400 font-medium">
+                Dica: Use os botões abaixo para ações rápidas em toda a lista. (Pressione <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-sky-400 font-mono text-[10px]">Ctrl + S</kbd> para salvar)
+            </div>
+            <div class="flex gap-2">
+                <button onclick="marcarTodos(false)" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-[11px] font-bold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-check-double"></i> Todos Presentes
+                </button>
+                <button onclick="marcarTodos(true)" class="bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-[11px] font-bold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-xmark"></i> Todos Faltosos
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabela Principal Otimizada -->
+        <div class="glass-panel rounded-3xl flex-1 overflow-hidden flex flex-col shadow-2xl border border-bordercolor">
+            <div class="overflow-y-auto flex-1 max-h-[70vh]">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900/95 text-slate-400 text-xs uppercase tracking-wider border-b border-bordercolor sticky top-0 z-20">
+                        <tr>
+                            <th class="p-4 w-16 text-center font-bold">#</th>
+                            <th class="p-4 font-bold">Colaborador</th>
+                            <th class="p-4 font-bold">Cargo</th>
+                            <th class="p-4 font-bold font-mono">CPF</th>
+                            <th class="p-4 text-center w-52 font-bold">Status de Presença</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-bordercolor/40">
+                        <tr><td colspan="5" class="text-center py-20 text-slate-400 text-xs font-medium">Carregando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-950 border border-emerald-500/40 text-emerald-400 px-6 py-4 rounded-2xl text-xs font-bold shadow-2xl hidden z-50 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-base"></i> <span id="toast-msg">Salvo com sucesso! Painel atualizado.</span>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wukxupvwnagtdbvwdqlt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_-wMyexJm-TEbqx_CtYr-9Q_2ASKEBfs';
+        
+        let supabaseClient = null;
+        let currentRecord = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramId = urlParams.get('id');
+        const paramOp = urlParams.get('op');
+        const buscaAlvo = paramOp || paramId;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                if (typeof supabase === 'undefined') throw new Error("SDK do Supabase não carregou.");
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                const { data: registros, error } = await supabaseClient.from('agendamentos').select('*');
+                if (error) throw error;
+                if (!registros || registros.length === 0) throw new Error("Tabela vazia no Supabase.");
+
+                let registro = registros.find(s => String(s.id) === String(buscaAlvo) || String(s.op) === String(buscaAlvo));
+                
+                if (!registro && registros.length > 0) {
+                    registro = registros[registros.length - 1];
+                }
+
+                if (!registro) throw new Error("Nenhum agendamento encontrado.");
+
+                currentRecord = registro;
+                document.getElementById('op-number').innerText = registro.op || '---';
+                document.getElementById('view-subtitle').innerText = `Unidade: ${registro.cidade || 'N/A'} — ${registro.instituicao || ''}`;
+
+                renderizarTabela();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-box').innerText = "ERRO: " + err.message;
+                document.getElementById('error-box').classList.remove('hidden');
+                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="text-center py-16 text-rose-400 text-xs">Falha ao carregar. Veja o alerta acima.</td></tr>`;
+            }
+        });
+
+        // Atalho de teclado Ctrl + S para salvar
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                salvarChamada();
+            }
+        });
+
+        function renderizarTabela() {
+            let colaboradores = currentRecord.colaboradores;
+            if (typeof colaboradores === 'string') {
+                try { colaboradores = JSON.parse(colaboradores); } catch(e) { colaboradores = []; }
+            }
+            if (!Array.isArray(colaboradores)) colaboradores = [];
+
+            let faltosos = currentRecord.faltosos;
+            if (typeof faltosos === 'string') {
+                try { faltosos = JSON.parse(faltosos); } catch(e) { faltosos = []; }
+            }
+            if (!Array.isArray(faltosos)) faltosos = [];
+
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            if (colaboradores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-amber-400 text-xs font-semibold">Nenhum colaborador cadastrado para esta unidade.</td></tr>`;
+                document.getElementById('stat-total').innerText = '0';
+                document.getElementById('stat-presentes').innerText = '0';
+                document.getElementById('stat-faltosos').innerText = '0';
+                return;
+            }
+
+            // Descobrir CPFs duplicados na lista para destacar em amarelo
+            let cpfsVistos = new Set();
+            let cpfsDuplicados = new Set();
+            colaboradores.forEach(col => {
+                let cpf = typeof col === 'object' && col.cpf ? col.cpf.trim() : '';
+                if (cpf && cpf !== '000.000.000-00') {
+                    if (cpfsVistos.has(cpf)) {
+                        cpfsDuplicados.add(cpf);
+                    } else {
+                        cpfsVistos.add(cpf);
+                    }
+                }
+            });
+
+            colaboradores.forEach((col, index) => {
+                let nome = typeof col === 'string' ? col : (col.nome || 'Não informado');
+                let cargo = typeof col === 'object' && col.cargo ? col.cargo : 'Funcionário';
+                let cpf = typeof col === 'object' && col.cpf ? col.cpf : '000.000.000-00';
+                let isFaltoso = faltosos.includes(nome);
+                let isDuplicado = cpfsDuplicados.has(cpf.trim());
+
+                let rowClass = '';
+                if (isDuplicado) {
+                    rowClass = 'bg-amber-950/30 border-l-4 border-l-amber-500';
+                } else if (isFaltoso) {
+                    rowClass = 'bg-rose-950/30 border-l-4 border-l-rose-500';
+                } else {
+                    rowClass = 'hover:bg-slate-900/50 border-b border-bordercolor/40';
+                }
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass} transition-all colaborador-tr" data-nome="${nome.toLowerCase()}" data-cpf="${cpf}">
+                        <td class="py-2 px-3.5 font-mono text-xs text-slate-400 font-bold text-center">${index + 1}</td>
+                        <td class="py-2 px-3.5 font-bold text-white text-xs col-nome">
+                            ${nome} 
+                            ${isDuplicado ? '<span class="ml-2 px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded font-semibold">DUPLICADO</span>' : ''}
+                        </td>
+                        <td class="py-2 px-3.5 text-xs text-slate-300">${cargo}</td>
+                        <td class="py-2 px-3.5 text-xs font-mono text-sky-400 col-cpf">${cpf}</td>
+                        <td class="py-2 px-3.5 text-center">
+                            <label class="inline-flex items-center justify-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg border transition w-full ${isFaltoso ? 'bg-rose-950/60 border-rose-500/40 text-rose-300' : 'bg-slate-900 border-bordercolor text-slate-300'}">
+                                <input type="checkbox" data-nome="${nome}" onchange="atualizarStats()" class="presenca-checkbox sr-only" ${isFaltoso ? 'checked' : ''}>
+                                <span class="w-4 h-4 rounded flex items-center justify-center transition-all ${isFaltoso ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}">
+                                    <i class="fa-solid ${isFaltoso ? 'fa-xmark' : 'fa-check'} text-[10px]"></i>
+                                </span>
+                                <span class="text-[11px] font-extrabold ${isFaltoso ? 'text-rose-400' : 'text-emerald-400'} status-label">
+                                    ${isFaltoso ? 'FALTOU' : 'PRESENTE'}
+                                </span>
+                            </label>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            atualizarStats();
+        }
+
+        function atualizarStats() {
+            const checkboxes = document.querySelectorAll('.presenca-checkbox');
+            let p = 0, f = 0;
+
+            checkboxes.forEach(cb => {
+                const tr = cb.closest('tr');
+                const label = cb.parentElement.querySelector('.status-label');
+                const container = cb.parentElement;
+                const iconSpan = container.querySelector('span'); 
+                const icon = iconSpan.querySelector('i');
+
+                if (cb.checked) {
+                    f++;
+                    label.innerText = 'FALTOU';
+                    label.className = 'text-[11px] font-extrabold text-rose-400 status-label';
+                    
+                    if (!tr.classList.contains('bg-amber-950/30')) {
+                        tr.className = 'bg-rose-950/30 border-l-4 border-l-rose-500 transition-all colaborador-tr';
+                    }
+                    
+                    container.className = 'inline-flex items-center justify-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg border transition w-full bg-rose-950/60 border-rose-500/40 text-rose-300';
+                    
+                    iconSpan.className = 'w-4 h-4 rounded flex items-center justify-center transition-all bg-rose-500 text-white';
+                    icon.className = 'fa-solid fa-xmark text-[10px]';
+                } else {
+                    p++;
+                    label.innerText = 'PRESENTE';
+                    label.className = 'text-[11px] font-extrabold text-emerald-400 status-label';
+                    
+                    if (tr.classList.contains('bg-rose-950/30')) {
+                        tr.className = 'hover:bg-slate-900/50 border-b border-bordercolor/40 transition-all colaborador-tr';
+                    }
+                    
+                    container.className = 'inline-flex items-center justify-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg border transition w-full bg-slate-900 border-bordercolor text-slate-300';
+                    
+                    iconSpan.className = 'w-4 h-4 rounded flex items-center justify-center transition-all bg-emerald-500 text-white';
+                    icon.className = 'fa-solid fa-check text-[10px]';
+                }
+            });
+
+            document.getElementById('stat-total').innerText = checkboxes.length;
+            document.getElementById('stat-presentes').innerText = p;
+            document.getElementById('stat-faltosos').innerText = f;
+        }
+
+        function filtrarColaboradores() {
+            let termo = document.getElementById('input-busca').value.toLowerCase();
+            let linhas = document.querySelectorAll('.colaborador-tr');
+
+            linhas.forEach(linha => {
+                let nome = linha.getAttribute('data-nome');
+                let cpf = linha.getAttribute('data-cpf');
+                if (nome.includes(termo) || cpf.includes(termo)) {
+                    linha.style.display = '';
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+        }
+
+        function marcarTodos(statusFaltoso) {
+            const checkboxes = document.querySelectorAll('.presenca-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = statusFaltoso;
+            });
+            atualizarStats();
+        }
+
+        async function salvarChamada() {
+            if (!currentRecord) return;
+            const btn = document.getElementById('btn-salvar');
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Salvando...`;
+            btn.disabled = true;
+
+            const checks = document.querySelectorAll('.presenca-checkbox:checked');
+            let faltosos = Array.from(checks).map(c => c.getAttribute('data-nome'));
+
+            // Atualiza os faltosos e muda o status para 'concluido' no banco
+            const { error } = await supabaseClient
+                .from('agendamentos')
+                .update({ 
+                    faltosos: JSON.stringify(faltosos),
+                    status: 'concluido'
+                })
+                .eq('id', currentRecord.id);
+
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i> Salvar Chamada`;
+            btn.disabled = false;
+
+            if (error) {
+                alert("Erro ao salvar: " + error.message);
+                return;
+            }
+
+            currentRecord.faltosos = faltosos;
+            currentRecord.status = 'concluido';
+
+            try {
+                if (window.opener && !window.opener.closed) {
+                    window.opener.location.reload(); 
+                }
+            } catch (e) {
+                console.log("Painel pai atualizado.");
+            }
+
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function exportarExcel() {
+            if (!currentRecord) return;
+            let colaboradores = currentRecord.colaboradores || [];
+            if (typeof colaboradores === 'string') colaboradores = JSON.parse(colaboradores);
+
+            let faltososSet = new Set();
+            document.querySelectorAll('.presenca-checkbox:checked').forEach(c => faltososSet.add(c.getAttribute('data-nome')));
+
+            let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="UTF-8"><style>
+                    table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+                    th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
+                    td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; }
+                    .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+                    .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
+                </style></head>
+                <body><table>
+                    <tr><th>#</th><th>COLABORADOR</th><th>CARGO</th><th>CPF</th><th>STATUS</th></tr>
+            `;
+
+            colaboradores.forEach((col, i) => {
+                let nome = typeof col === 'string' ? col : col.nome;
+                let cargo = typeof col === 'object' ? col.cargo : '';
+                let cpf = typeof col === 'object' ? col.cpf : '';
+                let isFaltoso = faltososSet.has(nome);
+                let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
+                let css = isFaltoso ? 'faltoso' : 'presente';
+
+                html += `<tr><td style="text-align:center;">${i+1}</td><td><b>${nome}</b></td><td>${cargo}</td><td style="text-align:center;">${cpf}</td><td class="${css}">${status}</td></tr>`;
+            });
+
+            html += `</table></body></html>`;
+
+            let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `Presenca_OP_${currentRecord.op}.xls`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarExcelASO() {
+            if (!currentRecord) return;
+            let colaboradores = currentRecord.colaboradores || [];
+            if (typeof colaboradores === 'string') colaboradores = JSON.parse(colaboradores);
+
+            if (colaboradores.length === 0) {
+                alert("Nenhum colaborador para exportar.");
+                return;
+            }
+
+            let nameCounts = {};
+            colaboradores.forEach(col => {
+                let nome = typeof col === 'string' ? col : (col.nome || '');
+                nameCounts[nome] = (nameCounts[nome] || 0) + 1;
+            });
+
+            let faltososSet = new Set();
+            document.querySelectorAll('.presenca-checkbox:checked').forEach(c => faltososSet.add(c.getAttribute('data-nome')));
+
+            let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="UTF-8"><style>
+                    table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+                    th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
+                    td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; }
+                    .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+                    .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
+                </style></head>
+                <body><table>
+                    <tr><th>#</th><th>FICHA ASO (NOME FORMATADO)</th><th>CARGO ORIGINAL</th><th>CPF</th><th>STATUS</th></tr>
+            `;
+
+            colaboradores.forEach((col, i) => {
+                let nome = typeof col === 'string' ? col : (col.nome || '');
+                let cargo = typeof col === 'object' && col.cargo ? col.cargo : '';
+                let cpf = typeof col === 'object' && col.cpf ? col.cpf : '';
+                let isFaltoso = faltososSet.has(nome);
+                let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
+                let css = isFaltoso ? 'faltoso' : 'presente';
+
+                let nomeFormatado = `ASO_${nome}`;
+                if (nameCounts[nome] > 1 && cargo && cargo.trim() !== '') {
+                    nomeFormatado += ` - ${cargo}`;
+                }
+
+                html += `
+                    <tr>
+                        <td style="text-align:center;">${i+1}</td>
+                        <td><b>${nomeFormatado}</b></td>
+                        <td>${cargo}</td>
+                        <td style="text-align:center;">${cpf}</td>
+                        <td class="${css}">${status}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</table></body></html>`;
+
+            let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `Relatorio_ASO_Formatado_OP_${currentRecord.op}.xls`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
