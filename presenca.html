@@ -255,8 +255,8 @@
                         <td class="py-2 px-3.5 text-xs font-mono text-sky-400 col-cpf">${cpf}</td>
                         <td class="py-2 px-3.5 text-center">
                             <label class="inline-flex items-center justify-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg border transition w-full ${isFaltoso ? 'bg-rose-950/60 border-rose-500/40 text-rose-300' : 'bg-slate-900 border-bordercolor text-slate-300'}">
-                                <input type="checkbox" data-nome="${nome}" onchange="atualizarStats()" class="presenca-checkbox sr-only" ${isFaltoso ? 'checked' : ''}>
-                                <span class="w-4 h-4 rounded flex items-center justify-center transition-all ${isFaltoso ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}">
+                                <input type="checkbox" data-nome="${nome}" onchange="atualizarStats(this)" class="presenca-checkbox sr-only" ${isFaltoso ? 'checked' : ''}>
+                                <span class="presenca-icon-span w-4 h-4 rounded flex items-center justify-center transition-all ${isFaltoso ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}">
                                     <i class="fa-solid ${isFaltoso ? 'fa-xmark' : 'fa-check'} text-[10px]"></i>
                                 </span>
                                 <span class="text-[11px] font-extrabold ${isFaltoso ? 'text-rose-400' : 'text-emerald-400'} status-label">
@@ -271,44 +271,48 @@
             atualizarStats();
         }
 
-        function atualizarStats() {
-            const checkboxes = document.querySelectorAll('.presenca-checkbox');
-            let p = 0, f = 0;
-
-            checkboxes.forEach(cb => {
+        function atualizarStats(cb) {
+            // Se um checkbox específico foi alterado, atualiza apenas a linha dele instantaneamente
+            if (cb) {
                 const tr = cb.closest('tr');
-                const label = cb.parentElement.querySelector('.status-label');
-                const container = cb.parentElement;
-                const iconSpan = container.querySelector('span'); 
+                const container = cb.closest('label');
+                const label = container.querySelector('.status-label');
+                const iconSpan = container.querySelector('.presenca-icon-span');
                 const icon = iconSpan.querySelector('i');
+                const isDuplicado = tr.classList.contains('bg-amber-950/30');
 
                 if (cb.checked) {
-                    f++;
                     label.innerText = 'FALTOU';
                     label.className = 'text-[11px] font-extrabold text-rose-400 status-label';
                     
-                    if (!tr.classList.contains('bg-amber-950/30')) {
+                    if (!isDuplicado) {
                         tr.className = 'bg-rose-950/30 border-l-4 border-l-rose-500 transition-all colaborador-tr';
                     }
                     
                     container.className = 'inline-flex items-center justify-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg border transition w-full bg-rose-950/60 border-rose-500/40 text-rose-300';
-                    
-                    iconSpan.className = 'w-4 h-4 rounded flex items-center justify-center transition-all bg-rose-500 text-white';
+                    iconSpan.className = 'presenca-icon-span w-4 h-4 rounded flex items-center justify-center transition-all bg-rose-500 text-white';
                     icon.className = 'fa-solid fa-xmark text-[10px]';
                 } else {
-                    p++;
                     label.innerText = 'PRESENTE';
                     label.className = 'text-[11px] font-extrabold text-emerald-400 status-label';
                     
-                    if (tr.classList.contains('bg-rose-950/30')) {
+                    if (!isDuplicado) {
                         tr.className = 'hover:bg-slate-900/50 border-b border-bordercolor/40 transition-all colaborador-tr';
                     }
                     
                     container.className = 'inline-flex items-center justify-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-lg border transition w-full bg-slate-900 border-bordercolor text-slate-300';
-                    
-                    iconSpan.className = 'w-4 h-4 rounded flex items-center justify-center transition-all bg-emerald-500 text-white';
+                    iconSpan.className = 'presenca-icon-span w-4 h-4 rounded flex items-center justify-center transition-all bg-emerald-500 text-white';
                     icon.className = 'fa-solid fa-check text-[10px]';
                 }
+            }
+
+            // Recalcula apenas os contadores globais do topo
+            const checkboxes = document.querySelectorAll('.presenca-checkbox');
+            let p = 0, f = 0;
+
+            checkboxes.forEach(item => {
+                if (item.checked) f++;
+                else p++;
             });
 
             document.getElementById('stat-total').innerText = checkboxes.length;
@@ -335,8 +339,8 @@
             const checkboxes = document.querySelectorAll('.presenca-checkbox');
             checkboxes.forEach(cb => {
                 cb.checked = statusFaltoso;
+                atualizarStats(cb);
             });
-            atualizarStats();
         }
 
         async function salvarChamada() {
