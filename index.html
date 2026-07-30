@@ -1615,27 +1615,21 @@
         }
 
         async function applyUserPermissions(email) {
-    try {
-        if (!email) return;
-        const { data, error } = await supabaseClient.from('perfis_operadores').select('*').ilike('email', email.trim()).maybeSingle();
-        if (data) {
-            appData.currentUserProfile = data;
-        } else {
-            appData.currentUserProfile = { nivel_acesso: 'operador' };
+            try {
+                if (!email) return;
+                const { data, error } = await supabaseClient.from('perfis_operadores').select('*').ilike('email', email.trim()).maybeSingle();
+                if (data) {
+                    appData.currentUserProfile = data;
+                } else {
+                    appData.currentUserProfile = { nivel_acesso: 'operador' };
+                }
+                
+                // Atualiza a visibilidade do menu de acordo com o nível, sem forçar troca de aba
+                updateSidebarVisibility();
+            } catch(e) { 
+                console.error("Erro ao aplicar permissões:", e); 
+            }
         }
-        
-        // Redirecionamento inteligente baseado no nível de acesso
-        const nivel = appData.currentUserProfile.nivel_acesso.trim().toLowerCase();
-        if (nivel !== 'master') {
-            // Se for visitante, define a aba inicial correta e oculta o botão "Início" admin
-            setTimeout(() => switchTab('home-visitor'), 100);
-        } else {
-            setTimeout(() => switchTab('home'), 100);
-        }
-    } catch(e) { 
-        console.error("Erro ao aplicar permissões:", e); 
-    }
-}
 
         function updateSidebarVisibility() {
     const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
@@ -2756,7 +2750,7 @@
             }
         }
 
-        function switchTab(tabId) {
+        function switchTab(tabId, salvarNoHistorico = true) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-gradient-to-r', 'from-sky-600', 'to-sky-700', 'text-white', 'shadow-lg');
@@ -2770,6 +2764,12 @@
                 activeBtn.classList.add('bg-gradient-to-r', 'from-sky-600', 'to-sky-700', 'text-white', 'shadow-lg');
                 activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800/50', 'hover:text-white');
             }
+
+            // Salva a aba atual no navegador para restaurar se houver oscilação/recarregamento
+            if (salvarNoHistorico) {
+                localStorage.setItem('painel_ultima_aba', tabId);
+            }
+
             const titleMap = {
                 'home': 'Sala ADM / Dashboard',
                 'home-visitor': 'Portal de Acompanhamento',
@@ -3555,12 +3555,31 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('sidebar-username').innerText = session.user.email.split('@')[0];
                 
-                // Substitui ou complementa o carregamento antigo pelo DataService
+                // Carrega permissões e sidebar primeiro
+                await applyUserPermissions(session.user.email);
+
                 await DataService.init();
-                await loadDataFromCloud(); // Mantém as outras tabelas (wiki, logs, etc)
+                await loadDataFromCloud(); 
+
+                // Restaura EXATAMENTE a última aba onde o operador estava, ou define a padrão se for o primeiro acesso
+                const ultimaAbaSalva = localStorage.getItem('painel_ultima_aba');
+                const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
+                    ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() 
+                    : 'operador';
+
+                if (ultimaAbaSalva && document.getElementById('tab-' + ultimaAbaSalva)) {
+                    switchTab(ultimaAbaSalva, false);
+                } else {
+                    if (nivel !== 'master') {
+                        switchTab('home-visitor', false);
+                    } else {
+                        switchTab('home', false);
+                    }
+                }
             } else {
                 document.getElementById('login-screen').classList.remove('hidden');
             }
+
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 if (event === 'SIGNED_IN' && session) {
                     document.getElementById('login-screen').classList.add('hidden');
