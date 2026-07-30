@@ -2919,7 +2919,7 @@
                         </div>
                     `;
                 } else {
-                    // ANALISA O ESTADO DA UNIDADE
+                    // ANÁLISE DOS DADOS DA UNIDADE PARA AS 3 ETAPAS
                     let colaboradoresData = s.colaboradores;
                     if (typeof colaboradoresData === 'string') {
                         try { colaboradoresData = JSON.parse(colaboradoresData); } catch(e) { colaboradoresData = []; }
@@ -2930,22 +2930,24 @@
                     if (typeof faltososData === 'string') {
                         try { faltososData = JSON.parse(faltososData); } catch(e) { faltososData = []; }
                     }
-                    
-                    let listaJaRealizada = (s.status === 'concluido') || (Array.isArray(faltososData) && faltososData.length > 0);
+                    let listaRealizada = Array.isArray(faltososData) && faltososData.length > 0;
 
                     let btnClass = '';
                     let btnIcon = '';
                     let btnText = '';
 
-                    if (listaJaRealizada) {
+                    if (listaRealizada) {
+                        // Etapa 3: Lista Realizada
                         btnClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30';
                         btnIcon = 'fa-circle-check text-emerald-400';
                         btnText = 'Lista Realizada';
                     } else if (temColaboradores) {
+                        // Etapa 2: Aguardando Fechamento da Lista
                         btnClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20';
                         btnIcon = 'fa-clock text-amber-400';
-                        btnText = 'Aguardando Lista Presença';
+                        btnText = 'Aguardando Fechamento da Lista';
                     } else {
+                        // Etapa 1: Lista Presença Vazia
                         btnClass = 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:bg-slate-800';
                         btnIcon = 'fa-folder-open text-slate-400';
                         btnText = 'Lista Presença Vazia';
