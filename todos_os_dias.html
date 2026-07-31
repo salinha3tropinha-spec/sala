@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logística Médica | Central de Despacho Enterprise</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#070b14',
+                            900: '#0c1322',
+                            800: '#151f38',
+                            700: '#202e52',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SheetJS (Para ler Excel/CSV no navegador) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-dark-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white pb-20">
+
+    <!-- Topbar / Header Enterprise -->
+    <header class="border-b border-dark-800 bg-dark-900/85 backdrop-blur-xl sticky top-0 z-40 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/5">
+                    <i class="fa-solid fa-suitcase-medical text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-base font-bold tracking-tight text-white">Central de Logística Médica</h1>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/20 uppercase tracking-wider">Enterprise v2.7</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Controle de expedição de insumos e endereçamento para atendimentos.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span id="sync-status" class="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-slate-400 bg-dark-800 px-3 py-1.5 rounded-xl border border-dark-700">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Sincronizado
+                </span>
+                <button onclick="exportarCSV()" class="bg-dark-800 hover:bg-dark-700 text-slate-300 border border-dark-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 shadow-sm" title="Exportar dados filtrados para CSV">
+                    <i class="fa-solid fa-file-csv text-emerald-400"></i> Exportar CSV
+                </button>
+                <button onclick="carregarOrganizadorMateriais()" class="bg-dark-800 hover:bg-dark-700 text-slate-300 border border-dark-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 shadow-sm" title="Sincronizar com banco de dados">
+                    <i class="fa-solid fa-rotate-right text-slate-400"></i> Sincronizar
+                </button>
+                <a href="index.html" class="bg-dark-800 hover:bg-dark-700 text-slate-300 border border-dark-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-arrow-left text-slate-400"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 pt-8">
+        
+        <!-- Barra de Progresso Geral de Despacho -->
+        <div class="bg-dark-900/90 border border-dark-800 rounded-2xl p-5 mb-8 shadow-xl relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-emerald-400 text-sm"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Progresso Geral de Expedição</span>
+                </div>
+                <span id="progress-percentage" class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">0% Concluído</span>
+            </div>
+            <div class="w-full bg-dark-950 rounded-full h-2.5 overflow-hidden border border-dark-800">
+                <div id="progress-bar-fill" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Cards de Métricas Executivas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div class="bg-dark-900/80 border border-dark-800 rounded-2xl p-5 shadow-xl relative overflow-hidden group hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-slate-400 mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total na Fila</span>
+                    <div class="w-8 h-8 rounded-lg bg-dark-800 flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                        <i class="fa-solid fa-layer-group text-xs"></i>
+                    </div>
+                </div>
+                <div id="stat-total" class="text-3xl font-extrabold text-white">0</div>
+                <div class="text-[11px] text-slate-500 mt-1">Unidades mapeadas no fluxo</div>
+            </div>
+
+            <div class="bg-dark-900/80 border border-emerald-900/30 rounded-2xl p-5 shadow-xl relative overflow-hidden group hover:border-emerald-800/50 transition">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none"></div>
+                <div class="flex items-center justify-between text-emerald-400 mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-400/90">Etapa 4 / Parametrização</span>
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                        <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                    </div>
+                </div>
+                <div id="stat-npso" class="text-3xl font-extrabold text-emerald-400">0</div>
+                <div class="text-[11px] text-emerald-500/80 mt-1">Unidades nesta fase atual</div>
+            </div>
+
+            <div class="bg-dark-900/80 border border-sky-900/30 rounded-2xl p-5 shadow-xl relative overflow-hidden group hover:border-sky-800/50 transition">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-bl-full pointer-events-none"></div>
+                <div class="flex items-center justify-between text-sky-400 mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400/90">Materiais Despachados</span>
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20">
+                        <i class="fa-solid fa-truck-fast text-xs"></i>
+                    </div>
+                </div>
+                <div id="stat-sig" class="text-3xl font-extrabold text-sky-400">0</div>
+                <div class="text-[11px] text-sky-500/80 mt-1">Confirmados com endereçamento</div>
+            </div>
+
+            <div class="bg-dark-900/80 border border-dark-800 rounded-2xl p-5 shadow-xl relative overflow-hidden group hover:border-slate-700 transition">
+                <div class="flex items-center justify-between text-amber-400 mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400/90">Outros Status</span>
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20">
+                        <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    </div>
+                </div>
+                <div id="stat-param" class="text-3xl font-extrabold text-amber-400">0</div>
+                <div class="text-[11px] text-slate-500 mt-1">Demais etapas do processo</div>
+            </div>
+        </div>
+
+        <!-- Filtros e Barra de Pesquisa Avançada -->
+        <div class="bg-dark-900/80 border border-dark-800 rounded-2xl p-4 mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 shadow-xl">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="mudarFiltroEnvio('todos', this)" class="envio-filter-btn px-4 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-[10px]"></i> Todos os Registros
+                </button>
+                <button onclick="mudarFiltroEnvio('pendentes', this)" class="envio-filter-btn px-4 py-2.5 rounded-xl text-xs font-semibold bg-dark-800 border border-dark-700 text-slate-400 hover:text-white transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-hourglass-half text-[10px]"></i> Pendentes de Envio
+                </button>
+                <button onclick="mudarFiltroEnvio('enviados', this)" class="envio-filter-btn px-4 py-2.5 rounded-xl text-xs font-semibold bg-dark-800 border border-dark-700 text-slate-400 hover:text-white transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-[10px]"></i> Já Enviados (Bloqueados)
+                </button>
+            </div>
+
+            <div class="relative w-full lg:w-80">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="input-busca" placeholder="Pesquisar instituição, cidade, OP... (Ctrl+K)" 
+                    class="w-full bg-dark-950 border border-dark-700/80 rounded-xl pl-11 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition shadow-inner">
+                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <kbd class="bg-dark-800 text-slate-400 text-[10px] px-1.5 py-0.5 rounded border border-dark-700 font-mono">/K</kbd>
+                </span>
+            </div>
+        </div>
+
+        <!-- Tabela Principal Enterprise com Alerta de Dias Úteis -->
+        <div class="bg-dark-900/85 border border-dark-800/90 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-dark-800 bg-dark-900/90 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                            <th class="p-5 w-20 text-center">Despacho</th>
+                            <th class="p-5">Instituição / Unidade de Atendimento</th>
+                            <th class="p-5">Fase do Processo</th>
+                            <th class="p-5">Data Agendada</th>
+                            <th class="p-5 text-right">Ações Operacionais</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-todos-dias" class="divide-y divide-dark-800/40 text-sm">
+                        <tr>
+                            <td colspan="5" class="p-16 text-center">
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <div class="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin"></div>
+                                    <p class="text-xs text-slate-400 font-medium">Carregando dados seguros do Supabase...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de Confirmação Customizado -->
+    <!-- Modal de Confirmação Customizado -->
+    <div id="modal-confirmacao" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden opacity-0 transition-all duration-300">
+        <div class="bg-dark-900 border border-dark-700 w-full max-w-md rounded-2xl p-6 shadow-2xl transform scale-95 transition-all duration-300 text-center" id="modal-confirm-box">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-4 shadow-inner">
+                <i class="fa-solid fa-circle-question text-2xl"></i>
+            </div>
+            
+            <h3 class="text-lg font-bold text-white mb-2">Confirmação de Despacho</h3>
+            <p id="modal-confirm-text" class="text-xs text-slate-300 mb-4 leading-relaxed">
+                Você realmente mandou o material?<br>Mandou o ENDEREÇO também?
+            </p>
+
+            <!-- Nova área de upload da planilha -->
+            <div class="mb-6 text-left bg-dark-950/50 p-4 rounded-xl border border-dark-800">
+                <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Importar Planilha (Lista de Presença)
+                </label>
+                <p class="text-[10px] text-slate-400 mb-3">Opcional. Formatos: .xlsx, .csv (Colunas sugeridas: Nome, Cargo, CPF)</p>
+                
+                <input type="file" id="upload-planilha" accept=".xlsx, .xls, .csv" onchange="processarPlanilha(event)"
+                    class="block w-full text-xs text-slate-400 
+                    file:mr-3 file:py-2.5 file:px-4 file:rounded-lg file:border-0 
+                    file:text-xs file:font-bold file:bg-dark-800 file:text-emerald-400 
+                    hover:file:bg-dark-700 transition cursor-pointer">
+                    
+                <div id="upload-feedback" class="text-[10px] mt-2 hidden font-medium"></div>
+            </div>
+
+            <div class="flex items-center gap-3 justify-center">
+                <button onclick="cancelarConfirmacaoEnvio()" class="flex-1 bg-dark-800 hover:bg-dark-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition border border-dark-700 shadow-sm">
+                    Cancelar
+                </button>
+                <button onclick="executarConfirmacaoEnvio()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-emerald-600/20">
+                    Sim, Enviar e Bloquear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes Corporativo -->
+    <div id="modal-detalhes" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-dark-900 border border-dark-700 w-full max-w-lg rounded-2xl p-6 shadow-2xl transform scale-95 transition-transform duration-300" id="modal-content-box">
+            <div class="flex items-center justify-between pb-4 border-b border-dark-800 mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-file-medical text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Dossiê Logístico da Unidade</h3>
+                        <p class="text-xs text-slate-400">Especificações completas para conferência</p>
+                    </div>
+                </div>
+                <button onclick="fecharModalDetalhes()" class="w-8 h-8 rounded-lg bg-dark-800 hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="modal-body-data" class="space-y-4 text-xs">
+                <!-- Conteúdo dinâmico -->
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-dark-800 flex justify-end">
+                <button onclick="fecharModalDetalhes()" class="bg-dark-800 hover:bg-dark-700 text-slate-200 px-5 py-2.5 rounded-xl text-xs font-semibold transition border border-dark-700 shadow-sm">
+                    Fechar Dossiê
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container de Notificações Toast -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Script Enterprise & Lógica de Negócio -->
+    <script>
+        const SUPABASE_URL = 'https://wukxupvwnagtdbvwdqlt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_-wMyexJm-TEbqx_CtYr-9Q_2ASKEBfs';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let dadosGlobais = [];
+        let termoBusca = '';
+        let filtroEnvioAtual = 'todos';
+        
+        let acaoPendenteCheckbox = null;
+        let acaoPendenteId = null;
+        let acaoPendenteNome = '';
+
+        const STORAGE_KEY_ENVIOS = 'materiais_medicos_enviados_v2_locked';
+
+        function obterEnviosSalvos() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY_ENVIOS)) || {};
+            } catch {
+                return {};
+            }
+        }
+
+        function salvarEnvioLocal(id, statusEnviado) {
+            const envios = obterEnviosSalvos();
+            envios[id] = statusEnviado;
+            localStorage.setItem(STORAGE_KEY_ENVIOS, JSON.stringify(envios));
+        }
+
+        function mostrarToast(mensagem, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = tipo === 'success' ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300' : 'bg-dark-900 border-dark-700 text-slate-200';
+            const icon = tipo === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-info text-sky-400';
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4.5 py-3.5 rounded-xl border shadow-2xl backdrop-blur-xl transition-all duration-300 transform translate-y-2 opacity-0 ${bgClass}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-sm"></i>
+                <span class="text-xs font-medium">${mensagem}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Função corrigida para pegar o primeiro dia do intervalo e o mês/ano corretos
+        function calcularDiasUteisAte(strData) {
+            if (!strData) return 999;
+            
+            // Pega o primeiro par de dígitos (dia inicial) e o mês/ano no final da string (ex: "24 a 28/08/2026" -> 24, 08, 2026)
+            const match = strData.match(/^.*?(\d{2}).*?(\d{2})\/(\d{4})/);
+            if (!match) return 999;
+            
+            const [, d, m, a] = match;
+            const targetDate = new Date(`${a}-${m}-${d}`);
+            targetDate.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (targetDate < today) return -1; // Data passada
+
+            let businessDays = 0;
+            let current = new Date(today);
+
+            while (current < targetDate) {
+                current.setDate(current.getDate() + 1);
+                const day = current.getDay();
+                if (day !== 0 && day !== 6) { // Ignora Sábado (6) e Domingo (0)
+                    businessDays++;
+                }
+            }
+            return businessDays;
+        }
+
+        // Função de timestamp corrigida com a mesma lógica de precisão
+        function extrairDataTimestamp(strData) {
+            if (!strData) return Number.MAX_SAFE_INTEGER;
+            
+            const match = strData.match(/^.*?(\d{2}).*?(\d{2})\/(\d{4})/);
+            if (match) {
+                const [, dia, mes, ano] = match;
+                return new Date(`${ano}-${mes}-${dia}`).getTime();
+            }
+            return Number.MAX_SAFE_INTEGER;
+        }
+
+        async function carregarOrganizadorMateriais() {
+            const tbody = document.getElementById('tabela-todos-dias');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="p-16 text-center">
+                        <div class="flex flex-col items-center justify-center gap-3">
+                            <div class="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin"></div>
+                            <p class="text-xs text-slate-400 font-medium">Sincronizando todas as unidades com o Supabase...</p>
+                        </div>
+                    </td>
+                </tr>`;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('agendamentos')
+                    .select('*');
+
+                if (error) throw error;
+
+                dadosGlobais = (data || []).sort((a, b) => {
+                    return extrairDataTimestamp(a.data) - extrairDataTimestamp(b.data);
+                });
+
+                atualizarMetricas(dadosGlobais);
+                renderizarTabela();
+            } catch (err) {
+                console.error('Erro na sincronização:', err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-12 text-center text-red-400 font-medium">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+                                <p class="text-sm font-semibold">Falha na comunicação com o banco de dados.</p>
+                                <span class="text-xs text-red-500/80 font-mono bg-red-950/40 px-3 py-1 rounded border border-red-900/50">${err.message}</span>
+                            </div>
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        function atualizarMetricas(data) {
+            const envios = obterEnviosSalvos();
+            const totalParametrizacao = data.filter(i => {
+                const s = (i.status || '').toLowerCase();
+                return s === 'parametrizacao' || s === 'parametrização';
+            }).length;
+
+            // LÊ DO CACHE LOCAL OU DIRETAMENTE DO SUPABASE (material_enviado === true)
+            const totalEnviados = data.filter(i => envios[i.id] || i.material_enviado === true).length;
+            const outrosStatus = data.length - (totalParametrizacao + totalEnviados);
+
+            document.getElementById('stat-total').textContent = data.length;
+            document.getElementById('stat-npso').textContent = totalParametrizacao;
+            document.getElementById('stat-sig').textContent = totalEnviados;
+            document.getElementById('stat-param').textContent = outrosStatus >= 0 ? outrosStatus : 0;
+
+            if (data.length > 0) {
+                const porcentagem = Math.round((totalEnviados / data.length) * 100);
+                document.getElementById('progress-percentage').textContent = `${porcentagem}% Concluído (${totalEnviados}/${data.length})`;
+                document.getElementById('progress-bar-fill').style.width = `${porcentagem}%`;
+            }
+        }
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabela-todos-dias');
+            const enviosSalvos = obterEnviosSalvos();
+            
+            const dadosFiltrados = dadosGlobais.filter(item => {
+                const textoBusca = `${item.instituicao || ''} ${item.cidade || ''} ${item.op || ''} ${item.status || ''}`.toLowerCase();
+                const matchBusca = textoBusca.includes(termoBusca.toLowerCase());
+                
+                // LÊ DO CACHE LOCAL OU DIRETAMENTE DO SUPABASE
+                const isEnviado = !!enviosSalvos[item.id] || item.material_enviado === true;
+                
+                let matchEnvio = true;
+                if (filtroEnvioAtual === 'pendentes') matchEnvio = !isEnviado;
+                if (filtroEnvioAtual === 'enviados') matchEnvio = isEnviado;
+
+                return matchBusca && matchEnvio;
+            });
+
+            if (dadosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-16 text-center text-slate-500">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-1"></i>
+                                <p class="text-sm font-medium text-slate-400">Nenhum registro encontrado</p>
+                                <p class="text-xs text-slate-600">Tente ajustar sua busca ou filtro de despacho.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            dadosFiltrados.forEach(item => {
+                let badgeStatus = '';
+                // LÊ DO CACHE LOCAL OU DIRETAMENTE DO SUPABASE
+                const isEnviado = !!enviosSalvos[item.id] || item.material_enviado === true;
+                const statusLower = (item.status || '').toLowerCase();
+                
+                // Calcula os dias úteis restantes até o agendamento
+                const diasUteisRestantes = calcularDiasUteisAte(item.data);
+                // Critério de alerta: faltam 2 dias úteis ou menos, e ainda não foi enviado
+                const emAlertaUrgente = !isEnviado && diasUteisRestantes >= 0 && diasUteisRestantes <= 2;
+                
+                switch(statusLower) {
+                    case 'concluido':
+                    case 'concluído':
+                        badgeStatus = '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Concluído</span>';
+                        break;
+                    case 'parametrizacao':
+                    case 'parametrização':
+                        badgeStatus = '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Etapa 4</span>';
+                        break;
+                    case 'confirmada':
+                        badgeStatus = '<span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Confirmada</span>';
+                        break;
+                    case 'sig':
+                        badgeStatus = '<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Aguardando SIG</span>';
+                        break;
+                    case 'disciplinas':
+                        badgeStatus = '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Disciplinas</span>';
+                        break;
+                    case 'npso':
+                        badgeStatus = '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> NPSO Concluído</span>';
+                        break;
+                    default:
+                        badgeStatus = `<span class="bg-dark-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase">${item.status || 'Pendente'}</span>`;
+                }
+
+                const nomeExibicao = item.instituicao ? `${item.instituicao}` : `Ordem de Produção #${item.op || 'N/A'}`;
+                const localizacao = item.cidade ? `${item.cidade}` : 'Local não informado';
+                const dataFormatada = item.data || 'Não informada';
+
+                // Define a estilização da linha com base no estado de envio ou alerta de prazo
+                let rowClasses = 'transition-all group ';
+                if (isEnviado) {
+                    rowClasses += 'bg-emerald-950/20 hover:bg-emerald-950/30';
+                } else if (emAlertaUrgente) {
+                    rowClasses += 'bg-amber-950/30 border-l-4 border-amber-500 hover:bg-amber-950/40 shadow-inner animate-pulse-slow';
+                } else {
+                    rowClasses += 'hover:bg-dark-800/40';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = rowClasses;
+                
+                tr.innerHTML = `
+                    <td class="p-5 text-center">
+                        <label class="relative flex items-center justify-center cursor-pointer">
+                            <input type="checkbox" data-id="${item.id}" ${isEnviado ? 'checked disabled' : ''} onclick="solicitarConfirmacaoEnvio(event, this, '${item.id}', '${nomeExibicao.replace(/'/g, "")}')" 
+                                class="w-5 h-5 rounded border-dark-700 bg-dark-950 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-dark-900 ${isEnviado ? 'cursor-not-allowed opacity-70' : 'cursor-pointer accent-emerald-500'} transition">
+                        </label>
+                    </td>
+                    <td class="p-5 font-medium text-white">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-dark-800/80 border border-dark-700/60 flex items-center justify-center text-emerald-400 group-hover:border-emerald-500/40 transition shadow-inner shrink-0">
+                                <i class="fa-solid fa-suitcase-medical text-sm"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-semibold text-white tracking-wide leading-snug">${nomeExibicao}</p>
+                                    ${emAlertaUrgente ? '<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> URGENTE (' + diasUteisRestantes + 'd úteis)</span>' : ''}
+                                </div>
+                                <p class="text-xs text-slate-400 flex items-center gap-2 mt-1">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-[10px] text-slate-500"></i> ${localizacao}</span>
+                                    <span class="text-dark-700">•</span>
+                                    <span class="font-mono text-slate-400">OP: ${item.op || 'N/A'}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-5">${badgeStatus}</td>
+                    <td class="p-5 text-slate-300 text-xs font-medium">
+                        <div class="flex items-center gap-2 bg-dark-950/40 px-3 py-1.5 rounded-lg border border-dark-800/60 w-fit">
+                            <i class="fa-regular fa-calendar text-slate-500"></i>
+                            <span>${dataFormatada}</span>
+                        </div>
+                    </td>
+                    <td class="p-5 text-right">
+                        <div class="flex items-center justify-end gap-3">
+                            <span id="badge-status-${item.id}" class="text-xs font-medium px-3 py-1.5 rounded-lg ${isEnviado ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : emAlertaUrgente ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold' : 'bg-dark-800/60 text-slate-400 border border-dark-700/60'}">
+                                ${isEnviado ? '<i class="fa-solid fa-check-circle mr-1"></i> Enviado & Bloqueado' : emAlertaUrgente ? '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Atenção Prazo' : 'Pendente Envio'}
+                            </span>
+                            <button onclick="abrirModalDetalhes('${item.id}')" class="bg-dark-800 hover:bg-dark-700 text-slate-300 w-9 h-9 rounded-xl text-xs transition border border-dark-700 hover:border-slate-600 shadow-sm flex items-center justify-center shrink-0" title="Ver Dossiê do Atendimento">
+                                <i class="fa-solid fa-eye text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function mudarFiltroEnvio(filtro, btnElement) {
+            filtroEnvioAtual = filtro;
+            document.querySelectorAll('.envio-filter-btn').forEach(b => {
+                b.className = 'envio-filter-btn px-4 py-2.5 rounded-xl text-xs font-semibold bg-dark-800 border border-dark-700 text-slate-400 hover:text-white transition-all flex items-center gap-2';
+            });
+            btnElement.className = 'envio-filter-btn px-4 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2';
+            renderizarTabela();
+        }
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabela-todos-dias');
+            const enviosSalvos = obterEnviosSalvos();
+            
+            const dadosFiltrados = dadosGlobais.filter(item => {
+                const textoBusca = `${item.instituicao || ''} ${item.cidade || ''} ${item.op || ''} ${item.status || ''}`.toLowerCase();
+                const matchBusca = textoBusca.includes(termoBusca.toLowerCase());
+                
+                const isEnviado = !!enviosSalvos[item.id];
+                let matchEnvio = true;
+                if (filtroEnvioAtual === 'pendentes') matchEnvio = !isEnviado;
+                if (filtroEnvioAtual === 'enviados') matchEnvio = isEnviado;
+
+                return matchBusca && matchEnvio;
+            });
+
+            if (dadosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-16 text-center text-slate-500">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-1"></i>
+                                <p class="text-sm font-medium text-slate-400">Nenhum registro encontrado</p>
+                                <p class="text-xs text-slate-600">Tente ajustar sua busca ou filtro de despacho.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            dadosFiltrados.forEach(item => {
+                let badgeStatus = '';
+                const isEnviado = !!enviosSalvos[item.id];
+                const statusLower = (item.status || '').toLowerCase();
+                
+                // Calcula os dias úteis restantes até o agendamento
+                const diasUteisRestantes = calcularDiasUteisAte(item.data);
+                // Critério de alerta: faltam 2 dias úteis ou menos, e ainda não foi enviado
+                const emAlertaUrgente = !isEnviado && diasUteisRestantes >= 0 && diasUteisRestantes <= 2;
+                
+                switch(statusLower) {
+                    case 'concluido':
+                    case 'concluído':
+                        badgeStatus = '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Concluído</span>';
+                        break;
+                    case 'parametrizacao':
+                    case 'parametrização':
+                        badgeStatus = '<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Etapa 4</span>';
+                        break;
+                    case 'confirmada':
+                        badgeStatus = '<span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Confirmada</span>';
+                        break;
+                    case 'sig':
+                        badgeStatus = '<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Aguardando SIG</span>';
+                        break;
+                    case 'disciplinas':
+                        badgeStatus = '<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Disciplinas</span>';
+                        break;
+                    case 'npso':
+                        badgeStatus = '<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 w-fit shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> NPSO Concluído</span>';
+                        break;
+                    default:
+                        badgeStatus = `<span class="bg-dark-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase">${item.status || 'Pendente'}</span>`;
+                }
+
+                const nomeExibicao = item.instituicao ? `${item.instituicao}` : `Ordem de Produção #${item.op || 'N/A'}`;
+                const localizacao = item.cidade ? `${item.cidade}` : 'Local não informado';
+                const dataFormatada = item.data || 'Não informada';
+
+                // Define a estilização da linha com base no estado de envio ou alerta de prazo
+                let rowClasses = 'transition-all group ';
+                if (isEnviado) {
+                    rowClasses += 'bg-emerald-950/20 hover:bg-emerald-950/30';
+                } else if (emAlertaUrgente) {
+                    rowClasses += 'bg-amber-950/30 border-l-4 border-amber-500 hover:bg-amber-950/40 shadow-inner animate-pulse-slow';
+                } else {
+                    rowClasses += 'hover:bg-dark-800/40';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = rowClasses;
+                
+                tr.innerHTML = `
+                    <td class="p-5 text-center">
+                        <label class="relative flex items-center justify-center cursor-pointer">
+                            <input type="checkbox" data-id="${item.id}" ${isEnviado ? 'checked disabled' : ''} onclick="solicitarConfirmacaoEnvio(event, this, '${item.id}', '${nomeExibicao.replace(/'/g, "")}')" 
+                                class="w-5 h-5 rounded border-dark-700 bg-dark-950 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-dark-900 ${isEnviado ? 'cursor-not-allowed opacity-70' : 'cursor-pointer accent-emerald-500'} transition">
+                        </label>
+                    </td>
+                    <td class="p-5 font-medium text-white">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-dark-800/80 border border-dark-700/60 flex items-center justify-center text-emerald-400 group-hover:border-emerald-500/40 transition shadow-inner shrink-0">
+                                <i class="fa-solid fa-suitcase-medical text-sm"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-semibold text-white tracking-wide leading-snug">${nomeExibicao}</p>
+                                    ${emAlertaUrgente ? '<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> URGENTE (' + diasUteisRestantes + 'd úteis)</span>' : ''}
+                                </div>
+                                <p class="text-xs text-slate-400 flex items-center gap-2 mt-1">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-[10px] text-slate-500"></i> ${localizacao}</span>
+                                    <span class="text-dark-700">•</span>
+                                    <span class="font-mono text-slate-400">OP: ${item.op || 'N/A'}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-5">${badgeStatus}</td>
+                    <td class="p-5 text-slate-300 text-xs font-medium">
+                        <div class="flex items-center gap-2 bg-dark-950/40 px-3 py-1.5 rounded-lg border border-dark-800/60 w-fit">
+                            <i class="fa-regular fa-calendar text-slate-500"></i>
+                            <span>${dataFormatada}</span>
+                        </div>
+                    </td>
+                    <td class="p-5 text-right">
+                        <div class="flex items-center justify-end gap-3">
+                            <span id="badge-status-${item.id}" class="text-xs font-medium px-3 py-1.5 rounded-lg ${isEnviado ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : emAlertaUrgente ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold' : 'bg-dark-800/60 text-slate-400 border border-dark-700/60'}">
+                                ${isEnviado ? '<i class="fa-solid fa-check-circle mr-1"></i> Enviado & Bloqueado' : emAlertaUrgente ? '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Atenção Prazo' : 'Pendente Envio'}
+                            </span>
+                            <button onclick="abrirModalDetalhes('${item.id}')" class="bg-dark-800 hover:bg-dark-700 text-slate-300 w-9 h-9 rounded-xl text-xs transition border border-dark-700 hover:border-slate-600 shadow-sm flex items-center justify-center shrink-0" title="Ver Dossiê do Atendimento">
+                                <i class="fa-solid fa-eye text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function solicitarConfirmacaoEnvio(event, checkbox, id, nome) {
+            if (checkbox.disabled) {
+                event.preventDefault();
+                return;
+            }
+
+            event.preventDefault();
+
+            acaoPendenteCheckbox = checkbox;
+            acaoPendenteId = id;
+            acaoPendenteNome = nome;
+
+            const modal = document.getElementById('modal-confirmacao');
+            const box = document.getElementById('modal-confirm-box');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        // Nova variável para guardar os dados da planilha antes de salvar
+        let colaboradoresImportados = null;
+
+        // Função que lê a planilha selecionada e formata os dados
+        function processarPlanilha(event) {
+            const file = event.target.files[0];
+            const feedbackEl = document.getElementById('upload-feedback');
+            
+            if (!file) {
+                colaboradoresImportados = null;
+                feedbackEl.classList.add('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheet];
+                    
+                    // Transforma em array de arrays para podermos encontrar dinamicamente as colunas
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (json.length < 2) throw new Error("A planilha está vazia ou sem cabeçalhos.");
+                    
+                    // Busca os índices identificando as colunas (mesmo que estejam em ordem diferente)
+                    const header = json[0].map(h => String(h).toLowerCase().trim());
+                    const nomeIdx = header.findIndex(h => h.includes('nome') || h === 'colaborador');
+                    const cargoIdx = header.findIndex(h => h.includes('cargo') || h.includes('função') || h.includes('funcao'));
+                    const cpfIdx = header.findIndex(h => h.includes('cpf') || h.includes('documento'));
+
+                    if (nomeIdx === -1) throw new Error("Não foi possível localizar a coluna 'Nome' na planilha.");
+
+                    let colaboradores = [];
+                    
+                    // Pula o cabeçalho (índice 0) e começa a extrair os dados
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (!row || row.length === 0 || !row[nomeIdx]) continue; // Pula linhas vazias
+
+                        colaboradores.push({
+                            nome: row[nomeIdx] || 'Não informado',
+                            cargo: cargoIdx !== -1 && row[cargoIdx] ? String(row[cargoIdx]) : 'Funcionário',
+                            cpf: cpfIdx !== -1 && row[cpfIdx] ? String(row[cpfIdx]) : '000.000.000-00'
+                        });
+                    }
+
+                    if (colaboradores.length === 0) throw new Error("Nenhum dado válido extraído.");
+
+                    colaboradoresImportados = colaboradores;
+                    
+                    feedbackEl.innerHTML = `<i class="fa-solid fa-check mr-1"></i> ${colaboradores.length} colaboradores carregados e prontos para envio.`;
+                    feedbackEl.classList.remove('hidden', 'text-rose-400');
+                    feedbackEl.classList.add('text-emerald-400');
+                    
+                } catch (err) {
+                    colaboradoresImportados = null;
+                    document.getElementById('upload-planilha').value = '';
+                    feedbackEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ${err.message}`;
+                    feedbackEl.classList.remove('hidden', 'text-emerald-400');
+                    feedbackEl.classList.add('text-rose-400');
+                    mostrarToast("Erro na leitura do arquivo: " + err.message, "error");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Função de cancelar (Modificada para limpar o campo de arquivo ao fechar)
+        function cancelarConfirmacaoEnvio() {
+            const modal = document.getElementById('modal-confirmacao');
+            const box = document.getElementById('modal-confirm-box');
+            
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (acaoPendenteCheckbox) {
+                    acaoPendenteCheckbox.checked = false;
+                }
+                acaoPendenteCheckbox = null;
+                acaoPendenteId = null;
+                acaoPendenteNome = '';
+                
+                // Reseta o estado do input e do feedback
+                colaboradoresImportados = null;
+                const uploadEl = document.getElementById('upload-planilha');
+                if(uploadEl) uploadEl.value = '';
+                const feedbackEl = document.getElementById('upload-feedback');
+                if(feedbackEl) feedbackEl.classList.add('hidden');
+            }, 300);
+        }
+
+       async function executarConfirmacaoEnvio() {
+            const modal = document.getElementById('modal-confirmacao');
+            const box = document.getElementById('modal-confirm-box');
+            
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            
+            // Variáveis locais para não perder o contexto
+            const curId = acaoPendenteId;
+            const curNome = acaoPendenteNome;
+            const curCheckbox = acaoPendenteCheckbox;
+            const colabsAnexados = colaboradoresImportados; 
+            
+            setTimeout(async () => {
+                modal.classList.add('hidden');
+                
+                if (curCheckbox && curId) {
+                    // CONVERSÃO CRÍTICA: Garante que o ID é número para o Supabase não rejeitar
+                    const idNumerico = Number(curId);
+
+                    curCheckbox.checked = true;
+                    curCheckbox.disabled = true;
+                    curCheckbox.classList.add('cursor-not-allowed', 'opacity-70');
+                    
+                    // Salva no cache do navegador (Visual Imediato)
+                    salvarEnvioLocal(curId, true);
+
+                    // ==========================================
+                    // ATUALIZAÇÃO GARANTIDA NO SUPABASE
+                    // ==========================================
+                    const dadosParaAtualizar = {
+                        material_enviado: true 
+                    };
+
+                    if (colabsAnexados && colabsAnexados.length > 0) {
+                        dadosParaAtualizar.colaboradores = JSON.stringify(colabsAnexados);
+                    }
+
+                    try {
+                        // O .select() força o Supabase a devolver a linha. Se voltar vazio, a atualização falhou.
+                        const { data, error } = await supabaseClient
+                            .from('agendamentos')
+                            .update(dadosParaAtualizar)
+                            .eq('id', idNumerico)
+                            .select();
+
+                        if (error) {
+                            mostrarToast('Erro Supabase: ' + error.message, 'error');
+                            console.error(error);
+                        } else if (!data || data.length === 0) {
+                            mostrarToast('Erro: Nenhuma linha atualizada. Atualize a página e tente novamente.', 'error');
+                        } else {
+                            let msg = `Material de "${curNome}" salvo como TRUE no banco!`;
+                            if (colabsAnexados && colabsAnexados.length > 0) {
+                                msg += ` (+ Planilha Salva)`;
+                            }
+                            mostrarToast(msg);
+                        }
+                    } catch (err) {
+                        mostrarToast('Falha na requisição com o banco.', 'error');
+                        console.error(err);
+                    }
+                    
+                    // Atualiza a interface
+                    const badgeLabel = document.getElementById(`badge-status-${curId}`);
+                    const row = curCheckbox.closest('tr');
+
+                    if (badgeLabel) {
+                        badgeLabel.className = 'text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                        badgeLabel.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Enviado & Bloqueado';
+                    }
+                    if (row) {
+                        row.className = 'transition-all group bg-emerald-950/20 hover:bg-emerald-950/30';
+                    }
+
+                    atualizarMetricas(dadosGlobais);
+                }
+
+                // Reseta tudo
+                acaoPendenteCheckbox = null;
+                acaoPendenteId = null;
+                acaoPendenteNome = '';
+                
+                colaboradoresImportados = null;
+                const uploadEl = document.getElementById('upload-planilha');
+                if(uploadEl) uploadEl.value = '';
+                const feedbackEl = document.getElementById('upload-feedback');
+                if(feedbackEl) {
+                    feedbackEl.classList.add('hidden');
+                    feedbackEl.innerText = '';
+                }
+            }, 300);
+        }
+
+        function exportarCSV() {
+            if (dadosGlobais.length === 0) {
+                alert('Não há dados para exportar.');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,ID,Instituicao,Cidade,OP,Status,Data\n";
+            dadosGlobais.forEach(row => {
+                const linha = [row.id, `"${row.instituicao || ''}"`, `"${row.cidade || ''}"`, row.op || '', row.status || '', `"${row.data || ''}"`];
+                csvContent += linha.join(",") + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `logistica_materiais_medicos_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            mostrarToast("Relatório CSV exportado com sucesso!");
+        }
+
+        function abrirModalDetalhes(id) {
+            const item = dadosGlobais.find(i => i.id == id);
+            if (!item) return;
+
+            const modalBody = document.getElementById('modal-body-data');
+            modalBody.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 bg-dark-950/60 p-4 rounded-xl border border-dark-800">
+                    <div>
+                        <span class="text-slate-500 block text-[11px] uppercase tracking-wider mb-1">Instituição / Hospital</span>
+                        <span class="text-white font-semibold text-sm">${item.instituicao || 'Não informada'}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block text-[11px] uppercase tracking-wider mb-1">Cidade / Localidade</span>
+                        <span class="text-white font-semibold text-sm">${item.cidade || 'Não informada'}</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3 bg-dark-950/60 p-4 rounded-xl border border-dark-800">
+                    <div>
+                        <span class="text-slate-500 block text-[11px] uppercase tracking-wider mb-1">Ordem de Produção</span>
+                        <span class="text-emerald-400 font-mono font-bold text-sm">#${item.op || 'N/A'}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block text-[11px] uppercase tracking-wider mb-1">Fase da Esteira</span>
+                        <span class="text-slate-200 font-semibold uppercase text-xs">${item.status || 'Pendente'}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block text-[11px] uppercase tracking-wider mb-1">Data Agendada</span>
+                        <span class="text-slate-200 font-semibold">${item.data || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="bg-emerald-950/20 p-4 rounded-xl border border-emerald-900/30 text-emerald-300">
+                    <p class="text-xs"><i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i> <strong>Instrução de Segurança:</strong> Verifique os kits estéreis, maletas de atendimento e o comprovante de endereçamento antes de despachar o material médico.</p>
+                </div>
+            `;
+
+            const modal = document.getElementById('modal-detalhes');
+            const contentBox = document.getElementById('modal-content-box');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                contentBox.classList.remove('scale-95');
+                contentBox.classList.add('scale-100');
+            }, 10);
+        }
+
+        function fecharModalDetalhes() {
+            const modal = document.getElementById('modal-detalhes');
+            const contentBox = document.getElementById('modal-content-box');
+            
+            modal.classList.add('opacity-0');
+            contentBox.classList.remove('scale-100');
+            contentBox.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                document.getElementById('input-busca').focus();
+            }
+            if (e.key === 'Escape') {
+                fecharModalDetalhes();
+                cancelarConfirmacaoEnvio();
+            }
+        });
+
+        document.getElementById('input-busca').addEventListener('input', (e) => {
+            termoBusca = e.target.value;
+            renderizarTabela();
+        });
+
+        carregarOrganizadorMateriais();
+    </script>
+</body>
+</html>
