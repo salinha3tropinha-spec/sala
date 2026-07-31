@@ -170,19 +170,46 @@
                 if (typeof supabase === 'undefined') throw new Error("SDK do Supabase não carregou.");
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-                const { data: registros, error } = await supabaseClient.from('agendamentos').select('*');
-                if (error) throw error;
-                if (!registros || registros.length === 0) throw new Error("Tabela vazia no Supabase.");
+                let registro = null;
 
-                let registro = registros.find(s => String(s.id) === String(buscaAlvo) || String(s.op) === String(buscaAlvo));
-                
-                if (!registro && registros.length > 0) {
-                    registro = registros[registros.length - 1];
+                // Tenta buscar online no Supabase
+                try {
+                    const { data: registros, error } = await supabaseClient.from('agendamentos').select('*');
+                    if (!error && registros && registros.length > 0) {
+                        // Procura EXATAMENTE pelo ID ou OP da URL (sem fallback automático para o último)
+                        registro = registros.find(s => String(s.id) === String(buscaAlvo) || String(s.op) === String(buscaAlvo));
+                        
+                        if (registro) {
+                            // Salva em cache local para garantir caso fique offline depois
+                            localStorage.setItem('cache_registro_' + buscaAlvo, JSON.stringify(registro));
+                        }
+                    }
+                } catch (netErr) {
+                    console.warn("Sem conexão com o Supabase. Buscando do cache local...", netErr);
                 }
 
-                if (!registro) throw new Error("Nenhum agendamento encontrado.");
+                // Se falhou online (offline/oscilação), recupera do cache salvo no navegador
+                if (!registro && buscaAlvo) {
+                    let cachedData = localStorage.getItem('cache_registro_' + buscaAlvo);
+                    if (cachedData) {
+                        try {
+                            registro = JSON.parse(cachedData);
+                        } catch(e) {}
+                    }
+                }
+
+                if (!registro) throw new Error("Agendamento não encontrado. Verifique se a OP/ID está correta ou se há conexão com a internet.");
 
                 currentRecord = registro;
+
+                // Restaura o rascunho local dos faltosos se houver alterações pendentes
+                let localBackup = localStorage.getItem('faltosos_' + buscaAlvo);
+                if (localBackup) {
+                    try {
+                        currentRecord.faltosos = JSON.parse(localBackup);
+                    } catch(e) {}
+                }
+
                 document.getElementById('op-number').innerText = registro.op || '---';
                 document.getElementById('view-subtitle').innerText = `Unidade: ${registro.cidade || 'N/A'} — ${registro.instituicao || ''}`;
 
@@ -192,7 +219,7 @@
                 console.error(err);
                 document.getElementById('error-box').innerText = "ERRO: " + err.message;
                 document.getElementById('error-box').classList.remove('hidden');
-                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="text-center py-16 text-rose-400 text-xs">Falha ao carregar. Veja o alerta acima.</td></tr>`;
+                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="text-center py-16 text-rose-400 text-xs">Falha ao carregar. Verifique sua conexão com a internet.</td></tr>`;
             }
         });
 
