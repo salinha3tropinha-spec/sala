@@ -36,34 +36,42 @@
 
         :root {
             --bg-deep: #020617;
-            --card-bg: rgba(11, 15, 25, 0.75);
+            --card-bg: rgba(15, 23, 42, 0.92); /* Ligeiramente mais opaco para blindar a nitidez do texto */
             --card-border: rgba(255, 255, 255, 0.08);
             --accent-glow: rgba(56, 189, 248, 0.15);
             --primary-sky: #38bdf8;
+            --text-main: #f8fafc;  /* Branco puro/gelo para contraste máximo */
+            --text-muted: #94a3b8; /* Cinza calibrado para legibilidade */
         }
 
         body {
             background-color: var(--bg-deep);
             background-image: 
-                radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.04) 0%, transparent 60%),
-                linear-gradient(to right, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+                radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 60%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
             background-size: 100% 100%, 32px 32px, 32px 32px;
             font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            
+            /* Correções cruciais para eliminar o aspecto borrado dos textos */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
 
         .glass-panel {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(3, 7, 18, 0.95) 100%);
-            backdrop-filter: blur(16px); /* Reduzido de 24px para 16px para aliviar a GPU */
-            -webkit-backdrop-filter: blur(16px);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px); /* Reduzido de 16px para 12px para preservar a nitidez das fontes */
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--card-border);
-            transform: translateZ(0); /* Força aceleração por hardware */
-            will-change: transform, opacity; /* Otimiza renderização de animações */
+            transform: translateZ(0); 
+            backface-visibility: hidden;
         }
 
         .glass-panel:hover {
             border-color: rgba(56, 189, 248, 0.3);
-            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 30px -10px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 25px -10px rgba(56, 189, 248, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
         }
 
@@ -91,13 +99,20 @@
             box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15), 0 0 20px rgba(56, 189, 248, 0.1);
         }
 
-        button { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Transições otimizadas apenas nas propriedades necessárias (evita 'transition: all') */
+        button { 
+            transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; 
+        }
         button:active { transform: scale(0.96); }
 
-        tbody tr { transition: background-color 0.2s ease; }
+        tbody tr { 
+            transition: background-color 0.15s ease; 
+        }
         tbody tr:hover { background-color: rgba(30, 41, 59, 0.4); }
 
-        aside { transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        aside { 
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
         aside.collapsed span.sidebar-text,
         aside.collapsed span.sidebar-footer-text,
         aside.collapsed .sidebar-header-details { display: none !important; }
@@ -393,7 +408,7 @@
                             </div>
                             <div>
                                 <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Unidades Base</span>
-                                <span class="text-lg font-extrabold text-white font-mono">317 Unidades</span>
+                                <span class="text-lg font-extrabold text-white font-mono">319 Unidades</span>
                             </div>
                         </div>
                     </div>
