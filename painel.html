@@ -54,13 +54,11 @@
 
         .glass-panel {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(3, 7, 18, 0.95) 100%);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(16px); /* Reduzido de 24px para 16px para aliviar a GPU */
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--card-border);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+            transform: translateZ(0); /* Força aceleração por hardware */
+            will-change: transform, opacity; /* Otimiza renderização de animações */
         }
 
         .glass-panel:hover {
@@ -125,93 +123,123 @@
     <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- Sidebar de Navegação Retrátil -->
-    <aside id="main-sidebar" class="w-72 bg-darkcard/95 backdrop-blur-2xl border-r border-bordercolor/80 flex flex-col justify-between hidden lg:flex shadow-2xl z-30 transition-all duration-300">
-        <div>
+    <!-- Sidebar de Navegação Elite Command Center -->
+    <aside id="main-sidebar" class="w-72 bg-slate-950/85 backdrop-blur-3xl bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-950/30 via-slate-950/95 to-slate-950 border-r border-slate-800/60 flex flex-col justify-between hidden lg:flex shadow-2xl z-30 transition-all duration-300">
+        <div class="flex flex-col h-full overflow-hidden">
+            
             <!-- Cabeçalho do Perfil / Usuário -->
-            <div class="sidebar-header p-5 border-b border-bordercolor/60 flex items-center justify-between bg-gradient-to-b from-slate-900/50 to-transparent">
+            <div class="sidebar-header p-5 border-b border-slate-800/50 flex items-center justify-between bg-slate-900/40 shrink-0">
                 <div class="flex items-center space-x-3 overflow-hidden">
-                    <div class="w-11 h-11 shrink-0 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/25 ring-1 ring-white/20">
-                        <i class="fa-solid fa-database text-white text-sm"></i>
+                    <div class="relative">
+                        <div class="w-11 h-11 shrink-0 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-sky-500/30 ring-1 ring-white/20">
+                            <i class="fa-solid fa-terminal text-white text-sm"></i>
+                        </div>
+                        <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 animate-pulse shadow-sm shadow-emerald-500"></span>
                     </div>
                     <div class="sidebar-header-details overflow-hidden">
-                        <span id="sidebar-username" class="font-bold text-sm tracking-tight text-white block truncate">Operador</span>
-                        <span class="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5 mt-0.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500"></span> Supabase Ativo
+                        <span id="sidebar-username" class="font-extrabold text-sm tracking-tight text-white block truncate">Operador</span>
+                        <span class="text-[11px] text-sky-400 font-mono font-medium block truncate mt-0.5">
+                            Cloud Core v7.2
                         </span>
                     </div>
                 </div>
-                <button onclick="toggleSidebarCollapse()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800/80 transition-all duration-200" title="Minimizar / Expandir Menu">
+                <button onclick="toggleSidebarCollapse()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800/80 transition-all duration-200 shrink-0" title="Minimizar / Expandir Menu">
                     <i class="fa-solid fa-angles-left text-xs" id="collapse-icon"></i>
                 </button>
             </div>
 
-            <!-- Navegação Principal com Estilo Moderno -->
-            <nav class="p-3.5 space-y-1.5">
-                <button onclick="switchTab('home')" id="btn-home" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-semibold bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-sky-600/25 ring-1 ring-white/15 transition-all duration-200 group" title="Sala ADM / Dashboard">
-                    <i class="fa-solid fa-house w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110"></i>
+            <!-- Navegação Principal Ultra Estilizada -->
+            <nav class="p-3.5 space-y-2 flex-1 overflow-y-auto pr-1">
+                
+                <button onclick="switchTab('home')" id="btn-home" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-semibold bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-sky-600/25 transition-all duration-200 group relative overflow-hidden" title="Sala ADM / Dashboard">
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-white rounded-r-full shadow-md"></div>
+                    <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-white shadow-inner">
+                        <i class="fa-solid fa-house text-xs"></i>
+                    </div>
                     <span class="sidebar-text font-medium tracking-wide">Sala ADM / Dashboard</span>
                 </button>
 
-                <button onclick="switchTab('batch')" id="btn-batch" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Central de Agendamentos">
-                    <i class="fa-solid fa-layer-group w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-sky-400"></i>
-                    <span class="sidebar-text">Central de Agendamentos</span>
+                <button onclick="switchTab('batch')" id="btn-batch" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Central de Agendamentos">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-sky-400 group-hover:bg-sky-500/10 group-hover:border-sky-500/30 transition-all">
+                        <i class="fa-solid fa-layer-group text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Central de Agendamentos</span>
                 </button>
 
-                <button onclick="switchTab('sig-rpa')" id="btn-sig-rpa" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Gestão SIG & Disciplinas">
-                    <i class="fa-solid fa-file-signature w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-indigo-400"></i>
-                    <span class="sidebar-text">Gestão SIG & Disciplinas</span>
+                <button onclick="switchTab('sig-rpa')" id="btn-sig-rpa" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Gestão SIG & Disciplinas">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-indigo-400 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/30 transition-all">
+                        <i class="fa-solid fa-file-signature text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Gestão SIG & Disciplinas</span>
                 </button>
 
-                <button onclick="switchTab('directory')" id="btn-directory" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Diretório Geral (Unidades)">
-                    <i class="fa-solid fa-address-book w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-sky-400"></i>
-                    <span class="sidebar-text">Diretório Geral (Unidades)</span>
+                <button onclick="switchTab('directory')" id="btn-directory" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Diretório Geral (Unidades)">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-sky-400 group-hover:bg-sky-500/10 group-hover:border-sky-500/30 transition-all">
+                        <i class="fa-solid fa-address-book text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Diretório Geral (Unidades)</span>
                 </button>
 
-                <button onclick="switchTab('status-confirmacao')" id="btn-status-confirmacao" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Status unidades em confirmação">
-                    <i class="fa-solid fa-clock-rotate-left w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-teal-400"></i>
-                    <span class="sidebar-text">Status unidades em confirmação</span>
+                <button onclick="switchTab('status-confirmacao')" id="btn-status-confirmacao" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Status unidades em confirmação">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-teal-400 group-hover:bg-teal-500/10 group-hover:border-teal-500/30 transition-all">
+                        <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Unidades em Confirmação</span>
                 </button>
 
-                <button onclick="switchTab('unidades-agendadas')" id="btn-unidades-agendadas" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Unidades Agendadas">
-                    <i class="fa-solid fa-calendar-check w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-emerald-400"></i>
-                    <span class="sidebar-text">Unidades agendadas</span>
+                <button onclick="switchTab('unidades-agendadas')" id="btn-unidades-agendadas" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Unidades Agendadas">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 group-hover:border-emerald-500/30 transition-all">
+                        <i class="fa-solid fa-calendar-check text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Unidades Agendadas</span>
                 </button>             
 
-                <button onclick="switchTab('automations')" id="btn-automations" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Automações UI.Vision">
-                    <i class="fa-solid fa-robot w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-amber-400"></i>
-                    <span class="sidebar-text">Automações UI.Vision</span>
+                <button onclick="switchTab('automations')" id="btn-automations" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Automações UI.Vision">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-amber-400 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all">
+                        <i class="fa-solid fa-robot text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Automações UI.Vision</span>
                 </button>
 
-                <button onclick="switchTab('logs')" id="btn-logs" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Logs & Auditoria">
-                    <i class="fa-solid fa-clock-rotate-left w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-purple-400"></i>
-                    <span class="sidebar-text">Logs & Auditoria</span>
+                <button onclick="switchTab('logs')" id="btn-logs" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Logs & Auditoria">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-purple-400 group-hover:bg-purple-500/10 group-hover:border-purple-500/30 transition-all">
+                        <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Logs & Auditoria</span>
                 </button>
 
-                <!-- OPÇÃO NO MENU RESTRITA AO MASTER -->
-                <button onclick="switchTab('comparecimento-global')" id="btn-comparecimento-global" class="tab-btn w-full hidden items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Comparecimento Global (Master)">
-                    <i class="fa-solid fa-globe w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-amber-400"></i>
-                    <span class="sidebar-text">Comparecimento Global</span>
+                <button onclick="switchTab('comparecimento-global')" id="btn-comparecimento-global" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Comparecimento Global">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-amber-400 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all">
+                        <i class="fa-solid fa-globe text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Comparecimento Global</span>
                 </button>
 
-                <button onclick="switchTab('wiki')" id="btn-wiki" class="tab-btn w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Wiki Pessoal">
-                    <i class="fa-solid fa-book-bookmark w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-pink-400"></i>
-                    <span class="sidebar-text">Wiki Pessoal</span>
+                <button onclick="switchTab('wiki')" id="btn-wiki" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Wiki Pessoal">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-pink-400 group-hover:bg-pink-500/10 group-hover:border-pink-500/30 transition-all">
+                        <i class="fa-solid fa-book-bookmark text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Wiki Pessoal</span>
                 </button>
 
-                <a href="todos_os_dias.html" id="btn-todos-os-dias" class="tab-btn w-full hidden items-center space-x-3.5 px-4 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group" title="Ver TODOS OS DIAS">
-                    <i class="fa-solid fa-calendar-days w-5 text-center text-sm shrink-0 transition-transform group-hover:scale-110 group-hover:text-sky-400"></i>
-                    <span class="sidebar-text">Ver TODOS OS DIAS</span>
+                <a href="todos_os_dias.html" id="btn-todos-os-dias" class="tab-btn w-full hidden items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80 no-underline" title="Ver TODOS OS DIAS">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-sky-400 group-hover:bg-sky-500/10 group-hover:border-sky-500/30 transition-all">
+                        <i class="fa-solid fa-calendar-days text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Ver TODOS OS DIAS</span>
                 </a>
 
             </nav>
         </div>
 
-        <!-- Rodapé da Sidebar -->
-        <div class="p-4 mx-3 mb-3 rounded-2xl border border-bordercolor/60 bg-slate-900/40 text-xs text-slate-400 flex items-center justify-between">
-            <span class="sidebar-text font-mono text-[11px] text-slate-400">317 Unidades</span>
-            <button onclick="handleLogout()" class="text-rose-400 hover:text-rose-300 font-bold transition-all flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-rose-500/10" title="Sair do Sistema">
-                <i class="fa-solid fa-power-off"></i> 
-                <span class="sidebar-footer-text">Sair</span>
+        <!-- Rodapé da Sidebar Blindado -->
+        <div class="p-3 mx-3 mb-3 rounded-2xl border border-slate-800/90 bg-slate-900/90 text-xs text-slate-400 flex items-center justify-between shrink-0 shadow-2xl">
+            <div class="flex items-center gap-2.5 overflow-hidden px-1">
+                <div class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40 text-[10px] font-mono font-extrabold shadow-inner">317</div>
+                <span class="sidebar-text font-mono text-[11px] text-slate-200 font-semibold truncate tracking-tight">Unidades</span>
+            </div>
+            <button onclick="handleLogout()" class="text-rose-400 hover:text-white font-bold transition-all flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/20 border border-rose-500/20 shadow-sm shrink-0" title="Sair do Sistema">
+                <i class="fa-solid fa-power-off text-xs"></i> 
             </button>
         </div>
     </aside>
@@ -335,41 +363,129 @@
             </section>
 
             <!-- TAB 0-VISITANT: DASHBOARD EXCLUSIVO PARA VISITANTES -->
+            <!-- TAB 0-VISITANT: DASHBOARD EXCLUSIVO PARA VISITANTES & OPERADORES -->
             <section id="tab-home-visitor" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
-                <div class="glass-panel p-8 rounded-3xl relative overflow-hidden shrink-0">
-                    <div class="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                    <span class="text-[11px] font-mono text-sky-400 font-semibold uppercase tracking-widest block mb-1">Painel Operacional Restrito</span>
-                    <h2 class="text-2xl font-extrabold text-white mb-2 tracking-tight">Portal de Acompanhamento e Unidades</h2>
-                    <p class="text-xs text-slate-400 max-w-2xl leading-relaxed">
-                        Bem-vindo à central de consultas. Utilize os acessos rápidos abaixo para navegar pelas unidades oficiais, acompanhar o histórico de agendamentos e auditoria do sistema.
-                    </p>
+                
+                <!-- Hero Banner Principal -->
+                <div class="glass-panel p-8 rounded-3xl relative overflow-hidden shrink-0 shadow-2xl border border-sky-500/20">
+                    <div class="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-sky-500/10 to-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute left-10 bottom-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-3 py-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span> Sala de Comando Operacional
+                                </span>
+                                <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest">
+                                    Supabase Online
+                                </span>
+                            </div>
+                            <h2 class="text-2xl font-extrabold text-white tracking-tight mb-2">Portal de Acompanhamento e Unidades</h2>
+                            <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                                Bem-vindo à central de consultas corporativa. Utilize os módulos de acesso rápido abaixo para navegar pelas unidades oficiais, acompanhar o fluxo de agendamentos, conferir relatórios globais e auditoria do sistema em tempo real.
+                            </p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-inner shrink-0">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-lg border border-sky-500/20 shadow-sm">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Unidades Base</span>
+                                <span class="text-lg font-extrabold text-white font-mono">317 Unidades</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Cards de Atalho Rápido para Visitantes -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
-                    <button onclick="switchTab('directory')" class="glass-panel hover:border-sky-500/40 text-slate-200 p-8 rounded-3xl flex flex-col items-center justify-center text-center group transition-all transform hover:-translate-y-1 shadow-xl">
-                        <div class="w-14 h-14 rounded-2xl bg-slate-800/80 text-sky-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition border border-bordercolor shadow-inner">
-                            <i class="fa-solid fa-address-book"></i>
+                <!-- Grid de Acessos Rápidos (4 Módulos Principais) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 shrink-0">
+                    
+                    <!-- Card 1: Diretório -->
+                    <button onclick="switchTab('directory')" class="group relative bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-2xl border border-slate-800/90 rounded-3xl p-6 flex flex-col justify-between hover:border-sky-500/40 transition-all duration-300 hover:-translate-y-1.5 shadow-2xl overflow-hidden text-left">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all duration-500 pointer-events-none"></div>
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex justify-between items-center">
+                                <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-address-book"></i>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">Módulo 01</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base tracking-tight mb-1 group-hover:text-sky-300 transition-colors">Diretório Geral</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">Consultar lista oficial de unidades, escolas cadastradas, telefones e e-mails.</p>
+                            </div>
                         </div>
-                        <h3 class="text-base font-bold tracking-tight mb-1 text-white">Diretório Geral (Unidades)</h3>
-                        <p class="text-xs text-slate-400">Consultar lista oficial de unidades e escolas cadastradas</p>
+                        <div class="pt-6 mt-6 border-t border-slate-800/80 relative z-10 flex items-center justify-between text-xs font-semibold text-sky-400">
+                            <span>Acessar Diretório</span>
+                            <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+                        </div>
                     </button>
 
-                    <button onclick="switchTab('unidades-agendadas')" class="glass-panel hover:border-emerald-500/40 text-slate-200 p-8 rounded-3xl flex flex-col items-center justify-center text-center group transition-all transform hover:-translate-y-1 shadow-xl">
-                        <div class="w-14 h-14 rounded-2xl bg-slate-800/80 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition border border-bordercolor shadow-inner">
-                            <i class="fa-solid fa-calendar-check"></i>
+                    <!-- Card 2: Unidades Agendadas -->
+                    <button onclick="switchTab('unidades-agendadas')" class="group relative bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-2xl border border-slate-800/90 rounded-3xl p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1.5 shadow-2xl overflow-hidden text-left">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500 pointer-events-none"></div>
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex justify-between items-center">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">Módulo 02</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base tracking-tight mb-1 group-hover:text-emerald-300 transition-colors">Unidades Agendadas</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">Acompanhar unidades com fluxo concluído, detalhes médicos e listas de presença.</p>
+                            </div>
                         </div>
-                        <h3 class="text-base font-bold tracking-tight mb-1 text-white">Unidades Agendadas</h3>
-                        <p class="text-xs text-slate-400">Acompanhar unidades com fluxo concluído e detalhes</p>
+                        <div class="pt-6 mt-6 border-t border-slate-800/80 relative z-10 flex items-center justify-between text-xs font-semibold text-emerald-400">
+                            <span>Ver Agendamentos</span>
+                            <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+                        </div>
                     </button>
 
-                    <button onclick="switchTab('logs')" class="glass-panel hover:border-purple-500/40 text-slate-200 p-8 rounded-3xl flex flex-col items-center justify-center text-center group transition-all transform hover:-translate-y-1 shadow-xl">
-                        <div class="w-14 h-14 rounded-2xl bg-slate-800/80 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition border border-bordercolor shadow-inner">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
+                    <!-- Card 3: Comparecimento Global -->
+                    <button onclick="switchTab('comparecimento-global')" class="group relative bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-2xl border border-slate-800/90 rounded-3xl p-6 flex flex-col justify-between hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1.5 shadow-2xl overflow-hidden text-left">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500 pointer-events-none"></div>
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex justify-between items-center">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-globe"></i>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">Módulo 03</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base tracking-tight mb-1 group-hover:text-amber-300 transition-colors">Comparecimento Global</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">Visão consolidada em tempo real de inscritos, presentes e faltosos de todas as OPs.</p>
+                            </div>
                         </div>
-                        <h3 class="text-base font-bold tracking-tight mb-1 text-white">Logs & Auditoria</h3>
-                        <p class="text-xs text-slate-400">Histórico de execuções e movimentações do sistema</p>
+                        <div class="pt-6 mt-6 border-t border-slate-800/80 relative z-10 flex items-center justify-between text-xs font-semibold text-amber-400">
+                            <span>Abrir Relatório</span>
+                            <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+                        </div>
                     </button>
+
+                    <!-- Card 4: Logs & Auditoria -->
+                    <button onclick="switchTab('logs')" class="group relative bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-2xl border border-slate-800/90 rounded-3xl p-6 flex flex-col justify-between hover:border-purple-500/40 transition-all duration-300 hover:-translate-y-1.5 shadow-2xl overflow-hidden text-left">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all duration-500 pointer-events-none"></div>
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex justify-between items-center">
+                                <div class="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">Módulo 04</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base tracking-tight mb-1 group-hover:text-purple-300 transition-colors">Logs & Auditoria</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">Histórico detalhado de execuções, movimentações de processos e auditoria do banco.</p>
+                            </div>
+                        </div>
+                        <div class="pt-6 mt-6 border-t border-slate-800/80 relative z-10 flex items-center justify-between text-xs font-semibold text-purple-400">
+                            <span>Ver Auditoria</span>
+                            <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+                        </div>
+                    </button>
+
                 </div>
             </section>
 
@@ -658,24 +774,44 @@
 
             <!-- TAB 2: DIRETÓRIO GERAL -->
             <section id="tab-directory" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
-                <div class="glass-panel p-8 rounded-2xl flex-1 flex flex-col min-h-0">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
-                        <div>
-                            <h3 class="text-lg font-bold text-white">Diretório Geral (317 Unidades Oficiais)</h3>
-                            <p class="text-xs text-slate-400 mt-1">Lista completa sincronizada com o Supabase.</p>
-                        </div>
-                        <div class="flex items-center space-x-3 w-full md:w-auto">
-                            <button onclick="openAddUnitModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition whitespace-nowrap shadow-lg shadow-emerald-600/15 flex items-center gap-1.5">
-                                <i class="fa-solid fa-plus"></i> Adicionar Nova Unidade
-                            </button>
-                            <div class="relative w-full md:w-72">
-                                <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-xs text-slate-500"></i>
-                                <input type="text" id="search-directory" oninput="renderDirectory()" placeholder="Buscar unidade ou OP..." class="w-full bg-slate-900 border border-bordercolor rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-sky-500 transition-all font-medium">
+                <div class="glass-panel p-8 rounded-3xl flex-1 flex flex-col min-h-0 shadow-2xl relative overflow-hidden border border-indigo-500/20">
+                    <div class="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <!-- Cabeçalho Imponente -->
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6 pb-6 border-b border-slate-800/80 relative z-10 shrink-0">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> Banco de Dados Ativo
+                                </span>
                             </div>
-                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition whitespace-nowrap border border-bordercolor"><i class="fa-solid fa-house"></i> Início</button>
+                            <h3 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+                                <i class="fa-solid fa-address-book text-indigo-400"></i> Diretório Geral de Unidades
+                            </h3>
+                            <p class="text-xs text-slate-400">Consulta unificada de 317 unidades e escolas sincronizadas em tempo real via Supabase.</p>
+                        </div>
+
+                        <!-- Barra de Ações do Topo -->
+                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                            <div class="relative flex-1 sm:flex-initial sm:w-80 group">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                    <i class="fa-solid fa-search text-slate-500 group-focus-within:text-indigo-400 transition-colors"></i>
+                                </div>
+                                <input type="text" id="search-directory" oninput="renderDirectory()" placeholder="Pesquisar por unidade, OP ou cidade..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl pl-11 pr-4 py-3 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 transition-all font-medium shadow-inner backdrop-blur-sm">
+                            </div>
+
+                            <button onclick="openAddUnitModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all flex items-center gap-2 shrink-0 transform active:scale-95">
+                                <i class="fa-solid fa-plus text-sm"></i> <span>Nova Unidade</span>
+                            </button>
+
+                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-2xl text-xs font-semibold transition-all border border-slate-700/80 flex items-center gap-2 shrink-0 shadow-sm">
+                                <i class="fa-solid fa-house"></i> <span>Início</span>
+                            </button>
                         </div>
                     </div>
-                    <div id="directory-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 flex-1 overflow-y-auto pr-2 min-h-0"></div>
+
+                    <!-- Grid de Cards de Unidades -->
+                    <div id="directory-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-2 min-h-0 relative z-10"></div>
                 </div>
             </section>
 
@@ -715,30 +851,45 @@
 
             <!-- TAB 3.5: UNIDADES AGENDADAS -->
             <section id="tab-unidades-agendadas" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
-                <div class="glass-panel p-8 rounded-2xl flex-1 flex flex-col">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 shrink-0">
-                        <h3 class="text-lg font-bold text-white">Unidades Agendadas</h3>
+                <div class="glass-panel p-8 rounded-3xl flex-1 flex flex-col shadow-2xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <!-- Cabeçalho -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 pb-6 border-b border-slate-800/80 relative z-10 shrink-0">
+                        <div>
+                            <span class="text-[11px] font-mono text-emerald-400 font-semibold uppercase tracking-widest block mb-1">Acompanhamento Operacional</span>
+                            <h3 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+                                <i class="fa-solid fa-calendar-check text-emerald-400"></i> Unidades Agendadas
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Gerencie as unidades com fluxo concluído, visualize detalhes e controle as listas de presença.</p>
+                        </div>
                         <div class="flex items-center space-x-3 w-full md:w-auto">
-                            <div class="relative w-full md:w-72">
-                                <i class="fa-solid fa-search absolute left-3.5 top-3 text-xs text-slate-500"></i>
-                                <input type="text" id="search-unidades-agendadas" oninput="renderUnidadesAgendadas()" placeholder="Filtrar agendamentos..." class="w-full bg-slate-900 border border-bordercolor rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-sky-500 transition-all">
+                            <div class="relative w-full md:w-72 group">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                    <i class="fa-solid fa-search text-slate-500 group-focus-within:text-emerald-400 transition-colors"></i>
+                                </div>
+                                <input type="text" id="search-unidades-agendadas" oninput="renderUnidadesAgendadas()" placeholder="Filtrar por cidade, OP ou médico..." class="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all font-medium shadow-inner backdrop-blur-sm">
                             </div>
-                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap border border-bordercolor"><i class="fa-solid fa-house"></i> Início</button>
+                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border border-bordercolor flex items-center gap-2 shrink-0">
+                                <i class="fa-solid fa-house"></i> Início
+                            </button>
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto">
+
+                    <!-- Tabela Aprimorada -->
+                    <div class="flex-1 overflow-y-auto rounded-2xl border border-slate-800/80 bg-slate-950/40 relative z-10 shadow-inner">
                         <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider border-b border-bordercolor sticky top-0">
+                            <thead class="bg-slate-900/90 backdrop-blur-md text-slate-400 text-[11px] font-bold uppercase tracking-widest border-b border-slate-800/80 sticky top-0 z-20 shadow-sm">
                                 <tr>
-                                    <th class="p-3.5 rounded-l-xl">OP</th>
-                                    <th class="p-3.5">Cidade / Instituição</th>
-                                    <th class="p-3.5">Data / Horário</th>
-                                    <th class="p-3.5">Status Pipeline</th>
-                                    <th class="p-3.5">QTD</th>
-                                    <th class="p-3.5 text-right rounded-r-xl">Ações</th>
+                                    <th class="p-4">OP</th>
+                                    <th class="p-4">Cidade / Instituição</th>
+                                    <th class="p-4">Data / Horário</th>
+                                    <th class="p-4">Status Pipeline</th>
+                                    <th class="p-4 text-center">QTD</th>
+                                    <th class="p-4 text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="unidades-agendadas-table-body" class="divide-y divide-bordercolor/50"></tbody>
+                            <tbody id="unidades-agendadas-table-body" class="divide-y divide-slate-800/50"></tbody>
                         </table>
                     </div>
                 </div>
@@ -797,53 +948,66 @@
 
             <!-- TAB: COMPARECIMENTO GLOBAL (EXCLUSIVO MASTER) -->
             <section id="tab-comparecimento-global" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
-                <div class="glass-panel p-8 rounded-2xl flex-1 flex flex-col">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 shrink-0">
+                <div class="glass-panel p-8 rounded-3xl flex-1 flex flex-col shadow-2xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <!-- Cabeçalho -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 pb-6 border-b border-slate-800/80 relative z-10 shrink-0">
                         <div>
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span class="text-[11px] font-mono text-amber-400 font-semibold uppercase tracking-widest block mb-1">Métricas Consolidadas</span>
+                            <h3 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
                                 <i class="fa-solid fa-globe text-amber-400"></i> Relatório Global de Comparecimento (Master)
                             </h3>
-                            <p class="text-xs text-slate-400 mt-1">Visão consolidada em tempo real do comparecimento de todas as unidades e OPs.</p>
+                            <p class="text-xs text-slate-400 mt-1">Visão consolidada em tempo real do comparecimento de todas as unidades e OPs com listas finalizadas.</p>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition border border-bordercolor"><i class="fa-solid fa-house"></i> Início</button>
-                        </div>
-                    </div>
-
-                    <!-- Cards de Indicadores Globais -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 shrink-0">
-                        <div class="bg-slate-900/80 border border-bordercolor p-4 rounded-xl">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold mb-1">Total de Unidades/OPs</span>
-                            <span id="global-stat-unidades" class="text-xl font-extrabold text-white">0</span>
-                        </div>
-                        <div class="bg-slate-900/80 border border-bordercolor p-4 rounded-xl">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold mb-1">Total Inscritos</span>
-                            <span id="global-stat-inscritos" class="text-xl font-extrabold text-sky-400">0</span>
-                        </div>
-                        <div class="bg-slate-900/80 border border-bordercolor p-4 rounded-xl">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold mb-1">Total Presentes</span>
-                            <span id="global-stat-presentes" class="text-xl font-extrabold text-emerald-400">0</span>
-                        </div>
-                        <div class="bg-slate-900/80 border border-bordercolor p-4 rounded-xl">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold mb-1">Total Faltosos</span>
-                            <span id="global-stat-faltosos" class="text-xl font-extrabold text-rose-400">0</span>
+                        <div class="flex items-center space-x-3 w-full md:w-auto">
+                            <button onclick="exportarExcelGlobal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-file-excel"></i> Gerar Excel Global
+                            </button>
+                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border border-bordercolor flex items-center gap-2">
+                                <i class="fa-solid fa-house"></i> Início
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Tabela Consolidada Global -->
-                    <div class="flex-1 overflow-y-auto">
+                    <!-- Cards de Indicadores Globais Aprimorados -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 relative z-10 shrink-0">
+                        <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800/90 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all">
+                            <div class="absolute right-3 top-3 w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs border border-amber-500/20"><i class="fa-solid fa-building"></i></div>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-1">Total de Unidades/OPs</span>
+                            <span id="global-stat-unidades" class="text-2xl font-extrabold text-white font-mono">0</span>
+                        </div>
+                        <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800/90 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-sky-500/40 transition-all">
+                            <div class="absolute right-3 top-3 w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-xs border border-sky-500/20"><i class="fa-solid fa-users"></i></div>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-1">Total Inscritos</span>
+                            <span id="global-stat-inscritos" class="text-2xl font-extrabold text-sky-400 font-mono">0</span>
+                        </div>
+                        <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800/90 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                            <div class="absolute right-3 top-3 w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs border border-emerald-500/20"><i class="fa-solid fa-user-check"></i></div>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-1">Total Presentes</span>
+                            <span id="global-stat-presentes" class="text-2xl font-extrabold text-emerald-400 font-mono">0</span>
+                        </div>
+                        <div class="bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800/90 p-5 rounded-2xl shadow-lg relative overflow-hidden group hover:border-rose-500/40 transition-all">
+                            <div class="absolute right-3 top-3 w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xs border border-rose-500/20"><i class="fa-solid fa-user-xmark"></i></div>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-1">Total Faltosos</span>
+                            <span id="global-stat-faltosos" class="text-2xl font-extrabold text-rose-400 font-mono">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabela Consolidada Global Aprimorada -->
+                    <div class="flex-1 overflow-y-auto rounded-2xl border border-slate-800/80 bg-slate-950/40 relative z-10 shadow-inner">
                         <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="bg-slate-900/80 text-slate-400 text-xs uppercase tracking-wider border-b border-bordercolor sticky top-0">
+                            <thead class="bg-slate-900/90 backdrop-blur-md text-slate-400 text-[11px] font-bold uppercase tracking-widest border-b border-slate-800/80 sticky top-0 z-20 shadow-sm">
                                 <tr>
-                                    <th class="p-3.5 rounded-l-xl">OP</th>
-                                    <th class="p-3.5">Cidade / Unidade</th>
-                                    <th class="p-3.5 text-center">Inscritos</th>
-                                    <th class="p-3.5 text-center">Presentes</th>
-                                    <th class="p-3.5 text-center">Faltas</th>
-                                    <th class="p-3.5 text-right rounded-r-xl">Ação</th>
+                                    <th class="p-4">OP</th>
+                                    <th class="p-4">Cidade / Unidade</th>
+                                    <th class="p-4 text-center">Inscritos</th>
+                                    <th class="p-4 text-center">Presentes</th>
+                                    <th class="p-4 text-center">Faltas</th>
+                                    <th class="p-4 text-right">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="global-comparecimento-tbody" class="divide-y divide-bordercolor/50"></tbody>
+                            <tbody id="global-comparecimento-tbody" class="divide-y divide-slate-800/50"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1781,13 +1945,9 @@ function updateSidebarVisibility() {
     
     const btnGlobal = document.getElementById('btn-comparecimento-global');
     if (btnGlobal) {
-        if (isMaster) {
-            btnGlobal.classList.remove('hidden');
-            btnGlobal.classList.add('flex');
-        } else {
-            btnGlobal.classList.add('hidden');
-            btnGlobal.classList.remove('flex');
-        }
+        // Agora todos os níveis têm acesso à aba global
+        btnGlobal.classList.remove('hidden');
+        btnGlobal.classList.add('flex');
     }
 }
 
@@ -2412,33 +2572,59 @@ function updateSidebarVisibility() {
             paginatedOps.forEach(op => {
                 let unit = fullDir[op];
                 let isFatec = unit.unidade.toLowerCase().includes('faculdade');
-                let badgeBg = isFatec ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                let badgeBg = isFatec ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 shadow-cyan-500/10' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30 shadow-indigo-500/10';
                 let badgeLabel = isFatec ? `FATEC · OP ${op}` : `ETEC · OP ${op}`;
                 if (!unit.unidade.toLowerCase().includes('faculdade') && !unit.unidade.toLowerCase().includes('escola')) {
                     badgeLabel = `OP ${op}`;
                 }
 
+                let phoneDisplay = unit.telefone || 'N/D';
+                let safeUnidade = unit.unidade.replace(/'/g, "\\'");
+                let safeEmail = unit.email || '';
+                let safePhone = unit.telefone || '';
+
                 htmlChunks.push(`
-                    <div class="group relative bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-2xl border border-slate-800/90 rounded-3xl p-6 shadow-2xl transition-all duration-300 hover:border-indigo-500/40 hover:-translate-y-1.5 flex flex-col justify-between overflow-hidden">
+                    <div class="group relative bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-slate-950/95 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl transition-all duration-300 hover:border-indigo-500/50 hover:shadow-indigo-500/10 hover:-translate-y-1 flex flex-col justify-between overflow-hidden">
+                        <!-- Efeito de Luz Neon no Fundo -->
+                        <div class="absolute -right-12 -top-12 w-36 h-36 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-all duration-500 pointer-events-none"></div>
+                        
                         <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="px-3.5 py-1.5 ${badgeBg} border text-xs font-bold rounded-full tracking-wider uppercase shadow-inner">${badgeLabel}</span>
-                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(unit.unidade + ', ' + unit.cidade)}" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 hover:border-sky-500/50 text-xs text-slate-300 hover:text-sky-400 font-medium rounded-lg transition-all cursor-pointer group/map shadow-sm" title="Abrir no Google Maps">
-                                    <i class="fa-solid fa-location-dot text-rose-400 group-hover/map:scale-110 transition-transform"></i> ${unit.cidade}
+                            <!-- Badges do Topo -->
+                            <div class="flex items-center justify-between mb-4 gap-2">
+                                <span class="px-3 py-1.5 ${badgeBg} border text-[11px] font-extrabold rounded-xl tracking-wider uppercase shadow-sm">${badgeLabel}</span>
+                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(unit.unidade + ', ' + unit.cidade)}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 hover:border-sky-500/50 text-[11px] text-slate-300 hover:text-sky-400 font-medium rounded-xl transition-all cursor-pointer group/map shadow-sm shrink-0" title="Abrir no Google Maps">
+                                    <i class="fa-solid fa-location-dot text-rose-400 group-hover/map:scale-110 transition-transform"></i> 
+                                    <span class="truncate max-w-[120px]">${unit.cidade}</span>
                                 </a>
                             </div>
-                            <h3 class="text-white font-bold text-base leading-snug mb-3 group-hover:text-indigo-200 transition-colors line-clamp-2">${unit.unidade}</h3>
-                            <div class="flex items-center gap-2.5 text-xs text-slate-400 mb-5">
-                                <div class="w-7 h-7 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center shrink-0 text-indigo-400"><i class="fa-solid fa-envelope"></i></div>
-                                <span class="truncate font-medium">${unit.email || 'E-mail não informado'}</span>
+
+                            <!-- Nome da Unidade (Clicável para Copiar) -->
+                            <h3 onclick="copyToClipboard('${safeUnidade}')" class="text-white font-bold text-base leading-snug mb-4 hover:text-indigo-300 transition-colors line-clamp-2 min-h-[44px] cursor-pointer group/title flex items-center justify-between" title="Clique para copiar o nome da unidade">
+                                <span>${unit.unidade}</span>
+                                <i class="fa-regular fa-copy text-slate-600 group-hover/title:text-indigo-400 text-xs opacity-0 group-hover/title:opacity-100 transition-all shrink-0 ml-1"></i>
+                            </h3>
+                            
+                            <!-- Caixa de E-mail Aprimorada e Clicável -->
+                            <div onclick="copyToClipboard('${safeEmail}')" class="flex items-center gap-2.5 text-xs text-slate-300 mb-5 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 hover:border-indigo-500/50 hover:bg-slate-900/60 transition-all cursor-pointer shadow-inner group/email relative" title="Clique para copiar o e-mail">
+                                <div class="w-7 h-7 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 text-indigo-400 shadow-sm group-hover/email:scale-110 transition-transform"><i class="fa-solid fa-envelope text-xs"></i></div>
+                                <span class="truncate font-mono text-[11px] text-slate-300 select-all flex-1">${safeEmail || 'E-mail não informado'}</span>
+                                <i class="fa-regular fa-copy text-slate-500 group-hover/email:text-indigo-400 text-xs transition-colors shrink-0"></i>
                             </div>
                         </div>
+
+                        <!-- Rodapé do Card -->
                         <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3 mt-auto">
-                            <div class="flex items-center gap-2 text-xs text-slate-300 truncate">
-                                <div class="w-7 h-7 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center shrink-0 text-emerald-400"><i class="fa-solid fa-phone"></i></div>
-                                <span class="truncate font-medium">${unit.telefone || 'N/D'}</span>
+                            <!-- Telefone Clicável para Copiar -->
+                            <div onclick="copyToClipboard('${safePhone}')" class="flex items-center gap-2 text-xs text-slate-300 truncate cursor-pointer hover:text-emerald-400 transition-colors group/phone py-1" title="Clique para copiar o telefone">
+                                <div class="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-400 shadow-sm group-hover/phone:scale-110 transition-transform"><i class="fa-solid fa-phone text-xs"></i></div>
+                                <span class="truncate font-medium text-xs text-slate-300 max-w-[120px]">${phoneDisplay}</span>
+                                <i class="fa-regular fa-copy text-slate-600 group-hover/phone:text-emerald-400 text-[10px] transition-colors"></i>
                             </div>
-                            <button onclick="openDetailsModal('${op}')" class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-semibold rounded-xl shadow-lg transition-all">Detalhes</button>
+
+                            <button onclick="openDetailsModal('${op}')" class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/25 transition-all transform active:scale-95">
+                                <span>Detalhes</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </button>
                         </div>
                     </div>
                 `);
@@ -2448,11 +2634,11 @@ function updateSidebarVisibility() {
             
             if (totalPages > 1) {
                 contentHtml += `
-                    <div class="col-span-full flex items-center justify-between pt-6 mt-4 border-t border-bordercolor">
+                    <div class="col-span-full flex items-center justify-between pt-6 mt-4 border-t border-slate-800/80">
                         <span class="text-xs text-slate-400 font-mono">Página ${currentDirectoryPage} de ${totalPages} (${filteredOps.length} unidades)</span>
                         <div class="flex items-center space-x-2">
-                            <button onclick="changeDirectoryPage(${currentDirectoryPage - 1})" ${currentDirectoryPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold border border-bordercolor text-slate-400"' : 'class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold border border-bordercolor text-white transition"'}>Anterior</button>
-                            <button onclick="changeDirectoryPage(${currentDirectoryPage + 1})" ${currentDirectoryPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold border border-bordercolor text-slate-400"' : 'class="bg-sky-600 hover:bg-sky-500 px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition"'}>Próxima</button>
+                            <button onclick="changeDirectoryPage(${currentDirectoryPage - 1})" ${currentDirectoryPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-800 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700/50 text-slate-400"' : 'class="bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700/50 text-white transition"'}>Anterior</button>
+                            <button onclick="changeDirectoryPage(${currentDirectoryPage + 1})" ${currentDirectoryPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed bg-slate-800 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-700/50 text-slate-400"' : 'class="bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 rounded-xl text-xs font-semibold text-white transition shadow-md shadow-indigo-600/20"'}>Próxima</button>
                         </div>
                     </div>
                 `;
@@ -2922,6 +3108,24 @@ window.renderParametrizacaoTable = function() {
     }).join('');
 };
 
+
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Exemplo de aplicação no input de busca geral ou diretório:
+const inputBusca = document.getElementById('input-busca');
+if (inputBusca) {
+    inputBusca.addEventListener('input', debounce((e) => {
+        termoBusca = e.target.value;
+        renderizarTabela();
+    }, 250));
+}
+
         function copyEmailContent() {
             document.getElementById('email-preview').select();
             document.execCommand('copy');
@@ -3101,117 +3305,128 @@ window.renderParametrizacaoTable = function() {
         }
 
         function renderUnidadesAgendadas() {
-            const tbody = document.getElementById('unidades-agendadas-table-body');
-            if (!tbody) return;
-            const searchInput = document.getElementById('search-unidades-agendadas');
-            const filter = searchInput ? searchInput.value.toLowerCase() : '';
-            
-            const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
-                ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() 
-                : '';
-            const isMaster = (nivel === 'master');
+    const tbody = document.getElementById('unidades-agendadas-table-body');
+    if (!tbody) return;
+    const searchInput = document.getElementById('search-unidades-agendadas');
+    const filter = searchInput ? searchInput.value.toLowerCase() : '';
+    
+    const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
+        ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() 
+        : '';
+    const isMaster = (nivel === 'master');
 
-            let schedList;
-            if (isMaster) {
-                schedList = appData.scheduling.filter(s => s.status === 'concluido');
-            } else {
-                schedList = appData.scheduling.filter(s => s.status === 'sig' || s.status === 'disciplinas' || s.status === 'concluido');
+    let schedList;
+    if (isMaster) {
+        schedList = appData.scheduling.filter(s => s.status === 'concluido');
+    } else {
+        schedList = appData.scheduling.filter(s => s.status === 'sig' || s.status === 'disciplinas' || s.status === 'concluido');
+    }
+    
+    tbody.innerHTML = '';
+    
+    // ORDENAÇÃO CRESCENTE PELO NÚMERO DA OP
+    const schedListOrdenada = [...schedList].sort((a, b) => {
+        return Number(a.op || 0) - Number(b.op || 0);
+    });
+
+    const filtered = schedListOrdenada.filter(s => `${s.cidade} ${s.medico} ${s.op}`.toLowerCase().includes(filter));
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8">${getEmptyStateHtml('fa-calendar-xmark', 'Nenhuma unidade encontrada', 'Nenhum agendamento correspondente aos filtros.')}</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(s => {
+        let statusBadge = '';
+        if (isMaster) {
+            if (s.status === 'concluido') statusBadge = `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Concluído</span>`;
+            else if (s.status === 'sig') {
+                statusBadge = s.sig_enviado 
+                    ? `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">SIG Enviado</span>` 
+                    : `<span class="inline-block mt-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Aguardando SIG</span>`;
+            } else if (s.status === 'disciplinas') {
+                statusBadge = `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Concluído</span>`;
             }
-            
-            tbody.innerHTML = '';
-            
-            // ORDENAÇÃO CRESCENTE PELO NÚMERO DA OP
-            const schedListOrdenada = [...schedList].sort((a, b) => {
-                return Number(a.op || 0) - Number(b.op || 0);
-            });
-
-            const filtered = schedListOrdenada.filter(s => `${s.cidade} ${s.medico} ${s.op}`.toLowerCase().includes(filter));
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6">${getEmptyStateHtml('fa-calendar-xmark', 'Nenhuma unidade encontrada', '')}</td></tr>`;
-                return;
-            }
-
-            filtered.forEach(s => {
-                let statusBadge = '';
-                if (isMaster) {
-                    if (s.status === 'concluido') statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Concluído</span>`;
-                    else if (s.status === 'sig') {
-                        statusBadge = s.sig_enviado 
-                            ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Solicitação SIG enviada</span>` 
-                            : `<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Aguardando SIG</span>`;
-                    } else if (s.status === 'disciplinas') {
-                        statusBadge = `<span class="bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Concluído</span>`;
-                    }
-                } else {
-                    statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold">Concluído</span>`;
-                }
-
-                let actionHtml = '';
-                if (isMaster) {
-                    actionHtml = `
-                        <div class="flex items-center justify-end gap-1">
-                            <button onclick="openColaboradoresMasterModal(${s.id})" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition hover:bg-indigo-500/20" title="Gerenciar Colaboradores"><i class="fa-solid fa-users-gear"></i></button>
-                            <button onclick="openConfirmEmailModal(${s.id})" class="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition hover:bg-teal-500/20" title="E-mail Confirmação"><i class="fa-solid fa-envelope-circle-check"></i></button>
-                            <button onclick="openExcelRowModal(${s.id})" class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition hover:bg-amber-500/20" title="Linha Excel"><i class="fa-solid fa-file-excel"></i></button>
-                            <button onclick="openNpsoModal(${s.id})" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition hover:bg-emerald-500/20" title="Enviar NPSO"><i class="fa-solid fa-paper-plane"></i></button>
-                        </div>
-                    `;
-                } else {
-                    let colaboradoresData = s.colaboradores;
-                    if (typeof colaboradoresData === 'string') {
-                        try { colaboradoresData = JSON.parse(colaboradoresData); } catch(e) { colaboradoresData = []; }
-                    }
-                    let temColaboradores = Array.isArray(colaboradoresData) && colaboradoresData.length > 0;
-
-                    let faltososData = s.faltosos;
-                    if (typeof faltososData === 'string') {
-                        try { faltososData = JSON.parse(faltososData); } catch(e) { faltososData = []; }
-                    }
-                    let listaRealizada = Array.isArray(faltososData) && faltososData.length > 0;
-
-                    let btnClass = '';
-                    let btnIcon = '';
-                    let btnText = '';
-
-                    if (listaRealizada) {
-                        btnClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30';
-                        btnIcon = 'fa-circle-check text-emerald-400';
-                        btnText = 'Lista Realizada';
-                    } else if (temColaboradores) {
-                        btnClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20';
-                        btnIcon = 'fa-clock text-amber-400';
-                        btnText = 'Aguardando Fechamento da Lista';
-                    } else {
-                        btnClass = 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:bg-slate-800';
-                        btnIcon = 'fa-folder-open text-slate-400';
-                        btnText = 'Lista Presença Vazia';
-                    }
-
-                    actionHtml = `
-                        <div class="flex items-center justify-end gap-2">
-                            <button onclick="openVisitorDetailsModal(${s.id})" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition hover:bg-indigo-500/20 flex items-center gap-1.5">
-                                <i class="fa-solid fa-magnifying-glass"></i> Ver Dados
-                            </button>
-                            <a href="presenca.html?op=${s.op}" target="_blank" class="${btnClass} px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 no-underline">
-                                <i class="fa-solid ${btnIcon}"></i> 
-                                <span>${btnText}</span>
-                            </a>
-                        </div>
-                    `;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-900/40 transition-all border-b border-slate-800/50 last:border-0">
-                        <td class="p-3.5 font-mono text-xs font-bold text-sky-400">OP ${s.op} <div class="mt-1">${statusBadge}</div></td>
-                        <td class="p-3.5"><div class="font-bold text-white text-sm">${s.cidade}</div><div class="text-xs text-slate-400">${s.instituicao || ''}</div></td>
-                        <td class="p-3.5 text-xs"><div class="text-slate-200 font-medium">${s.data || '-'}</div><div class="text-slate-400">${s.horario || ''}</div></td>
-                        <td class="p-3.5 text-xs">${s.medico !== 'NÃO INFORMADO' ? s.medico : '<span class="text-amber-400">Pendente</span>'}</td>
-                        <td class="p-3.5 font-bold text-emerald-400 text-sm">${s.qtd || 0}</td>
-                        <td class="p-3.5 text-right whitespace-nowrap">${actionHtml}</td>
-                    </tr>
-                `;
-            });
+        } else {
+            statusBadge = `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Concluído</span>`;
         }
+
+        let actionHtml = '';
+        if (isMaster) {
+            actionHtml = `
+                <div class="flex items-center justify-end gap-1.5">
+                    <button onclick="openColaboradoresMasterModal(${s.id})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Gerenciar Colaboradores"><i class="fa-solid fa-users-gear"></i></button>
+                    <button onclick="openConfirmEmailModal(${s.id})" class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="E-mail Confirmação"><i class="fa-solid fa-envelope-circle-check"></i></button>
+                    <button onclick="openExcelRowModal(${s.id})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Linha Excel"><i class="fa-solid fa-file-excel"></i></button>
+                    <button onclick="openNpsoModal(${s.id})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Enviar NPSO"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            `;
+        } else {
+            let colaboradoresData = s.colaboradores;
+            if (typeof colaboradoresData === 'string') {
+                try { colaboradoresData = JSON.parse(colaboradoresData); } catch(e) { colaboradoresData = []; }
+            }
+            let temColaboradores = Array.isArray(colaboradoresData) && colaboradoresData.length > 0;
+            let listaRealizada = s.lista_presenca_salva === true; 
+
+            let btnClass = '';
+            let btnIcon = '';
+            let btnText = '';
+
+            if (listaRealizada) {
+                btnClass = 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40';
+                btnIcon = 'fa-circle-check text-emerald-400';
+                btnText = 'Lista Realizada';
+            } else if (temColaboradores) {
+                btnClass = 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20';
+                btnIcon = 'fa-clock text-amber-400';
+                btnText = 'Aguardando Fechamento';
+            } else {
+                btnClass = 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 border-slate-700/60';
+                btnIcon = 'fa-folder-open text-slate-400';
+                btnText = 'Lista Vazia';
+            }
+
+            actionHtml = `
+                <div class="flex items-center justify-end gap-2">
+                    <button onclick="openVisitorDetailsModal(${s.id})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass"></i> Ver Dados
+                    </button>
+                    <a href="presenca.html?op=${s.op}" target="_blank" class="${btnClass} px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 no-underline border shadow-sm">
+                        <i class="fa-solid ${btnIcon}"></i> 
+                        <span>${btnText}</span>
+                    </a>
+                </div>
+            `;
+        }
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-950/60 transition-all border-b border-slate-800/50 last:border-0 group">
+                <td class="p-4 align-middle">
+                    <!-- Mudado para text-sky-400 para separar visualmente da tag de status verde -->
+                    <div class="inline-flex items-center bg-slate-900 text-sky-400 font-mono text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-700/50 shadow-inner">
+                        OP ${s.op}
+                    </div>
+                    <div>${statusBadge}</div>
+                </td>
+                <td class="p-4 align-middle">
+                    <div class="font-bold text-slate-100 text-sm group-hover:text-white transition-colors">${s.cidade}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">${s.instituicao || ''}</div>
+                </td>
+                <td class="p-4 align-middle text-xs">
+                    <div class="text-slate-200 font-medium">${s.data || '-'}</div>
+                    <div class="text-slate-400 font-mono text-[11px] mt-0.5">${s.horario || ''}</div>
+                </td>
+                <td class="p-4 align-middle text-xs font-medium text-slate-300">
+                    ${s.medico !== 'NÃO INFORMADO' ? s.medico : '<span class="text-amber-400 font-semibold">Pendente</span>'}
+                </td>
+                <td class="p-4 align-middle text-center">
+                    <span class="inline-block px-3 py-1 bg-slate-900/80 border border-slate-800 rounded-lg text-emerald-400 font-mono font-bold">${s.qtd || 0}</span>
+                </td>
+                <td class="p-4 align-middle text-right whitespace-nowrap">${actionHtml}</td>
+            </tr>
+        `;
+    });
+}
 
         function confirmDeleteScheduling(id) {
             showConfirm("Excluir Agendamento", "Tem certeza que deseja excluir este agendamento?", async () => {
@@ -3722,6 +3937,15 @@ window.renderParametrizacaoTable = function() {
             switchTab('presenca-detalhe');
         }
 
+        function copyToClipboard(text) {
+            if (!text || text === 'N/D' || text === 'E-mail não informado') return;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast("Texto copiado com sucesso!");
+                });
+            }
+        }
+
         // Renderiza a tabela dentro da página dedicada
         function renderPresencaTable() {
             let item = appData.scheduling.find(s => String(s.id) === String(currentPresencaId));
@@ -3901,13 +4125,29 @@ window.renderParametrizacaoTable = function() {
     tbody.innerHTML = '';
 
     let schedList = appData.scheduling || [];
-    let totalUnidades = schedList.length;
+    
+    // Filtra apenas as unidades que possuem colaboradores e cuja lista foi salva
+    let listaFinalizada = schedList.filter(s => {
+        let colabs = s.colaboradores;
+        if (typeof colabs === 'string') { 
+            try { colabs = JSON.parse(colabs); } catch(e) { colabs = []; } 
+        }
+        let temColaboradores = Array.isArray(colabs) && colabs.length > 0;
+        let listaRealizada = s.lista_presenca_salva === true;
+
+        return temColaboradores && listaRealizada;
+    });
+
+    // Ordenação crescente por OP (do menor para o maior)
+    listaFinalizada.sort((a, b) => Number(a.op || 0) - Number(b.op || 0));
+
+    let totalUnidades = listaFinalizada.length;
     let totalInscritos = 0;
     let totalPresentes = 0;
     let totalFaltosos = 0;
 
-    if (schedList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6">${getEmptyStateHtml('fa-globe', 'Nenhum agendamento registrado', 'Os dados de comparecimento global aparecerão aqui.')}</td></tr>`;
+    if (listaFinalizada.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">${getEmptyStateHtml('fa-globe', 'Nenhuma lista finalizada encontrada', 'As unidades com listas de presença salvas aparecerão aqui.')}</td></tr>`;
         document.getElementById('global-stat-unidades').innerText = '0';
         document.getElementById('global-stat-inscritos').innerText = '0';
         document.getElementById('global-stat-presentes').innerText = '0';
@@ -3915,7 +4155,7 @@ window.renderParametrizacaoTable = function() {
         return;
     }
 
-    schedList.forEach(s => {
+    listaFinalizada.forEach(s => {
         let colaboradores = s.colaboradores;
         if (typeof colaboradores === 'string') {
             try { colaboradores = JSON.parse(colaboradores); } catch(e) { colaboradores = []; }
@@ -3937,17 +4177,27 @@ window.renderParametrizacaoTable = function() {
         totalFaltosos += qtdFaltas;
 
         tbody.innerHTML += `
-            <tr class="hover:bg-slate-900/40 transition-all border-b border-slate-800/50 last:border-0">
-                <td class="p-3.5 font-mono text-xs font-bold text-amber-400">OP ${s.op || 'N/A'}</td>
-                <td class="p-3.5">
-                    <div class="font-bold text-white text-sm">${s.cidade || 'N/A'}</div>
-                    <div class="text-xs text-slate-400">${s.instituicao || ''}</div>
+            <tr class="hover:bg-slate-900/60 transition-all border-b border-slate-800/50 last:border-0 group">
+                <td class="p-4">
+                    <div class="inline-flex items-center bg-slate-900 text-amber-400 font-mono text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-700/50 shadow-inner">
+                        OP ${s.op || 'N/A'}
+                    </div>
                 </td>
-                <td class="p-3.5 text-center font-bold text-slate-200">${inscritos}</td>
-                <td class="p-3.5 text-center font-bold text-emerald-400">${presentes}</td>
-                <td class="p-3.5 text-center font-bold text-rose-400">${qtdFaltas}</td>
-                <td class="p-3.5 text-right">
-                    <a href="presenca.html?op=${s.op}" target="_blank" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition hover:bg-indigo-500/20 inline-flex items-center gap-1.5 no-underline">
+                <td class="p-4">
+                    <div class="font-bold text-slate-100 text-sm group-hover:text-white transition-colors">${s.cidade || 'N/A'}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">${s.instituicao || ''}</div>
+                </td>
+                <td class="p-4 text-center">
+                    <span class="inline-block px-2.5 py-1 bg-slate-900/80 border border-slate-800 rounded-lg text-slate-200 font-mono font-bold">${inscritos}</span>
+                </td>
+                <td class="p-4 text-center">
+                    <span class="inline-block px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 font-mono font-bold">${presentes}</span>
+                </td>
+                <td class="p-4 text-center">
+                    <span class="inline-block px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 font-mono font-bold">${qtdFaltas}</span>
+                </td>
+                <td class="p-4 text-right">
+                    <a href="presenca.html?op=${s.op}" target="_blank" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 no-underline shadow-sm">
                         <i class="fa-solid fa-clipboard-user"></i> Ver Fichas
                     </a>
                 </td>
@@ -3959,6 +4209,97 @@ window.renderParametrizacaoTable = function() {
     document.getElementById('global-stat-inscritos').innerText = totalInscritos;
     document.getElementById('global-stat-presentes').innerText = totalPresentes;
     document.getElementById('global-stat-faltosos').innerText = totalFaltosos;
+}
+
+function exportarExcelGlobal() {
+    // Corrigido: Usando appData.scheduling para acessar os dados corretamente
+    let schedList = appData.scheduling || [];
+    
+    let listaFinalizada = schedList.filter(s => {
+        let colabs = s.colaboradores;
+        if (typeof colabs === 'string') { 
+            try { colabs = JSON.parse(colabs); } catch(e) { colabs = []; } 
+        }
+        let temColaboradores = Array.isArray(colabs) && colabs.length > 0;
+        let listaRealizada = s.lista_presenca_salva === true;
+
+        return temColaboradores && listaRealizada;
+    });
+
+    if (listaFinalizada.length === 0) {
+        showToast("Nenhuma unidade com lista finalizada foi encontrada para exportação.", "error");
+        return;
+    }
+
+    // Lógica de exportação abaixo
+    let html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"><style>
+            table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+            th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
+            td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; vertical-align: middle; }
+            .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+            .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
+            .op-col { text-align: center; font-weight: bold; background-color: #f8fafc; }
+        </style></head>
+        <body><table>
+            <tr>
+                <th>OP</th>
+                <th>UNIDADE / INSTITUIÇÃO</th>
+                <th>NOME DO COLABORADOR</th>
+                <th>CARGO</th>
+                <th>CPF</th>
+                <th>STATUS</th>
+            </tr>
+    `;
+
+    listaFinalizada.sort((a, b) => Number(a.op) - Number(b.op)).forEach(s => {
+        let colaboradores = s.colaboradores;
+        if (typeof colaboradores === 'string') {
+            try { colaboradores = JSON.parse(colaboradores); } catch(e) { colaboradores = []; }
+        }
+        
+        let faltosos = s.faltosos;
+        if (typeof faltosos === 'string') {
+            try { faltosos = JSON.parse(faltosos); } catch(e) { faltosos = []; }
+        }
+        if (!Array.isArray(faltosos)) faltosos = [];
+        let faltososSet = new Set(faltosos);
+
+        let unidadeTexto = `${s.cidade || ''} - ${s.instituicao || ''}`.trim();
+
+        colaboradores.forEach(col => {
+            let nome = typeof col === 'string' ? col : (col.nome || 'Não informado');
+            let cargo = typeof col === 'object' && col.cargo ? col.cargo : 'N/D';
+            let cpf = typeof col === 'object' && col.cpf ? col.cpf : 'N/D';
+            
+            let isFaltoso = faltososSet.has(nome);
+            let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
+            let css = isFaltoso ? 'faltoso' : 'presente';
+
+            html += `<tr>
+                <td class="op-col">${s.op || ''}</td>
+                <td>${unidadeTexto}</td>
+                <td><b>${nome}</b></td>
+                <td>${cargo}</td>
+                <td style="text-align:center;">${cpf}</td>
+                <td class="${css}">${status}</td>
+            </tr>`;
+        });
+    });
+
+    html += `</table></body></html>`;
+
+    let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    let dataAtual = new Date().toISOString().slice(0, 10);
+    a.download = `Comparecimento_Global_Consolidado_${dataAtual}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast("Relatório Global exportado com sucesso!");
 }
 
 // 1. Verificação de urgências
@@ -4059,6 +4400,8 @@ function calcularDiasUteisAte(strData) {
     }
     return businessDays;
 }
+
+
 
         window.onload = async function() {
             localStorage.removeItem('urgent_banner_dismissed_time');
