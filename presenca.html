@@ -394,7 +394,8 @@
                 .from('agendamentos')
                 .update({ 
                     faltosos: JSON.stringify(faltosos),
-                    status: 'concluido'
+                    status: 'concluido',
+                    lista_presenca_salva: true // <--- ADICIONE ESTA LINHA
                 })
                 .eq('id', currentRecord.id);
 
