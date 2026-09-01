@@ -170,56 +170,42 @@
                 if (typeof supabase === 'undefined') throw new Error("SDK do Supabase não carregou.");
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-                let registro = null;
+                // 1. Busca relacional perfeita (Agendamento + Pivô + Colaboradores)
+                const { data: registro, error } = await supabaseClient
+                    .from('agendamentos')
+                    .select(`
+                        *,
+                        agendamento_participantes (
+                            compareceu,
+                            colaboradores (
+                                id,
+                                nome,
+                                cargo,
+                                cpf
+                            )
+                        )
+                    `)
+                    .eq('op', buscaAlvo) 
+                    .maybeSingle();
 
-                // Tenta buscar online no Supabase
-                try {
-                    const { data: registros, error } = await supabaseClient.from('agendamentos').select('*');
-                    if (!error && registros && registros.length > 0) {
-                        // Procura EXATAMENTE pelo ID ou OP da URL (sem fallback automático para o último)
-                        registro = registros.find(s => String(s.id) === String(buscaAlvo) || String(s.op) === String(buscaAlvo));
-                        
-                        if (registro) {
-                            // Salva em cache local para garantir caso fique offline depois
-                            localStorage.setItem('cache_registro_' + buscaAlvo, JSON.stringify(registro));
-                        }
-                    }
-                } catch (netErr) {
-                    console.warn("Sem conexão com o Supabase. Buscando do cache local...", netErr);
-                }
+                if (error) throw error;
+                if (!registro) throw new Error("Agendamento não encontrado na base de dados.");
 
-                // Se falhou online (offline/oscilação), recupera do cache salvo no navegador
-                if (!registro && buscaAlvo) {
-                    let cachedData = localStorage.getItem('cache_registro_' + buscaAlvo);
-                    if (cachedData) {
-                        try {
-                            registro = JSON.parse(cachedData);
-                        } catch(e) {}
-                    }
-                }
-
-                if (!registro) throw new Error("Agendamento não encontrado. Verifique se a OP/ID está correta ou se há conexão com a internet.");
-
+                // 2. Define o registro global para as outras funções usarem
                 currentRecord = registro;
 
-                // Restaura o rascunho local dos faltosos se houver alterações pendentes
-                let localBackup = localStorage.getItem('faltosos_' + buscaAlvo);
-                if (localBackup) {
-                    try {
-                        currentRecord.faltosos = JSON.parse(localBackup);
-                    } catch(e) {}
-                }
+                // 3. Atualiza os títulos da página
+                document.getElementById('op-number').innerText = currentRecord.op || '---';
+                document.getElementById('view-subtitle').innerText = `Unidade: ${currentRecord.cidade || 'N/A'} — ${currentRecord.instituicao || ''}`;
 
-                document.getElementById('op-number').innerText = registro.op || '---';
-                document.getElementById('view-subtitle').innerText = `Unidade: ${registro.cidade || 'N/A'} — ${registro.instituicao || ''}`;
-
+                // 4. Renderiza a tabela usando a nova estrutura
                 renderizarTabela();
 
             } catch (err) {
                 console.error(err);
                 document.getElementById('error-box').innerText = "ERRO: " + err.message;
                 document.getElementById('error-box').classList.remove('hidden');
-                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="text-center py-16 text-rose-400 text-xs">Falha ao carregar. Verifique sua conexão com a internet.</td></tr>`;
+                document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="text-center py-16 text-rose-400 text-xs">Falha ao carregar. ${err.message}</td></tr>`;
             }
         });
 
@@ -232,22 +218,13 @@
         });
 
         function renderizarTabela() {
-            let colaboradores = currentRecord.colaboradores;
-            if (typeof colaboradores === 'string') {
-                try { colaboradores = JSON.parse(colaboradores); } catch(e) { colaboradores = []; }
-            }
-            if (!Array.isArray(colaboradores)) colaboradores = [];
-
-            let faltosos = currentRecord.faltosos;
-            if (typeof faltosos === 'string') {
-                try { faltosos = JSON.parse(faltosos); } catch(e) { faltosos = []; }
-            }
-            if (!Array.isArray(faltosos)) faltosos = [];
-
+            // Agora lemos direto do relacionamento do Supabase
+            let participantes = currentRecord.agendamento_participantes || [];
+            
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
-            if (colaboradores.length === 0) {
+            if (participantes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 text-amber-400 text-xs font-semibold">Nenhum colaborador cadastrado para esta unidade.</td></tr>`;
                 document.getElementById('stat-total').innerText = '0';
                 document.getElementById('stat-presentes').innerText = '0';
@@ -255,30 +232,18 @@
                 return;
             }
 
-            let cpfsVistos = new Set();
-            let cpfsDuplicados = new Set();
-            colaboradores.forEach(col => {
-                let cpf = typeof col === 'object' && col.cpf ? col.cpf.trim() : '';
-                if (cpf && cpf !== '000.000.000-00') {
-                    if (cpfsVistos.has(cpf)) {
-                        cpfsDuplicados.add(cpf);
-                    } else {
-                        cpfsVistos.add(cpf);
-                    }
-                }
-            });
-
-            colaboradores.forEach((col, index) => {
-                let nome = typeof col === 'string' ? col : (col.nome || 'Não informado');
-                let cargo = typeof col === 'object' && col.cargo ? col.cargo : 'Funcionário';
-                let cpf = typeof col === 'object' && col.cpf ? col.cpf : '000.000.000-00';
-                let isFaltoso = faltosos.includes(nome);
-                let isDuplicado = cpfsDuplicados.has(cpf.trim());
+            participantes.forEach((p, index) => {
+                let colab = p.colaboradores || {}; // Dados da pessoa
+                let nome = colab.nome || 'Não informado';
+                let cargo = colab.cargo || 'Funcionário';
+                let cpf = colab.cpf || '000.000.000-00';
+                let id_colaborador = colab.id;
+                
+                // No banco novo, a lógica inverteu: false significa que faltou
+                let isFaltoso = p.compareceu === false; 
 
                 let rowClass = 'transition-all duration-200 colaborador-tr border-b border-slate-800/60';
-                if (isDuplicado) {
-                    rowClass += ' bg-amber-950/20 border-l-4 border-l-amber-500';
-                } else if (isFaltoso) {
+                if (isFaltoso) {
                     rowClass += ' bg-rose-950/20 border-l-4 border-l-rose-500';
                 } else {
                     rowClass += ' hover:bg-slate-900/50';
@@ -287,15 +252,13 @@
                 tbody.innerHTML += `
                     <tr class="${rowClass}" data-nome="${nome.toLowerCase()}" data-cpf="${cpf}">
                         <td class="py-2 px-3 font-mono text-[11px] text-slate-500 font-bold text-center w-16">${index + 1}</td>
-                        <td class="py-2 px-4 font-bold text-white text-[11px] col-nome w-[32%] truncate">
-                            ${nome} 
-                            ${isDuplicado ? '<span class="ml-2 px-1.5 py-0.5 text-[8px] bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded font-extrabold tracking-wide">DUPLICADO</span>' : ''}
-                        </td>
+                        <td class="py-2 px-4 font-bold text-white text-[11px] col-nome w-[32%] truncate">${nome}</td>
                         <td class="py-2 px-4 text-[11px] text-slate-300 font-normal w-[30%] truncate">${cargo}</td>
                         <td class="py-2 px-4 text-[11px] font-mono text-sky-400/90 col-cpf font-semibold w-44">${cpf}</td>
                         <td class="py-2 px-5 text-center w-56">
                             <label class="inline-flex items-center justify-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border transition-all w-full shadow-sm ${isFaltoso ? 'bg-rose-950/40 border-rose-500/40 text-rose-300' : 'bg-slate-900/80 border-slate-700/80 text-slate-300 hover:border-slate-600'}">
-                                <input type="checkbox" data-nome="${nome}" onchange="atualizarStats(this)" class="presenca-checkbox sr-only" ${isFaltoso ? 'checked' : ''}>
+                                <!-- ADICIONAMOS O data-colab-id AQUI PARA SALVAR DEPOIS -->
+                                <input type="checkbox" data-colab-id="${id_colaborador}" data-nome="${nome}" onchange="atualizarStats(this)" class="presenca-checkbox sr-only" ${isFaltoso ? 'checked' : ''}>
                                 <span class="presenca-icon-span w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${isFaltoso ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/30' : 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'}">
                                     <i class="fa-solid ${isFaltoso ? 'fa-xmark' : 'fa-check'} text-[9px]"></i>
                                 </span>
@@ -387,84 +350,166 @@
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Salvando...`;
             btn.disabled = true;
 
-            const checks = document.querySelectorAll('.presenca-checkbox:checked');
-            let faltosos = Array.from(checks).map(c => c.getAttribute('data-nome'));
-
-            const { error } = await supabaseClient
-                .from('agendamentos')
-                .update({ 
-                    faltosos: JSON.stringify(faltosos),
-                    status: 'concluido',
-                    lista_presenca_salva: true // <--- ADICIONE ESTA LINHA
-                })
-                .eq('id', currentRecord.id);
-
-            btn.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i> Salvar Chamada`;
-            btn.disabled = false;
-
-            if (error) {
-                alert("Erro ao salvar: " + error.message);
-                return;
-            }
-
-            currentRecord.faltosos = faltosos;
-            currentRecord.status = 'concluido';
+            // 1. Monta o array de atualizações para a tabela pivô
+            const checkboxes = document.querySelectorAll('.presenca-checkbox');
+            const updatesParticipantes = Array.from(checkboxes).map(cb => {
+                return {
+                    agendamento_id: currentRecord.id,
+                    colaborador_id: cb.getAttribute('data-colab-id'),
+                    compareceu: !cb.checked // Se tá checked (marcou que faltou), compareceu é false
+                };
+            });
 
             try {
-                if (window.opener && !window.opener.closed) {
-                    window.opener.location.reload(); 
-                }
-            } catch (e) {
-                console.log("Painel pai atualizado.");
-            }
+                // 2. Salva o status de presença de cada um
+                const { error: errParticipantes } = await supabaseClient
+                    .from('agendamento_participantes')
+                    .upsert(updatesParticipantes); // Atualiza tudo em 1 única requisição!
 
-            const toast = document.getElementById('toast');
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+                if (errParticipantes) throw errParticipantes;
+
+                // 3. Atualiza o status geral do agendamento
+                const { error: errAgenda } = await supabaseClient
+                    .from('agendamentos')
+                    .update({ 
+                        status: 'concluido',
+                        lista_presenca_salva: true 
+                    })
+                    .eq('id', currentRecord.id);
+
+                if (errAgenda) throw errAgenda;
+
+                currentRecord.status = 'concluido';
+
+                // Atualiza a janela pai (Painel) se estiver aberta
+                try {
+                    if (window.opener && !window.opener.closed) window.opener.location.reload(); 
+                } catch (e) {}
+
+                const toast = document.getElementById('toast');
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 3000);
+
+            } catch (err) {
+                alert("Erro ao salvar no banco: " + err.message);
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i> Salvar Chamada`;
+                btn.disabled = false;
+            }
         }
 
         function exportarExcel() {
-            if (!currentRecord) return;
-            let colaboradores = currentRecord.colaboradores || [];
-            if (typeof colaboradores === 'string') colaboradores = JSON.parse(colaboradores);
+    if (!currentRecord || !currentRecord.agendamento_participantes) return;
+    
+    let participantes = currentRecord.agendamento_participantes;
 
-            let faltososSet = new Set();
-            document.querySelectorAll('.presenca-checkbox:checked').forEach(c => faltososSet.add(c.getAttribute('data-nome')));
+    if (participantes.length === 0) {
+        alert("Nenhum colaborador para exportar.");
+        return;
+    }
 
-            let html = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta charset="UTF-8"><style>
-                    table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
-                    th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
-                    td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; }
-                    .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
-                    .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
-                </style></head>
-                <body><table>
-                    <tr><th>#</th><th>COLABORADOR</th><th>CARGO</th><th>CPF</th><th>STATUS</th></tr>
-            `;
+    let html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"><style>
+            table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+            th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
+            td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; }
+            .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+            .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
+        </style></head>
+        <body><table>
+            <tr><th>#</th><th>COLABORADOR</th><th>CARGO</th><th>CPF</th><th>STATUS</th></tr>
+    `;
 
-            colaboradores.forEach((col, i) => {
-                let nome = typeof col === 'string' ? col : col.nome;
-                let cargo = typeof col === 'object' ? col.cargo : '';
-                let cpf = typeof col === 'object' ? col.cpf : '';
-                let isFaltoso = faltososSet.has(nome);
-                let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
-                let css = isFaltoso ? 'faltoso' : 'presente';
+    participantes.forEach((p, i) => {
+        let colab = p.colaboradores || {};
+        let nome = colab.nome || 'Não informado';
+        let cargo = colab.cargo || '';
+        let cpf = colab.cpf || '';
+        
+        let isFaltoso = p.compareceu === false;
+        let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
+        let css = isFaltoso ? 'faltoso' : 'presente';
 
-                html += `<tr><td style="text-align:center;">${i+1}</td><td><b>${nome}</b></td><td>${cargo}</td><td style="text-align:center;">${cpf}</td><td class="${css}">${status}</td></tr>`;
-            });
+        html += `<tr><td style="text-align:center;">${i+1}</td><td><b>${nome}</b></td><td>${cargo}</td><td style="text-align:center;">${cpf}</td><td class="${css}">${status}</td></tr>`;
+    });
 
-            html += `</table></body></html>`;
+    html += `</table></body></html>`;
 
-            let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement('a');
-            a.href = url;
-            a.download = `Presenca_OP_${currentRecord.op}.xls`;
-            a.click();
-            URL.revokeObjectURL(url);
+    let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `Presenca_OP_${currentRecord.op}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+    function exportarExcelASO() {
+        if (!currentRecord || !currentRecord.agendamento_participantes) return;
+        let participantes = currentRecord.agendamento_participantes;
+
+        if (participantes.length === 0) {
+            alert("Nenhum colaborador para exportar.");
+            return;
         }
+
+        // Conta nomes duplicados para a lógica do ASO
+        let nameCounts = {};
+        participantes.forEach(p => {
+            let nome = p.colaboradores?.nome || '';
+            nameCounts[nome] = (nameCounts[nome] || 0) + 1;
+        });
+
+        let html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head><meta charset="UTF-8"><style>
+                table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+                th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
+                td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; }
+                .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+                .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
+            </style></head>
+            <body><table>
+                <tr><th>#</th><th>FICHA ASO (NOME FORMATADO)</th><th>CARGO ORIGINAL</th><th>CPF</th><th>STATUS</th></tr>
+        `;
+
+        participantes.forEach((p, i) => {
+            let colab = p.colaboradores || {};
+            let nome = colab.nome || '';
+            let cargo = colab.cargo || '';
+            let cpf = colab.cpf || '';
+            
+            let isFaltoso = p.compareceu === false;
+            let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
+            let css = isFaltoso ? 'faltoso' : 'presente';
+
+            let nomeFormatado = `ASO_${nome}`;
+            if (nameCounts[nome] > 1 && cargo && cargo.trim() !== '') {
+                nomeFormatado += ` - ${cargo}`;
+            }
+
+            html += `
+                <tr>
+                    <td style="text-align:center;">${i+1}</td>
+                    <td><b>${nomeFormatado}</b></td>
+                    <td>${cargo}</td>
+                    <td style="text-align:center;">${cpf}</td>
+                    <td class="${css}">${status}</td>
+                </tr>
+            `;
+        });
+
+        html += `</table></body></html>`;
+
+        let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = `Relatorio_ASO_Formatado_OP_${currentRecord.op}.xls`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 
         function exportarExcelASO() {
             if (!currentRecord) return;
