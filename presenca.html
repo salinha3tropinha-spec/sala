@@ -398,16 +398,52 @@
             }
         }
 
-        function exportarExcel() {
-    if (!currentRecord || !currentRecord.agendamento_participantes) return;
-    
-    let participantes = currentRecord.agendamento_participantes;
+        function exportarExcelASO() {
+    // 1. Obtém os dados do banco ou, como garantia, lê diretamente da tabela visível na tela
+    let listaColaboradores = [];
 
-    if (participantes.length === 0) {
-        alert("Nenhum colaborador para exportar.");
+    if (currentRecord && currentRecord.agendamento_participantes && currentRecord.agendamento_participantes.length > 0) {
+        listaColaboradores = currentRecord.agendamento_participantes.map(p => {
+            const colab = p.colaboradores || {};
+            const nomeBase = (colab.nome || 'NÃO INFORMADO').toUpperCase().trim();
+            const isFaltoso = p.compareceu === false;
+            return {
+                nome: `ASO_${nomeBase}`,
+                cargo: (colab.cargo || '').toUpperCase().trim(),
+                cpf: colab.cpf || '',
+                status: isFaltoso ? 'FALTOU' : 'PRESENTE',
+                css: isFaltoso ? 'faltoso' : 'presente'
+            };
+        });
+    } else {
+        // Fallback de segurança: lê as linhas que já estão desenhadas na tabela
+        const linhasTabela = document.querySelectorAll('#table-body tr.colaborador-tr');
+        linhasTabela.forEach(tr => {
+            const nomeEl = tr.querySelector('.col-nome');
+            const cargoEl = tr.querySelectorAll('td')[2];
+            const cpfEl = tr.querySelector('.col-cpf');
+            const checkbox = tr.querySelector('.presenca-checkbox');
+
+            if (nomeEl) {
+                const nomeTexto = nomeEl.innerText.replace(/^ASO_/i, '').toUpperCase().trim();
+                const isFaltoso = checkbox ? checkbox.checked : false;
+                listaColaboradores.push({
+                    nome: `ASO_${nomeTexto}`,
+                    cargo: cargoEl ? cargoEl.innerText.toUpperCase().trim() : '',
+                    cpf: cpfEl ? cpfEl.innerText.trim() : '',
+                    status: isFaltoso ? 'FALTOU' : 'PRESENTE',
+                    css: isFaltoso ? 'faltoso' : 'presente'
+                });
+            }
+        });
+    }
+
+    if (listaColaboradores.length === 0) {
+        alert("Aguarde a tabela carregar os colaboradores na tela antes de exportar.");
         return;
     }
 
+    // 2. Monta o HTML idêntico ao Excel Geral
     let html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
         <head><meta charset="UTF-8"><style>
@@ -421,112 +457,23 @@
             <tr><th>#</th><th>COLABORADOR</th><th>CARGO</th><th>CPF</th><th>STATUS</th></tr>
     `;
 
-    participantes.forEach((p, i) => {
-        let colab = p.colaboradores || {};
-        let nome = colab.nome || 'Não informado';
-        let cargo = colab.cargo || '';
-        let cpf = colab.cpf || '';
-        
-        let isFaltoso = p.compareceu === false;
-        let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
-        let css = isFaltoso ? 'faltoso' : 'presente';
-
-        html += `<tr><td style="text-align:center;">${i+1}</td><td><b>${nome}</b></td><td>${cargo}</td><td style="text-align:center;">${cpf}</td><td class="${css}">${status}</td></tr>`;
+    listaColaboradores.forEach((c, i) => {
+        html += `<tr><td style="text-align:center;">${i + 1}</td><td><b>${c.nome}</b></td><td>${c.cargo}</td><td style="text-align:center;">${c.cpf}</td><td class="${c.css}">${c.status}</td></tr>`;
     });
 
     html += `</table></body></html>`;
 
-    let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
+    // 3. Efetua o download
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const op = (currentRecord && currentRecord.op) ? currentRecord.op : (document.getElementById('op-number')?.innerText || 'GERAL');
+    
     a.href = url;
-    a.download = `Presenca_OP_${currentRecord.op}.xls`;
+    a.download = `ASO_RENOMEADO_OP_${op}.xls`;
     a.click();
     URL.revokeObjectURL(url);
 }
-
-    function exportarExcelASO() {
-        if (!currentRecord || !currentRecord.agendamento_participantes) {
-            alert("Nenhum colaborador carregado para exportar.");
-            return;
-        }
-
-        let participantes = currentRecord.agendamento_participantes;
-
-        if (participantes.length === 0) {
-            alert("Nenhum colaborador cadastrado para esta unidade.");
-            return;
-        }
-
-        // Lê os checkboxes da tela caso você tenha acabado de marcar faltas
-        let faltososSet = new Set();
-        document.querySelectorAll('.presenca-checkbox:checked').forEach(c => {
-            faltososSet.add(c.getAttribute('data-nome'));
-        });
-
-        // Contagem para tratar nomes duplicados na mesma OP
-        let nameCounts = {};
-        participantes.forEach(p => {
-            let nome = p.colaboradores?.nome || '';
-            nameCounts[nome] = (nameCounts[nome] || 0) + 1;
-        });
-
-        let html = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-            <head><meta charset="UTF-8"><style>
-                table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
-                th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
-                td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; }
-                .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
-                .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
-            </style></head>
-            <body><table>
-                <tr>
-                    <th>#</th>
-                    <th>FICHA ASO (NOME FORMATADO)</th>
-                    <th>CARGO ORIGINAL</th>
-                    <th>CPF</th>
-                    <th>STATUS</th>
-                </tr>
-        `;
-
-        participantes.forEach((p, i) => {
-            let colab = p.colaboradores || {};
-            let nome = colab.nome || 'Não informado';
-            let cargo = colab.cargo || '';
-            let cpf = colab.cpf || '';
-            
-            // Prioriza o checkbox da tela se houver marcação ativa, senão usa o banco
-            let isFaltoso = faltososSet.size > 0 ? faltososSet.has(nome) : (p.compareceu === false);
-            let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
-            let css = isFaltoso ? 'faltoso' : 'presente';
-
-            let nomeFormatado = `ASO_${nome}`;
-            if (nameCounts[nome] > 1 && cargo && cargo.trim() !== '') {
-                nomeFormatado += ` - ${cargo}`;
-            }
-
-            html += `
-                <tr>
-                    <td style="text-align:center;">${i + 1}</td>
-                    <td><b>${nomeFormatado}</b></td>
-                    <td>${cargo}</td>
-                    <td style="text-align:center;">${cpf}</td>
-                    <td class="${css}">${status}</td>
-                </tr>
-            `;
-        });
-
-        html += `</table></body></html>`;
-
-        let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = `Relatorio_ASO_Formatado_OP_${currentRecord.op}.xls`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
     </script>
 </body>
 </html>
