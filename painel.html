@@ -4323,7 +4323,7 @@ if (inputBusca) {
                     actionHtml = `
                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
                             <button onclick="openColaboradoresMasterModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Gerenciar Colaboradores (Master)"><i class="fa-solid fa-users-gear"></i></button>
-                            <a href="presenca.html?op=${s.op}" target="_blank" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 no-underline" title="Abrir Chamada Oficial"><i class="fa-solid fa-clipboard-user"></i></a>
+                            <a href="presenca.html?id=${s.id}" target="_blank" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 no-underline" title="Abrir Chamada Oficial"><i class="fa-solid fa-clipboard-user"></i></a>
                             <button onclick="openConfirmEmailModal(${safeId})" class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="E-mail Confirmação"><i class="fa-solid fa-envelope-circle-check"></i></button>
                             <button onclick="openExcelRowModal(${safeId})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Linha Excel"><i class="fa-solid fa-file-excel"></i></button>
                             <button onclick="openNpsoModal(${safeId})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Enviar NPSO"><i class="fa-solid fa-paper-plane"></i></button>
@@ -4357,7 +4357,7 @@ if (inputBusca) {
                             <button onclick="openVisitorDetailsModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
                                 <i class="fa-solid fa-magnifying-glass"></i> Ver Dados
                             </button>
-                            <a href="presenca.html?op=${s.op}" target="_blank" class="${btnClass} px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 no-underline border shadow-sm">
+                            <a href="presenca.html?id=${s.id}" target="_blank" class="${btnClass} px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 no-underline border shadow-sm">
                                 <i class="fa-solid ${btnIcon}"></i> 
                                 <span>${btnText}</span>
                             </a>
@@ -5202,8 +5202,9 @@ if (inputBusca) {
             let participantes = s.agendamento_participantes || [];
             let temColaboradores = participantes.length > 0;
             let listaRealizada = s.lista_presenca_salva === true;
+            let naoArquivado = s.status !== 'arquivado'; // Garante que as fechadas sumam
 
-            return temColaboradores && listaRealizada;
+            return temColaboradores && listaRealizada && naoArquivado;
         });
 
         // Ordenação crescente por OP
@@ -5256,7 +5257,7 @@ if (inputBusca) {
                         <span class="inline-block px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 font-mono font-bold">${qtdFaltas}</span>
                     </td>
                     <td class="p-4 text-right">
-                        <a href="presenca.html?op=${s.op}" target="_blank" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 no-underline shadow-sm">
+                        <a href="presenca.html?id=${s.id}" target="_blank" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 no-underline shadow-sm">
                             <i class="fa-solid fa-clipboard-user"></i> Ver Fichas
                         </a>
                     </td>
@@ -5437,7 +5438,7 @@ function abrirModalFechamento() {
     tbody.innerHTML = '';
     
     // Pega apenas as unidades que estão visíveis no Master (lista salva + tem colaboradores)
-    let listaFinalizada = appData.scheduling.filter(s => s.lista_presenca_salva === true && s.agendamento_participantes?.length > 0);
+    let listaFinalizada = appData.scheduling.filter(s => s.lista_presenca_salva === true && s.agendamento_participantes?.length > 0 && s.status !== 'arquivado');
     
     if (listaFinalizada.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500 italic">Nenhuma unidade pronta para fechamento.</td></tr>`;
@@ -5536,9 +5537,8 @@ async function processarFechamentoSeletivo() {
         const { error: errHist } = await supabaseClient.from('relatorio_global_historico').insert(historicoPayload);
         if (errHist) throw errHist;
 
-        // 2. Tira do painel Master (alterando lista_presenca_salva para false)
         for (let id of idsParaArquivar) {
-            await supabaseClient.from('agendamentos').update({ lista_presenca_salva: false }).eq('id', id);
+            await supabaseClient.from('agendamentos').update({ status: 'arquivado' }).eq('id', id);
         }
 
         showToast(`Sucesso! ${idsParaArquivar.length} unidade(s) movida(s) para o histórico de competência.`);
@@ -5605,8 +5605,9 @@ function exportarExcelGlobal() {
         let participantes = s.agendamento_participantes || [];
         let temColaboradores = participantes.length > 0;
         let listaRealizada = s.lista_presenca_salva === true;
+        let naoArquivado = s.status !== 'arquivado'; // Garante que as fechadas sumam do Excel
 
-        return temColaboradores && listaRealizada;
+        return temColaboradores && listaRealizada && naoArquivado;
     });
 
     if (listaFinalizada.length === 0) {
