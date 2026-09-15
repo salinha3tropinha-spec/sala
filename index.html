@@ -39,11 +39,72 @@
         ::-webkit-scrollbar-track { background: #030712; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
     </style>
+
+    
+<style id="premium-senior-layer">
+body {
+  background-image:
+    radial-gradient(760px 420px at 50% 24%, rgba(56,189,248,.065), transparent 70%),
+    radial-gradient(520px 340px at 8% 88%, rgba(99,102,241,.035), transparent 72%) !important;
+}
+/* Keep the existing animated background, but make it more restrained. */
+.blob-1 { opacity: .72; filter: blur(155px) !important; }
+#login-card {
+  background: linear-gradient(180deg, rgba(15,23,42,.82), rgba(6,10,18,.94)) !important;
+  border-color: rgba(148,163,184,.14) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 34px 95px -42px rgba(0,0,0,.98), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  backdrop-filter: blur(18px) saturate(112%);
+}
+#login-card input {
+  border-color: rgba(148,163,184,.15) !important;
+  background: rgba(2,6,23,.48) !important;
+  border-radius: 13px !important;
+}
+#login-card input:hover { border-color: rgba(148,163,184,.24) !important; }
+#login-card input:focus {
+  background: rgba(2,6,23,.64) !important;
+  border-color: rgba(56,189,248,.46) !important;
+  box-shadow: 0 0 0 4px rgba(56,189,248,.08) !important;
+}
+#login-card button[type="submit"] {
+  border-radius: 13px !important;
+  box-shadow: 0 16px 32px -22px rgba(56,189,248,.76) !important;
+}
+#login-card button[type="submit"]:active { transform: translateY(1px) scale(.985); }
+#toast-container > * {
+  border-radius: 14px !important;
+  border: 1px solid rgba(148,163,184,.12) !important;
+  box-shadow: 0 20px 50px -26px rgba(0,0,0,.92) !important;
+  backdrop-filter: blur(14px);
+}
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid rgba(56,189,248,.74) !important; outline-offset:2px; }
+@media (max-width: 480px) {
+  #login-card { margin-left: 12px !important; margin-right: 12px !important; padding: 24px !important; border-radius: 20px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+</style>
+
+
+<style id="senior-shared-v10">
+:root{--v10-line:rgba(148,163,184,.12);--v10-surface:#080c13;--v10-surface2:#0e1521;}
+body{background:var(--v10-surface)!important;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(56,189,248,.75)!important;outline-offset:2px;}
+button{transition:transform .16s ease,filter .16s ease,box-shadow .18s ease!important;}
+button:not([disabled]):hover{filter:brightness(1.04);}
+button:not([disabled]):active{transform:translateY(1px);}
+input,select,textarea{border-radius:10px!important;border-color:var(--v10-line)!important;}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08)!important;border-color:rgba(56,189,248,.48)!important;}
+</style>
+
 </head>
 <body class="bg-[#030712] text-slate-100 antialiased min-h-screen flex items-center justify-center relative overflow-hidden selection:bg-sky-500 selection:text-white">
 
     <!-- Container de Notificações Toast -->
     <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+    <div id="login-network-indicator" class="hidden fixed top-4 right-4 z-[70] rounded-full border border-sky-500/20 bg-slate-900/95 px-3 py-2 text-[11px] text-slate-200 shadow-2xl" role="status" aria-live="polite"><i class="fa-solid fa-circle-notch fa-spin text-sky-400 mr-2"></i><span>Processando acesso...</span></div>
 
     <!-- Background Atmosférico com Mesh Gradients Avançados -->
     <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-sky-600/10 via-indigo-600/15 to-purple-600/10 rounded-full blur-[140px] pointer-events-none blob-1"></div>
@@ -322,6 +383,7 @@
 
                 showToast("Credenciais inválidas ou erro de conexão.", "error");
             }
+
         }
 
         function calcularDiasUteisAte(strData) {
@@ -360,5 +422,12 @@
             }
         });
     </script>
+<script data-login-esc>
+document.addEventListener('keydown', (e)=>{
+  if(e.key!=='Escape') return;
+  const modal=document.getElementById('forgot-modal');
+  if(modal && !modal.classList.contains('hidden') && typeof closeForgotPasswordModal==='function') closeForgotPasswordModal();
+});
+</script>
 </body>
 </html>
