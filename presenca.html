@@ -247,15 +247,14 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
         const urlParams = new URLSearchParams(window.location.search);
         const paramId = urlParams.get('id');
         const paramOp = urlParams.get('op');
-        const buscaAlvo = paramOp || paramId;
 
         document.addEventListener("DOMContentLoaded", async () => {
             try {
                 if (typeof supabase === 'undefined') throw new Error("SDK do Supabase não carregou.");
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-                // 1. Busca relacional perfeita (Agendamento + Pivô + Colaboradores)
-                const { data: registro, error } = await supabaseClient
+                // Define a busca pela ID única do banco (100% preciso) ou cai para a OP caso seja um link antigo
+                let query = supabaseClient
                     .from('agendamentos')
                     .select(`
                         *,
@@ -268,21 +267,27 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                                 cpf
                             )
                         )
-                    `)
-                    .eq('op', buscaAlvo) 
-                    .maybeSingle();
+                    `);
+
+                if (paramId) {
+                    query = query.eq('id', paramId);
+                } else {
+                    query = query.eq('op', paramOp);
+                }
+
+                const { data: registro, error } = await query.maybeSingle();
 
                 if (error) throw error;
                 if (!registro) throw new Error("Agendamento não encontrado na base de dados.");
 
-                // 2. Define o registro global para as outras funções usarem
+                // Define o registro global para as outras funções usarem
                 currentRecord = registro;
 
-                // 3. Atualiza os títulos da página
+                // Atualiza os títulos da página
                 document.getElementById('op-number').innerText = currentRecord.op || '---';
                 document.getElementById('view-subtitle').innerText = `Unidade: ${currentRecord.cidade || 'N/A'} — ${currentRecord.instituicao || ''}`;
 
-                // 4. Renderiza a tabela usando a nova estrutura
+                // Renderiza a tabela
                 renderizarTabela();
 
             } catch (err) {
