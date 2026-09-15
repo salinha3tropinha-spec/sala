@@ -46,6 +46,81 @@
             border: 1px solid rgba(30, 41, 59, 0.5);
         }
     </style>
+<style id="enterprise-table-css">
+ table thead th { position: sticky; top: 0; z-index: 5; }
+ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:2px solid rgba(56,189,248,.32); outline-offset:2px; }
+ @media (max-width: 640px) { .overflow-x-auto { -webkit-overflow-scrolling: touch; } }
+</style>
+
+    
+<style id="premium-senior-layer">
+:root {
+  --premium-bg: #050914;
+  --premium-surface: rgba(15,23,42,.80);
+  --premium-border: rgba(148,163,184,.11);
+  --premium-shadow: 0 18px 48px -30px rgba(0,0,0,.82);
+  --premium-accent: #38bdf8;
+  --premium-radius: 18px;
+  --premium-radius-sm: 13px;
+}
+body {
+  background-image:
+    radial-gradient(900px 420px at 70% -10%, rgba(56,189,248,.055), transparent 70%),
+    radial-gradient(700px 360px at 5% 95%, rgba(99,102,241,.035), transparent 70%) !important;
+}
+.glass-panel {
+  background: linear-gradient(180deg, rgba(15,23,42,.82), rgba(8,13,24,.92)) !important;
+  border-color: var(--premium-border) !important;
+  border-radius: var(--premium-radius) !important;
+  box-shadow: var(--premium-shadow) !important;
+  backdrop-filter: blur(14px) saturate(110%);
+}
+.glass-panel:hover { transform: none !important; box-shadow: 0 24px 58px -32px rgba(0,0,0,.88) !important; }
+header.glass-panel { border-bottom-color: rgba(148,163,184,.10) !important; }
+button { border-radius: 12px; font-family: inherit; }
+button:not([disabled]):hover, a:hover { filter: brightness(1.035); }
+button:not([disabled]):active { transform: translateY(1px) scale(.985); }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(56,189,248,.74) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(56,189,248,.11) !important;
+}
+input, select, textarea {
+  border-radius: var(--premium-radius-sm) !important;
+  border-color: rgba(148,163,184,.14) !important;
+  background: rgba(2,6,23,.42) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+input:focus, select:focus, textarea:focus { background: rgba(2,6,23,.58) !important; border-color: rgba(56,189,248,.42) !important; }
+table { border-collapse: separate; border-spacing: 0; }
+thead th { background: rgba(15,23,42,.94) !important; border-bottom-color: rgba(148,163,184,.11) !important; text-transform: uppercase; letter-spacing: .08em; font-size: 10px !important; }
+tbody td { border-bottom-color: rgba(148,163,184,.07) !important; }
+tbody tr:hover td { background: rgba(255,255,255,.022) !important; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,.18); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.28); }
+@media (max-width: 768px) {
+  body { padding: 12px !important; }
+  header.glass-panel { border-radius: 16px !important; }
+  .glass-panel { border-radius: 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+</style>
+
+
+<style id="senior-shared-v10">
+:root{--v10-line:rgba(148,163,184,.12);--v10-surface:#080c13;--v10-surface2:#0e1521;}
+body{background:var(--v10-surface)!important;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid rgba(56,189,248,.75)!important;outline-offset:2px;}
+button{transition:transform .16s ease,filter .16s ease,box-shadow .18s ease!important;}
+button:not([disabled]):hover{filter:brightness(1.04);}
+button:not([disabled]):active{transform:translateY(1px);}
+input,select,textarea{border-radius:10px!important;border-color:var(--v10-line)!important;}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08)!important;border-color:rgba(56,189,248,.48)!important;}
+</style>
+
 </head>
 <body class="bg-dark-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white pb-20">
 
@@ -914,5 +989,19 @@
         carregarOrganizadorMateriais();
         inicializarRealtime();
     </script>
+<script data-todos-dias-ux>
+(function(){
+ const critical=[...document.querySelectorAll('button')].filter(b=>/(despach|process|confirm|enviar|salvar)/i.test(b.innerText||''));
+ critical.forEach(btn=>{
+   btn.addEventListener('click',()=>{
+     if(btn.dataset.uxBusy==='1') return;
+     btn.dataset.uxBusy='1'; const original=btn.innerHTML;
+     btn.disabled=true; btn.setAttribute('aria-busy','true');
+     btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
+     setTimeout(()=>{if(btn.isConnected){btn.innerHTML=original;btn.disabled=false;btn.removeAttribute('aria-busy');btn.dataset.uxBusy='0';}},1800);
+   },true);
+ });
+})();
+</script>
 </body>
 </html>
