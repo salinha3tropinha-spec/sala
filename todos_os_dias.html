@@ -819,12 +819,59 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                             payloadDespacho.usuario_id = user.id;
                         }
 
-                        // 1. Grava na tabela de Despachos (Auditoria)
+                        // 1. Grava na tabela de Despachos (Auditoria Logística)
                         const { error: errorDespacho } = await supabaseClient
                             .from('agendamento_despachos')
                             .insert([payloadDespacho]);
 
                         if (errorDespacho) throw errorDespacho;
+
+                        // =================================================================
+                        // INTEGRAÇÃO AUTOMÁTICA: PREENCHER LISTA DE PRESENÇA OFICIAL
+                        // =================================================================
+                        if (colabsAnexados && colabsAnexados.length > 0) {
+                            let participantesParaInserir = [];
+                            
+                            for (let p of colabsAnexados) {
+                                let nome = p.nome || 'Não informado';
+                                let cargo = p.cargo || 'Funcionário';
+                                // Garante que CPFs inválidos ou vazios fiquem como null
+                                let cpf = p.cpf && p.cpf.length > 8 && p.cpf !== '000.000.000-00' ? p.cpf : null;
+                                let colabId;
+
+                                // Busca inteligente para não duplicar CPFs na tabela mestra
+                                if (cpf) {
+                                    const { data: existing } = await supabaseClient.from('colaboradores').select('id').eq('cpf', cpf).maybeSingle();
+                                    if (existing) {
+                                        colabId = existing.id;
+                                    } else {
+                                        const { data: newC } = await supabaseClient.from('colaboradores').insert([{ nome, cargo, cpf }]).select().single();
+                                        if (newC) colabId = newC.id;
+                                    }
+                                } else {
+                                    const { data: newC } = await supabaseClient.from('colaboradores').insert([{ nome, cargo }]).select().single();
+                                    if (newC) colabId = newC.id;
+                                }
+
+                                // Prepara para ligar a pessoa à OP na tabela de presença
+                                if (colabId) {
+                                    participantesParaInserir.push({
+                                        agendamento_id: idNumerico,
+                                        colaborador_id: colabId,
+                                        compareceu: true // Inicia todos como PRESENTES por padrão
+                                    });
+                                }
+                            }
+
+                            // Limpa a lista antiga da OP (se houver) e insere a nova de uma vez
+                            await supabaseClient.from('agendamento_participantes').delete().eq('agendamento_id', idNumerico);
+                            
+                            if (participantesParaInserir.length > 0) {
+                                const { error: pivErr } = await supabaseClient.from('agendamento_participantes').insert(participantesParaInserir);
+                                if (pivErr) throw pivErr;
+                            }
+                        }
+                        // =================================================================
 
                         // 2. Atualiza o status base para manter a esteira
                         await supabaseClient
@@ -833,7 +880,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                             .eq('id', idNumerico);
 
                         let msg = `Material de "${curNome}" despachado com sucesso!`;
-                        if (colabsAnexados && colabsAnexados.length > 0) msg += ` (+ Snapshot Salvo)`;
+                        if (colabsAnexados && colabsAnexados.length > 0) msg += ` (Lista de Presença pré-preenchida automaticamente!)`;
                         
                         mostrarToast(msg, 'success');
                         carregarOrganizadorMateriais(); // Baixa os dados novos
@@ -841,7 +888,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                     } catch (err) {
                         mostrarToast('Falha na requisição com o banco: ' + err.message, 'error');
                         console.error(err);
-                        curCheckbox.checked = false; // Reverte erro
+                        curCheckbox.checked = false; // Reverte erro em caso de falha
                     }
                 }
 
