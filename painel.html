@@ -174,14 +174,55 @@
     tbody tr { transition: background-color 0.15s ease; }
     tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
 
-    aside { transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-    aside.collapsed span.sidebar-text,
-    aside.collapsed span.sidebar-footer-text,
-    aside.collapsed .sidebar-header-details { display: none !important; }
-    aside.collapsed { width: 5rem !important; }
-    aside.collapsed .sidebar-header { justify-content: center !important; padding: 1.25rem 0.5rem !important; }
-    aside.collapsed nav button { justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+    /* Transição suave do menu */
+    #main-sidebar { transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+    
+    /* 1. Fixa a largura do menu minimizado (Usando ID para vencer o conflito) */
+    #main-sidebar.collapsed { width: 5.5rem !important; }
+    
+    /* 2. ESCONDE TUDO QUE NÃO CABE */
+    #main-sidebar.collapsed span.sidebar-text,
+    #main-sidebar.collapsed span.sidebar-footer-text,
+    #main-sidebar.collapsed .sidebar-header-details,
+    #main-sidebar.collapsed .nav-section-label,
+    #main-sidebar.collapsed a[href="todos_os_dias.html"] h3,
+    #main-sidebar.collapsed a[href="todos_os_dias.html"] p,
+    #main-sidebar.collapsed #sidebar-unit-count { 
+        display: none !important; 
+    }
+    
+    /* 3. AJUSTA O TOPO */
+    #main-sidebar.collapsed .sidebar-header { 
+        flex-direction: column; 
+        gap: 16px; 
+        padding: 1.25rem 0.5rem !important; 
+    }
+    
+    /* Centraliza os botões do menu */
+    #main-sidebar.collapsed nav button { 
+        justify-content: center !important; 
+        padding-left: 0 !important; 
+        padding-right: 0 !important; 
+    }
 
+    /* 4. AJUSTA O BOTÃO GRADIENTE */
+    #main-sidebar.collapsed a[href="todos_os_dias.html"] {
+        padding: 14px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    #main-sidebar.collapsed a[href="todos_os_dias.html"] i {
+        margin: 0 !important;
+        font-size: 1.25rem !important;
+    }
+
+    /* 5. AJUSTA O RODAPÉ */
+    #main-sidebar.collapsed > div:last-child {
+        justify-content: center !important;
+        padding: 0.75rem !important;
+    }
     /* Classe utilitária para aplicar o gradiente dinâmico do tema */
     .bg-theme-gradient {
         background: var(--theme-gradient) !important;
@@ -198,12 +239,296 @@
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #334155; }
 </style>
+
+    <style id="enterprise-ux-css">
+        /* Refinamento incremental: tabelas legíveis sem alterar a estrutura existente. */
+        .overflow-x-auto > table thead th, table thead th { position: sticky; top: 0; z-index: 5; }
+        .modal-panel { max-height: min(86vh, 820px); overflow-y: auto; }
+        .sidebar-section-label { user-select:none; }
+        @media (max-width: 1023px) {
+          #main-sidebar { position: fixed !important; inset: 0 auto 0 0; height: 100vh; z-index: 60; }
+          #main-sidebar:not(.mobile-open) { display:none !important; }
+        }
+        @media (max-width: 1023px) {
+          #main-sidebar.mobile-open { display:flex !important; }
+        }
+    </style>
+
+<style id="senior-layout-v10">
+/* ==========================================================
+   SENIOR ENTERPRISE V10 — camada visual/layout, sem alterar JS
+   ========================================================== */
+:root{
+  --surface-0:#070b12;
+  --surface-1:#0b111b;
+  --surface-2:#101827;
+  --surface-3:#131d2b;
+  --line:rgba(148,163,184,.12);
+  --line-strong:rgba(148,163,184,.18);
+  --ink:#f8fafc;
+  --muted:#91a0b5;
+  --subtle:#64748b;
+  --elev:0 14px 40px rgba(0,0,0,.22);
+}
+html,body{background:var(--surface-0)!important;color:var(--ink);}
+body{letter-spacing:-.01em;}
+
+/* Shell */
+#main-sidebar{
+  width:260px!important;
+  background:linear-gradient(180deg,rgba(8,12,19,.98),rgba(5,9,15,.98))!important;
+  border-right:1px solid var(--line)!important;
+  box-shadow:18px 0 40px rgba(0,0,0,.16)!important;
+  backdrop-filter:blur(18px)!important;
+}
+#main-sidebar .sidebar-header{
+  padding:18px 16px!important;
+  background:rgba(255,255,255,.018)!important;
+  border-bottom:1px solid var(--line)!important;
+}
+#main-sidebar nav{padding:12px!important;gap:4px!important;}
+.nav-section-label{
+  padding:14px 10px 7px;
+  color:#56667c;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+#main-sidebar nav .tab-btn{
+  min-height:44px;
+  padding:8px 10px!important;
+  border-radius:11px!important;
+  border:1px solid transparent!important;
+  color:#8897ab!important;
+}
+#main-sidebar nav .tab-btn:hover{
+  background:rgba(255,255,255,.045)!important;
+  color:#f8fafc!important;
+  border-color:rgba(148,163,184,.08)!important;
+}
+#main-sidebar nav .tab-btn > div:first-child:not(.absolute){
+  width:30px!important;height:30px!important;border-radius:9px!important;
+  background:rgba(255,255,255,.035)!important;
+  border:1px solid rgba(148,163,184,.08)!important;
+}
+#main-sidebar .sidebar-text{font-size:11px!important;}
+#main-sidebar > div > div:last-child{
+  margin:10px!important;
+  border-radius:12px!important;
+  background:rgba(255,255,255,.025)!important;
+  border:1px solid var(--line)!important;
+}
+
+/* Main frame */
+main.flex-1{background:var(--surface-0)!important;min-width:0;}
+main > header{
+  height:74px!important;
+  padding:0 28px!important;
+  background:rgba(8,12,19,.88)!important;
+  border-bottom:1px solid var(--line)!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.12)!important;
+}
+main > header .absolute.top-0{height:1px!important;opacity:.7!important;box-shadow:none!important;}
+main > header .relative.group > .absolute{display:none!important;}
+main > header .relative.w-11{width:38px!important;height:38px!important;border-radius:10px!important;box-shadow:none!important;}
+main > header h1{font-size:13px!important;letter-spacing:-.02em!important;}
+
+/* Content canvas */
+main > div.p-6{
+  padding:24px 28px 34px!important;
+  background:radial-gradient(circle at 75% 0%,rgba(56,189,248,.025),transparent 28%),var(--surface-0)!important;
+}
+main > div.p-6 > .tab-content{
+  width:100%;max-width:1520px;margin:0 auto;
+}
+
+/* Generic panels/cards */
+.glass-panel{
+  background:linear-gradient(180deg,rgba(17,24,39,.82),rgba(10,15,24,.90))!important;
+  border:1px solid var(--line)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.12), inset 0 1px rgba(255,255,255,.025)!important;
+  backdrop-filter:blur(10px)!important;
+}
+.glass-panel:hover{
+  border-color:var(--line-strong)!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.03)!important;
+  transform:none!important;
+}
+
+/* Home / executive dashboard */
+#tab-home{gap:16px!important;}
+#tab-home > .glass-panel:first-child{
+  padding:24px 26px!important;
+  min-height:126px;
+  display:flex;flex-direction:column;justify-content:center;
+  border-radius:16px!important;
+}
+#tab-home > .glass-panel:first-child h2{font-size:24px!important;line-height:1.05!important;}
+#tab-home > .glass-panel:first-child p{max-width:850px!important;color:#8291a7!important;}
+#tab-home > a{
+  min-height:88px!important;padding:18px 22px!important;border-radius:15px!important;
+  flex-direction:row!important;justify-content:space-between!important;text-align:left!important;
+  background:linear-gradient(120deg,rgba(14,116,144,.70),rgba(37,99,235,.58))!important;
+  border:1px solid rgba(125,211,252,.18)!important;
+  box-shadow:0 14px 34px rgba(14,116,144,.10)!important;
+}
+#tab-home > a > div{padding:0!important;background:none!important;box-shadow:none!important;display:flex;align-items:center;gap:14px;}
+#tab-home > a i{margin:0!important;}
+#tab-home > a h3{margin:0!important;}
+#tab-home > a p{margin:0!important;}
+
+#tab-home > .grid.md\:grid-cols-5{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+#tab-home > .grid.md\:grid-cols-5 > .glass-panel{
+  min-height:104px!important;padding:17px 16px!important;border-radius:14px!important;
+  position:relative;overflow:hidden;
+}
+#tab-home > .grid.md\:grid-cols-5 > .glass-panel:after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--theme-accent),transparent);opacity:.45;
+}
+#tab-home > .grid.md\:grid-cols-5 .text-3xl{font-size:27px!important;}
+
+#tab-home > .grid.md\:grid-cols-3{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+#tab-home > .grid.md\:grid-cols-3 > *{
+  min-height:152px!important;padding:20px!important;border-radius:14px!important;
+}
+#tab-home > .grid.md\:grid-cols-3 > *:hover{transform:translateY(-2px)!important;}
+
+/* Tables */
+table{border-collapse:separate!important;border-spacing:0!important;width:100%;}
+table thead th{
+  background:rgba(6,10,17,.96)!important;
+  color:#78879a!important;
+  font-size:9px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.10em!important;
+  font-weight:800!important;
+  border-bottom:1px solid var(--line)!important;
+  padding:11px 12px!important;
+}
+table tbody td{
+  border-bottom:1px solid rgba(148,163,184,.07)!important;
+  padding:11px 12px!important;
+  color:#d6dee8!important;
+  font-size:11px!important;
+}
+table tbody tr:hover td{background:rgba(56,189,248,.025)!important;}
+
+/* Inputs */
+input,select,textarea{
+  background:rgba(8,13,21,.82)!important;
+  border:1px solid rgba(148,163,184,.14)!important;
+  color:#edf2f7!important;
+  border-radius:10px!important;
+}
+input:hover,select:hover,textarea:hover{border-color:rgba(148,163,184,.22)!important;}
+input:focus,select:focus,textarea:focus{
+  border-color:rgba(56,189,248,.55)!important;
+  box-shadow:0 0 0 3px rgba(56,189,248,.09)!important;
+}
+
+/* Buttons: visual only; handlers untouched */
+button,.btn,.tab-btn{font-family:inherit;}
+button:not([disabled]):hover{filter:brightness(1.05);}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
+  outline:2px solid rgba(56,189,248,.75)!important;outline-offset:2px;
+}
+
+/* Alerts */
+#urgent-alert-banner{
+  margin:18px 28px 0!important;
+  max-width:1520px!important;
+  width:calc(100% - 56px)!important;
+  align-self:center!important;
+  border-radius:14px!important;
+  border-width:1px!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.15)!important;
+}
+
+/* Responsive */
+@media (max-width:1200px){
+  #tab-home > .grid.md\:grid-cols-5{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+}
+@media (max-width:1023px){
+  main > header{padding:0 16px!important;}
+  main > div.p-6{padding:18px!important;}
+  #urgent-alert-banner{margin:14px 18px 0!important;width:calc(100% - 36px)!important;}
+  #tab-home > .grid.md\:grid-cols-3{grid-template-columns:1fr!important;}
+}
+@media (max-width:720px){
+  #tab-home > .grid.md\:grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  #tab-home > a{align-items:flex-start!important;gap:12px;}
+}
+</style>
+
+<style id="senior-command-ui-v11">
+/* AMBIENTAL — SENIOR COMMAND UI v11 — visual layer only */
+:root{
+  --ui-border:rgba(148,163,184,.14);--ui-cyan:#42d6ff;--ui-shadow:0 26px 70px rgba(0,0,0,.34)
+}
+body{background:radial-gradient(900px 520px at 84% -12%,rgba(56,189,248,.13),transparent 60%),radial-gradient(760px 460px at 18% 0%,rgba(99,102,241,.10),transparent 58%),linear-gradient(160deg,#050b13 0%,#091421 48%,#07101a 100%) !important}
+#main-sidebar{width:246px!important;background:linear-gradient(180deg,rgba(7,16,27,.97),rgba(5,12,20,.99))!important;border-right:1px solid rgba(148,163,184,.12)!important;box-shadow:20px 0 70px rgba(0,0,0,.22)!important;backdrop-filter:blur(24px)!important}
+#main-sidebar .sidebar-header{min-height:76px;padding:16px 14px!important;background:rgba(255,255,255,.015)!important;border-bottom-color:rgba(148,163,184,.10)!important}
+#main-sidebar nav{padding:14px 10px!important}
+#main-sidebar .nav-section-label{color:#6f8296!important;font-size:9px!important;font-weight:800!important;letter-spacing:.16em!important;text-transform:uppercase;margin:16px 10px 7px!important}
+#main-sidebar .tab-btn{min-height:44px;padding:8px 10px!important;border-radius:13px!important;margin-bottom:4px;gap:10px!important;color:#94a7ba!important}
+#main-sidebar .tab-btn:hover{background:rgba(255,255,255,.045)!important;border-color:rgba(148,163,184,.10)!important;transform:none!important}
+#main-sidebar .tab-btn>div:not(.absolute){width:31px!important;height:31px!important;border-radius:10px!important;background:rgba(255,255,255,.035)!important;border-color:rgba(148,163,184,.10)!important}
+#main-sidebar .tab-btn.active{background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(99,102,241,.08))!important;color:#f8fbff!important;border-color:rgba(56,189,248,.22)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 10px 25px rgba(0,0,0,.16)}
+#main-sidebar .sidebar-text{font-size:11px!important}
+#main-sidebar nav>a[href="todos_os_dias.html"]{margin:12px 2px!important;padding:14px!important;border-radius:14px!important;box-shadow:0 14px 32px rgba(0,0,0,.20)!important;transform:none!important}
+#main-sidebar>div:last-child{margin:8px 10px 10px!important;padding:9px!important;border-radius:14px!important;background:rgba(255,255,255,.028)!important;border-color:rgba(148,163,184,.12)!important}
+main>header{height:68px!important;min-height:68px!important;padding:0 24px!important;background:rgba(8,17,28,.76)!important;border-bottom-color:rgba(148,163,184,.11)!important;box-shadow:0 12px 38px rgba(0,0,0,.20)!important;backdrop-filter:blur(22px)!important}
+main.flex-1{background:radial-gradient(600px 350px at 100% 0%,rgba(56,189,248,.055),transparent 65%),linear-gradient(180deg,rgba(5,12,20,.38),rgba(5,12,20,.72))!important}
+main>.p-6{padding:24px!important;gap:18px!important}
+#tab-home{position:relative;width:100%;max-width:1480px;margin:0 auto;gap:18px!important}
+#tab-home>.glass-panel:first-child{min-height:168px;padding:30px 320px 28px 30px!important;border-radius:22px!important;background:radial-gradient(400px 220px at 82% 0%,rgba(56,189,248,.12),transparent 68%),linear-gradient(135deg,rgba(16,29,45,.96),rgba(11,20,32,.90))!important;border:1px solid rgba(148,163,184,.16)!important;box-shadow:var(--ui-shadow)!important}
+#tab-home>.glass-panel:first-child:before{content:"VISÃO GERAL  •  CENTRO DE OPERAÇÕES";display:block;margin-bottom:10px;color:var(--ui-cyan);font-size:9px;font-weight:800;letter-spacing:.18em}
+#tab-home>.glass-panel:first-child h2{font-size:27px!important;line-height:1.1!important;margin-bottom:9px!important;letter-spacing:-.035em!important}
+#tab-home>.glass-panel:first-child p{max-width:720px!important;color:#a4b3c3!important;font-size:12px!important;line-height:1.75!important}
+#tab-home>a[href="todos_os_dias.html"]{position:absolute;top:31px;right:30px;z-index:5;width:auto!important;max-width:280px;min-width:210px;min-height:52px;padding:8px 10px!important;border-radius:14px!important;border:1px solid rgba(96,165,250,.28)!important;background:linear-gradient(135deg,rgba(34,134,196,.90),rgba(79,70,229,.82))!important;box-shadow:0 16px 36px rgba(14,116,144,.20)!important;flex-direction:row!important;gap:10px;align-items:center!important;justify-content:center!important;text-align:left!important;transform:none!important}
+#tab-home>a[href="todos_os_dias.html"]>div{padding:0!important;background:transparent!important;box-shadow:none!important;display:flex!important;align-items:center;gap:10px}
+#tab-home>a[href="todos_os_dias.html"] i{width:34px;height:34px;margin:0!important;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.13)}
+#tab-home>a[href="todos_os_dias.html"] h3{font-size:11px!important;margin:0!important}
+#tab-home>a[href="todos_os_dias.html"] p{display:none}
+#tab-home>a[href="todos_os_dias.html"]:hover{filter:brightness(1.08);box-shadow:0 18px 42px rgba(14,116,144,.28)!important}
+#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+#tab-home>.grid.md\\:grid-cols-5>.glass-panel{position:relative;min-height:112px;padding:18px 18px 16px!important;border-radius:18px!important;border:1px solid rgba(148,163,184,.13)!important;background:linear-gradient(145deg,rgba(17,29,44,.94),rgba(10,20,31,.88))!important;box-shadow:0 12px 30px rgba(0,0,0,.18)!important;overflow:hidden}
+#tab-home>.grid.md\\:grid-cols-5>.glass-panel:before{content:"";position:absolute;top:0;left:18px;right:18px;height:2px;background:linear-gradient(90deg,transparent,var(--kpi-accent),transparent);opacity:.85}
+#tab-home>.grid.md\\:grid-cols-5>.glass-panel:nth-child(1){--kpi-accent:#fb7185}#tab-home>.grid.md\\:grid-cols-5>.glass-panel:nth-child(2){--kpi-accent:#fbbf24}#tab-home>.grid.md\\:grid-cols-5>.glass-panel:nth-child(3){--kpi-accent:#60a5fa}#tab-home>.grid.md\\:grid-cols-5>.glass-panel:nth-child(4){--kpi-accent:#34d399}#tab-home>.grid.md\\:grid-cols-5>.glass-panel:nth-child(5){--kpi-accent:#a78bfa}
+#tab-home>.grid.md\\:grid-cols-5 span{color:#90a1b4!important;font-size:9px!important;text-transform:uppercase;letter-spacing:.07em}
+#tab-home>.grid.md\\:grid-cols-5 [id^="kpi-"]{margin-top:9px;font-size:32px!important;line-height:1!important;color:var(--kpi-accent)!important}
+#tab-home>.grid.md\\:grid-cols-3{gap:12px!important}
+#tab-home>.grid.md\\:grid-cols-3>*{min-height:126px;padding:20px!important;border-radius:18px!important;box-shadow:0 14px 34px rgba(0,0,0,.18)!important}
+#tab-home>.grid.md\\:grid-cols-3>button:first-child{background:linear-gradient(145deg,rgba(21,104,155,.96),rgba(41,66,144,.92))!important;border-color:rgba(96,165,250,.24)!important}
+#tab-home>.grid.md\\:grid-cols-3>button:not(:first-child){background:linear-gradient(145deg,rgba(15,28,43,.94),rgba(10,19,30,.90))!important;border-color:rgba(148,163,184,.13)!important}
+#tab-home>.grid.md\\:grid-cols-3>* .w-14{width:42px!important;height:42px!important;border-radius:12px!important;margin-bottom:14px!important}
+#tab-home>.grid.md\\:grid-cols-3>* h3{font-size:12px!important}
+#tab-home>.grid.md\\:grid-cols-3>* p{font-size:10px!important;line-height:1.55!important}
+.glass-panel{border-color:var(--ui-border)!important}
+button,a,select,input,textarea{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease,transform .18s ease,opacity .18s ease!important}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid rgba(66,214,255,.72)!important;outline-offset:2px}
+.tab-content .glass-panel{border-radius:18px!important;border-color:rgba(148,163,184,.12)!important}
+.tab-content table thead th{background:rgba(7,16,27,.86)!important;color:#8799ac!important;font-size:9px!important;letter-spacing:.08em!important;text-transform:uppercase;border-bottom-color:rgba(148,163,184,.11)!important}
+.tab-content table tbody tr:hover{background:rgba(255,255,255,.025)!important}
+@media(max-width:1100px){#tab-home>.glass-panel:first-child{padding-right:280px!important}#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:800px){main>header{padding:0 14px!important}main>.p-6{padding:14px!important}#tab-home>.glass-panel:first-child{min-height:auto;padding:22px!important}#tab-home>.glass-panel:first-child h2{font-size:22px!important}#tab-home>a[href="todos_os_dias.html"]{position:static;width:100%!important;max-width:none;min-width:0}#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important}#tab-home>.grid.md\\:grid-cols-3{grid-template-columns:1fr!important}}
+@media(max-width:480px){#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:1fr 1fr!important}#tab-home>.grid.md\\:grid-cols-5>.glass-panel{min-height:96px;padding:15px!important}#tab-home>.grid.md\\:grid-cols-5 [id^="kpi-"]{font-size:27px!important}}
+
+</style>
 </head>
-<div id="app-loader" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center text-white transition-opacity duration-300">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500 mb-4"></div>
-    <p class="text-slate-400 text-sm font-medium">Carregando painel...</p>
-</div>
 <body class="bg-darker text-slate-100 antialiased min-h-screen flex selection:bg-sky-500 selection:text-white overflow-hidden">
+    <div id="app-loader" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center text-white transition-opacity duration-300" aria-live="polite" aria-label="Carregando painel">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500 mb-4"></div>
+        <p class="text-slate-400 text-sm font-medium">Carregando painel...</p>
+    </div>
 
     <!-- Container de Notificações Toast -->
     <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
@@ -236,6 +561,15 @@
             <!-- Navegação Principal com Rolagem Ativa -->
             <nav class="p-3.5 space-y-2 flex-1 overflow-y-auto pr-1">
                 
+                <div id="label-visao" class="nav-section-label transition-all duration-200">Visão geral</div>
+
+                <button onclick="switchTab('home-visitor')" id="btn-home-visitor" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80 hidden" title="Portal de Acompanhamento">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-sky-400 group-hover:bg-sky-500/10 group-hover:border-sky-500/30 transition-all">
+                        <i class="fa-solid fa-desktop text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Portal de Acompanhamento</span>
+                </button>
+
                 <button onclick="switchTab('home')" id="btn-home" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition-all duration-200 group relative overflow-hidden" title="Sala ADM / Dashboard">
                     <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-white rounded-r-full shadow-md"></div>
                     <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-white shadow-inner">
@@ -244,7 +578,9 @@
                     <span class="sidebar-text font-medium tracking-wide">Sala ADM / Dashboard</span>
                 </button>
 
-                <button onclick="switchTab('batch')" id="btn-batch" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Central de Agendamentos">
+                <div class="nav-section-label">Operação</div>
+
+                                <button onclick="switchTab('batch')" id="btn-batch" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Central de Agendamentos">
                     <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-sky-400 group-hover:bg-sky-500/10 group-hover:border-sky-500/30 transition-all">
                         <i class="fa-solid fa-layer-group text-xs"></i>
                     </div>
@@ -279,6 +615,8 @@
                     <span class="sidebar-text font-medium">Unidades Agendadas</span>
                 </button>             
 
+                <div class="nav-section-label">Automação & controle</div>
+
                 <button onclick="switchTab('automations')" id="btn-automations" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Automações UI.Vision">
                     <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-amber-400 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all">
                         <i class="fa-solid fa-robot text-xs"></i>
@@ -292,6 +630,8 @@
                     </div>
                     <span class="sidebar-text font-medium">Logs & Auditoria</span>
                 </button>
+
+                <div class="nav-section-label">Monitoramento</div>
 
                 <button onclick="switchTab('comparecimento-global')" id="btn-comparecimento-global" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Comparecimento Global">
                     <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-amber-400 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all">
@@ -319,7 +659,7 @@
         <!-- Rodapé da Sidebar Blindado -->
         <div class="p-3 mx-3 mb-3 rounded-2xl border border-slate-800/90 bg-slate-900/90 text-xs text-slate-400 flex items-center justify-between shrink-0 shadow-2xl">
             <div class="flex items-center gap-2.5 overflow-hidden px-1">
-                <div class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40 text-[10px] font-mono font-extrabold shadow-inner">317</div>
+                <div id="sidebar-unit-count" class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40 text-[10px] font-mono font-extrabold shadow-inner">—</div>
                 <span class="sidebar-text font-mono text-[11px] text-slate-200 font-semibold truncate tracking-tight">Unidades</span>
             </div>
             <button onclick="handleLogout()" class="text-rose-400 hover:text-white font-bold transition-all flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/20 border border-rose-500/20 shadow-sm shrink-0" title="Sair do Sistema">
@@ -913,6 +1253,19 @@
                                     </span>
                                 </div>
                             </div>
+                            <div class="ml-auto w-full md:w-auto flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+                                <div class="hidden md:block text-right mr-1">
+                                    <div id="stage-detail-title" class="text-sm font-extrabold text-white">Central de Etapas</div>
+                                    <div id="stage-detail-subtitle" class="text-[11px] text-slate-500 mt-1">Selecione uma etapa para visualizar os registros.</div>
+                                </div>
+                                <div class="relative min-w-[220px]">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 text-xs pointer-events-none"></i>
+                                    <input id="search-stage-detail" type="search" placeholder="Buscar nesta etapa..." autocomplete="off" class="w-full bg-slate-950/70 border border-slate-800 focus:border-[var(--theme-accent)]/60 text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 outline-none transition-all placeholder:text-slate-600">
+                                </div>
+                                <button type="button" onclick="goBackFromStage()" class="bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-arrow-left"></i> Voltar
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -928,45 +1281,46 @@
             </section>
 
             <!-- TAB 2: DIRETÓRIO GERAL -->
-            <section id="tab-directory" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
-                <div class="glass-panel p-8 rounded-3xl flex-1 flex flex-col min-h-0 shadow-2xl relative overflow-hidden border border-indigo-500/20">
-                    <div class="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <!-- TAB 2: DIRETÓRIO GERAL (ULTIMATE GLASSMORPHISM) -->
+            <section id="tab-directory" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-300">
+                <div class="glass-panel p-8 rounded-[32px] flex-1 flex flex-col min-h-0 shadow-2xl relative overflow-hidden border border-slate-700/50 bg-[#070b14]/80 backdrop-blur-3xl">
+                    <!-- Brilhos Volumétricos de Fundo -->
+                    <div class="absolute right-0 top-0 w-[500px] h-[500px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent rounded-full blur-[80px] pointer-events-none"></div>
+                    <div class="absolute left-0 bottom-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-500/5 to-transparent rounded-full blur-[80px] pointer-events-none"></div>
                     
                     <!-- Cabeçalho Imponente -->
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6 pb-6 border-b border-slate-800/80 relative z-10 shrink-0">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> Banco de Dados Ativo
-                                </span>
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6 relative z-10 shrink-0">
+                        <div class="space-y-2.5">
+                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 shadow-inner">
+                                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.6)]"></span>
+                                <span class="text-[10px] font-mono font-bold text-indigo-300 uppercase tracking-widest">Banco de Dados Ativo</span>
                             </div>
-                            <h3 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-                                <i class="fa-solid fa-address-book text-indigo-400"></i> Diretório Geral de Unidades
+                            <h3 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tight">
+                                Diretório Geral de Unidades
                             </h3>
-                            <p class="text-xs text-slate-400">Consulta unificada de 317 unidades e escolas sincronizadas em tempo real via Supabase.</p>
+                            <p class="text-sm text-slate-400 font-medium">Consulta unificada sincronizada em tempo real via Supabase.</p>
                         </div>
 
-                        <!-- Barra de Ações do Topo -->
-                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                            <div class="relative flex-1 sm:flex-initial sm:w-80 group">
+                        <!-- Barra de Ações do Topo Flutuante -->
+                        <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto bg-slate-900/40 p-2.5 rounded-3xl border border-slate-700/50 shadow-2xl backdrop-blur-md">
+                            <div class="relative flex-1 sm:w-80 group">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                     <i class="fa-solid fa-search text-slate-500 group-focus-within:text-indigo-400 transition-colors"></i>
                                 </div>
-                                <input type="text" id="search-directory" oninput="renderDirectory()" placeholder="Pesquisar por unidade, OP ou cidade..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl pl-11 pr-4 py-3 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 transition-all font-medium shadow-inner backdrop-blur-sm">
+                                <input type="text" id="search-directory" oninput="renderDirectory()" placeholder="Pesquisar por unidade, OP ou cidade..." class="w-full bg-slate-950/50 border border-slate-700/50 rounded-2xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium shadow-inner placeholder:text-slate-600">
                             </div>
 
-                            <button onclick="openAddUnitModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all flex items-center gap-2 shrink-0 transform active:scale-95">
-                                <i class="fa-solid fa-plus text-sm"></i> <span>Nova Unidade</span>
-                            </button>
-
-                            <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-2xl text-xs font-semibold transition-all border border-slate-700/80 flex items-center gap-2 shrink-0 shadow-sm">
-                                <i class="fa-solid fa-house"></i> <span>Início</span>
+                            <button onclick="openAddUnitModal()" class="relative group overflow-hidden rounded-2xl p-[1px] shrink-0">
+                                <span class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-fuchsia-500 rounded-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-300"></span>
+                                <div class="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-3 rounded-2xl text-sm font-bold flex items-center gap-2 transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                                    <i class="fa-solid fa-plus text-xs"></i> <span>Nova Unidade</span>
+                                </div>
                             </button>
                         </div>
                     </div>
 
                     <!-- Grid de Cards de Unidades -->
-                    <div id="directory-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-2 min-h-0 relative z-10"></div>
+                    <div id="directory-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-3 min-h-0 relative z-10 pb-4"></div>
                 </div>
             </section>
 
@@ -1143,17 +1497,20 @@
                     </div>
                     
                     <!-- Botões de Ação do Master -->
-                    <div class="flex items-center space-x-3 w-full md:w-auto flex-wrap gap-2">
-                        <button onclick="abrirModalHistorico()" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-start md:justify-end gap-3 w-full md:w-auto mt-4 md:mt-0">
+                        <button onclick="abrirModalHistorico()" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-box-archive"></i> Histórico Arquivado
                         </button>
-                        <button onclick="confirmarFechamentoMensal()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-lock"></i> Fechar Ciclo Mensal
+                        
+                        <button onclick="abrirModalFechamento()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-list-check"></i> Fechar Ciclo (Selecionar OPs)
                         </button>
-                        <button onclick="exportarExcelGlobal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+                        
+                        <button onclick="exportarExcelGlobal()" style="background: var(--theme-gradient);" class="hover:opacity-90 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all flex items-center justify-center gap-2">
                             <i class="fa-solid fa-file-excel"></i> Gerar Excel Global
                         </button>
-                        <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border border-bordercolor flex items-center gap-2">
+                        
+                        <button onclick="switchTab('home')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2">
                             <i class="fa-solid fa-house"></i> Início
                         </button>
                     </div>
@@ -1325,12 +1682,67 @@
             </div>
         </div>
 
-        <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex justify-end shrink-0">
-            <button onclick="fecharModalHistorico()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-semibold transition">Fechar</button>
+        <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center shrink-0 flex-wrap gap-3">
+    <span class="text-[11px] text-slate-400">O Excel conterá os detalhes e nomes de todos os colaboradores.</span>
+    <div class="flex items-center gap-3">
+        <button onclick="fecharModalHistorico()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-semibold transition border border-slate-700">Fechar</button>
+        <button id="btn-exportar-historico" onclick="exportarExcelHistorico()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i> Gerar Excel (Mês Selecionado)
+        </button>
+    </div>
+</div>
+</div> <!-- FECHAMENTO FALTANTE 1: Fecha a caixa com gradiente -->
+</div> <!-- FECHAMENTO FALTANTE 2: Fecha o modal inteiro -->
+
+<!-- MODAL: FECHAMENTO DE CICLO SELETIVO -->
+<div id="modal-fechar-ciclo" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4 transition-all duration-300">
+    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/80 rounded-3xl shadow-2xl w-full max-w-4xl relative overflow-hidden flex flex-col max-h-[85vh]">
+        
+        <!-- Cabeçalho do Modal -->
+        <div class="px-6 py-5 border-b border-slate-800/80 flex justify-between items-center relative z-10 bg-slate-900/50 shrink-0">
+            <div>
+                <h3 class="text-base font-bold text-white flex items-center gap-2.5 tracking-tight">
+                    <i class="fa-solid fa-list-check text-rose-400 p-2 bg-rose-500/10 rounded-lg"></i> Selecionar Unidades para Arquivamento
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">As unidades selecionadas terão seus dados movidos para o histórico oficial e sairão do painel Master.</p>
+            </div>
+            <button onclick="fecharModalFechamento()" class="text-slate-400 hover:text-rose-400 p-2 rounded-xl transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        
+        <!-- Tabela de Seleção -->
+        <div class="p-6 relative z-10 flex-1 overflow-y-auto">
+            <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/50">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-slate-400 text-[11px] font-bold uppercase tracking-wider border-b border-slate-800 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3.5 w-12 text-center">
+                                <input type="checkbox" id="fechamento-check-all" onchange="toggleAllFechamento(this)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-rose-500/20 cursor-pointer">
+                            </th>
+                            <th class="p-3.5">OP</th>
+                            <th class="p-3.5">Unidade / Cidade</th>
+                            <th class="p-3.5">Data Agendada</th>
+                            <th class="p-3.5">Competência (Mês Ref.)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-fechamento-modal" class="divide-y divide-slate-800/60 text-xs">
+                        <!-- Preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rodapé e Botões de Ação -->
+        <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center shrink-0">
+            <span id="fechamento-selecionados-count" class="text-xs font-bold text-rose-400">0 unidades selecionadas</span>
+            <div class="flex gap-3">
+                <button type="button" onclick="fecharModalFechamento()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                <button type="button" onclick="processarFechamentoSeletivo()" id="btn-processar-fechamento" class="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive"></i> Arquivar Selecionadas
+                </button>
+            </div>
         </div>
     </div>
 </div>
-
 
     <!-- MODAL: ADICIONAR NOVO USUÁRIO -->
     <div id="add-user-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
@@ -2187,37 +2599,29 @@
 
         // Função para carregar o tema ao logar / abrir a página
 async function initUserTheme() {
-    // 1. Aplica o tema local instantaneamente para não piscar a tela
-    const localTheme = localStorage.getItem('user_theme') || 'blue';
+    const allowedThemes = new Set(['blue', 'matrix', 'neon', 'amber']);
+    const localThemeRaw = localStorage.getItem('user_theme') || 'blue';
+    const localTheme = allowedThemes.has(localThemeRaw) ? localThemeRaw : 'blue';
     document.documentElement.className = document.documentElement.className.replace(/theme-\S+/g, '');
     document.documentElement.classList.add(`theme-${localTheme}`);
-
-    // 2. Busca o tema salvo no Supabase usando o e-mail do usuário logado
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && user.email) {
-            // Substitua 'NOME_DA_SUA_TABELA' pelo nome real da tabela no Supabase
-            const { data, error } = await supabase
-                .from('perfis_operadores')
-                .select('theme')
-                .eq('email', user.email)
-                .single();
-
-            if (data && data.theme) {
-                const cloudTheme = data.theme;
-                
-                // Aplica o tema salvo na nuvem
-                document.documentElement.className = document.documentElement.className.replace(/theme-\S+/g, '');
-                document.documentElement.classList.add(`theme-${cloudTheme}`);
-                localStorage.setItem('user_theme', cloudTheme);
-
-                // Atualiza o seletor visual no topo, se houver
-                const themeSelector = document.getElementById('theme-selector');
-                if (themeSelector) themeSelector.value = cloudTheme;
-            }
+        if (typeof supabaseClient === 'undefined') return;
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+        if (authError || !user?.email) return;
+        const { data, error } = await supabaseClient.from('perfis_operadores').select('theme').eq('email', user.email).maybeSingle();
+        if (error) {
+            console.warn('[Ambiental] Tema em nuvem indisponível; mantendo tema local.', error.message);
+            return;
         }
+        const cloudTheme = data?.theme;
+        if (!allowedThemes.has(cloudTheme)) return;
+        document.documentElement.className = document.documentElement.className.replace(/theme-\S+/g, '');
+        document.documentElement.classList.add(`theme-${cloudTheme}`);
+        localStorage.setItem('user_theme', cloudTheme);
+        const themeSelector = document.getElementById('theme-selector');
+        if (themeSelector) themeSelector.value = cloudTheme;
     } catch (err) {
-        console.error("Erro ao carregar tema do Supabase:", err);
+        console.warn('[Ambiental] Não foi possível sincronizar o tema; mantendo tema local.', err);
     }
 }
 
@@ -2230,11 +2634,11 @@ async function changeTheme(themeName) {
 
     // 2. Salva no Supabase na linha correspondente ao e-mail do usuário
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (user && user.email) {
             // Substitua 'NOME_DA_SUA_TABELA' pelo nome real da tabela no Supabase
-            const { error } = await supabase
-                .from('NOME_DA_SUA_TABELA')
+            const { error } = await supabaseClient
+                .from('perfis_operadores')
                 .update({ theme: themeName })
                 .eq('email', user.email);
 
@@ -2249,17 +2653,21 @@ async function changeTheme(themeName) {
 document.addEventListener('DOMContentLoaded', initUserTheme);
 
         async function handleLogout() {
-            const { error } = await supabaseClient.auth.signOut();
-            if (error) {
-                showToast('Erro ao sair: ' + error.message, 'error');
-                return;
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    if (typeof showToast === 'function') showToast('Erro ao sair: ' + error.message, 'error');
+                    return;
+                }
+                if (appData && Array.isArray(appData.scheduling)) appData.scheduling = [];
+                if (typeof renderScheduling === 'function') renderScheduling();
+                if (typeof renderUnidadesAgendadas === 'function') renderUnidadesAgendadas();
+                if (typeof showToast === 'function') showToast('Sessão encerrada com segurança.');
+                window.location.href = 'index.html';
+            } catch (err) {
+                console.error('[Ambiental] Falha ao encerrar sessão:', err);
+                if (typeof showToast === 'function') showToast('Não foi possível encerrar a sessão. Tente novamente.', 'error');
             }
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('login-form').reset();
-            appData.scheduling = [];
-            renderScheduling(); 
-            renderUnidadesAgendadas();
-            showToast('Sessão encerrada com segurança.');
         }
 
         let savedTempQtd = {};
@@ -2317,7 +2725,9 @@ function updateSidebarVisibility() {
     
     const isMaster = (nivel === 'master');
 
+    // Botões
     const btnHome = document.getElementById('btn-home');
+    const btnHomeVisitor = document.getElementById('btn-home-visitor');
     const btnBatch = document.getElementById('btn-batch');
     const btnSigRpa = document.getElementById('btn-sig-rpa');
     const btnDirectory = document.getElementById('btn-directory');
@@ -2329,8 +2739,19 @@ function updateSidebarVisibility() {
     const btnTodosOsDias = document.getElementById('btn-todos-os-dias'); 
     const btnGlobal = document.getElementById('btn-comparecimento-global');
 
+    // Títulos (Labels)
+    const labelVisao = document.getElementById('label-visao');
+    const labelOperacao = document.getElementById('label-operacao');
+    const labelAutomacao = document.getElementById('label-automacao');
+    const labelMonitoramento = document.getElementById('label-monitoramento');
+
+    // Sempre visíveis para todos
+    if (labelVisao) labelVisao.classList.remove('hidden');
+    if (labelOperacao) labelOperacao.classList.remove('hidden');
+
     if (isMaster) {
         if (btnHome) btnHome.classList.remove('hidden');
+        if (btnHomeVisitor) btnHomeVisitor.classList.add('hidden');
         if (btnBatch) btnBatch.classList.remove('hidden');
         if (btnSigRpa) btnSigRpa.classList.remove('hidden');
         if (btnDirectory) btnDirectory.classList.remove('hidden');
@@ -2343,8 +2764,14 @@ function updateSidebarVisibility() {
             btnTodosOsDias.classList.remove('hidden');
             btnTodosOsDias.classList.add('flex');
         }
+        
+        // Master vê todos os títulos
+        if (labelAutomacao) labelAutomacao.classList.remove('hidden');
+        if (labelMonitoramento) labelMonitoramento.classList.remove('hidden');
+
     } else {
         if (btnHome) btnHome.classList.add('hidden');
+        if (btnHomeVisitor) btnHomeVisitor.classList.remove('hidden');
         if (btnBatch) btnBatch.classList.add('hidden');
         if (btnSigRpa) btnSigRpa.classList.add('hidden');
         if (btnStatusConfirmacao) btnStatusConfirmacao.classList.add('hidden');
@@ -2358,6 +2785,10 @@ function updateSidebarVisibility() {
         if (btnDirectory) btnDirectory.classList.remove('hidden');
         if (btnUnidadesAgendadas) btnUnidadesAgendadas.classList.remove('hidden');
         if (btnLogs) btnLogs.classList.remove('hidden');
+
+        // Operador vê o título Automação (pois tem acesso aos Logs) e Monitoramento (Comparecimento)
+        if (labelAutomacao) labelAutomacao.classList.remove('hidden');
+        if (labelMonitoramento) labelMonitoramento.classList.remove('hidden');
     }
     
     if (btnGlobal) {
@@ -2368,12 +2799,14 @@ function updateSidebarVisibility() {
 
         function toggleSidebarMobile() {
             const sidebar = document.getElementById('main-sidebar');
-            if (sidebar.classList.contains('hidden')) {
-                sidebar.classList.remove('hidden');
-                sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'z-40', 'h-full');
-            } else {
+            if (!sidebar) return;
+            const open = sidebar.classList.contains('mobile-open');
+            if (open) {
+                sidebar.classList.remove('mobile-open','absolute','inset-y-0','left-0','z-40','h-full');
                 sidebar.classList.add('hidden');
-                sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'z-40', 'h-full');
+            } else {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('absolute','inset-y-0','left-0','z-40','h-full','mobile-open');
             }
         }
 
@@ -2628,13 +3061,35 @@ function updateSidebarVisibility() {
 
         let currentStage = 'agendar';
         function openStageView(stage) {
+            if (!stage) return;
             currentStage = stage;
+
+            // Parametrização possui uma tela própria; as demais etapas usam a tabela detalhada.
+            if (stage === 'parametrizacao') {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                const view = document.getElementById('stage-view-parametrizacao');
+                if (view) view.classList.remove('hidden');
+                const title = document.getElementById('page-title');
+                if (title) title.innerText = 'Parametrização';
+                if (typeof renderParametrizacaoTable === 'function') renderParametrizacaoTable();
+                localStorage.setItem('painel_ultima_aba', 'stage-view-parametrizacao');
+                return;
+            }
+
+            const body = document.getElementById('stage-table-body');
+            const head = document.getElementById('stage-table-head');
+            if (!body || !head) {
+                console.error('[Ambiental] Estrutura da etapa detalhada não encontrada.');
+                showToast('Não foi possível abrir esta etapa. Atualize a página e tente novamente.', 'error');
+                return;
+            }
             renderStageTable();
             switchTab('stage-detail');
         }
 
         function renderStageTable() {
             const tbody = document.getElementById('stage-table-body');
+            if (!tbody) return;
             const thead = document.getElementById('stage-table-head');
             const searchInput = document.getElementById('search-stage-detail');
             const filter = searchInput ? searchInput.value.toLowerCase() : '';
@@ -2649,8 +3104,8 @@ function updateSidebarVisibility() {
             const thStyle = "p-4 font-bold text-[10px] uppercase tracking-widest text-slate-500 whitespace-nowrap text-left";
 
             if (currentStage === 'agendar') {
-                document.getElementById('stage-detail-title').innerText = 'Etapa 1: Unidades Para Agendar';
-                document.getElementById('stage-detail-subtitle').innerText = 'Unidades aguardando contato telefônico e agendamento';
+                document.getElementById('stage-detail-title') && (document.getElementById('stage-detail-title').innerText = 'Etapa 1: Unidades Para Agendar')
+                document.getElementById('stage-detail-subtitle') && (document.getElementById('stage-detail-subtitle').innerText = 'Unidades aguardando contato telefônico e agendamento')
                 
                 thead.innerHTML = `
                     <tr class="border-b border-slate-800/80">
@@ -2706,7 +3161,7 @@ function updateSidebarVisibility() {
                     const isProposalSent = appData.propostasEnviadas && appData.propostasEnviadas[op] === true;
                     const proposalBtnHtml = isProposalSent 
                         ? `<button onclick="unmarkProposalSent(${op})" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:bg-emerald-500/20" title="Proposta já enviada! Clique para desmarcar"><i class="fa-solid fa-circle-check"></i> Enviada</button>`
-                        : `<button onclick="openEmailModal(${op}, '${unit.email || ''}', '${unit.unidade.replace(/'/g, "\\'")}')" class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:bg-sky-500/20"><i class="fa-solid fa-envelope"></i> Proposta</button>`;
+                        : `<button type="button" data-action="open-email" data-op="${op}" data-email="${unit.email || ''}" data-unidade="${unit.unidade || ''}" class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:bg-sky-500/20"><i class="fa-solid fa-envelope"></i> Proposta</button>`;
 
                     tbody.innerHTML += `
                         <tr class="group hover:bg-slate-800/40 transition-all duration-200 border-b border-slate-800/50 last:border-0 relative">
@@ -2736,17 +3191,17 @@ function updateSidebarVisibility() {
                             <td class="p-4 align-middle text-center">${qtdCellHtml}</td>
                             <td class="p-4 align-middle text-right whitespace-nowrap">
                                 <div class="flex justify-end items-center gap-2">
-                                    <button onclick="openDetailsModal(${op})" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-comment-dots text-slate-400"></i> Obs</button>
+                                    <button type="button" data-action="open-details" data-op="${op}" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5"><i class="fa-solid fa-comment-dots text-slate-400"></i> Obs</button>
                                     ${proposalBtnHtml}
-                                    <button onclick="openCallModal(${op}, '${unit.cidade.replace(/'/g, "\\'")}', '${unit.unidade.replace(/'/g, "\\'")}', '${unit.email || ''}')" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"><i class="fa-solid fa-calendar-plus"></i> Agendar & Avançar</button>
+                                    <button type="button" data-action="open-call" data-op="${op}" data-cidade="${unit.cidade || ''}" data-unidade="${unit.unidade || ''}" data-email="${unit.email || ''}" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"><i class="fa-solid fa-calendar-plus"></i> Agendar & Avançar</button>
                                 </div>
                             </td>
                         </tr>
                     `;
                 });
             } else if (currentStage === 'confirmacao') {
-                document.getElementById('stage-detail-title').innerText = 'Etapa 2: E-mail de Confirmação (Unidade)';
-                document.getElementById('stage-detail-subtitle').innerText = 'Unidades aguardando envio do e-mail oficial de confirmação de visita';
+                document.getElementById('stage-detail-title') && (document.getElementById('stage-detail-title').innerText = 'Etapa 2: E-mail de Confirmação (Unidade)')
+                document.getElementById('stage-detail-subtitle') && (document.getElementById('stage-detail-subtitle').innerText = 'Unidades aguardando envio do e-mail oficial de confirmação de visita')
                 
                 thead.innerHTML = `
                     <tr class="border-b border-slate-800/80">
@@ -2778,8 +3233,8 @@ function updateSidebarVisibility() {
                     `;
                 });
             } else if (currentStage === 'excel') {
-                document.getElementById('stage-detail-title').innerText = 'Etapa 3: Linha Excel';
-                document.getElementById('stage-detail-subtitle').innerText = 'Agendamentos pendentes de preenchimento de médico e faturamento';
+                document.getElementById('stage-detail-title') && (document.getElementById('stage-detail-title').innerText = 'Etapa 3: Linha Excel')
+                document.getElementById('stage-detail-subtitle') && (document.getElementById('stage-detail-subtitle').innerText = 'Agendamentos pendentes de preenchimento de médico e faturamento')
                 
                 thead.innerHTML = `
                     <tr class="border-b border-slate-800/80">
@@ -2811,8 +3266,8 @@ function updateSidebarVisibility() {
                     `;
                 });
             } else if (currentStage === 'npso') {
-                document.getElementById('stage-detail-title').innerText = 'Etapa 4: Enviar ao NPSO';
-                document.getElementById('stage-detail-subtitle').innerText = 'Unidades prontas para disparo do e-mail de inclusão ao NPSO';
+                document.getElementById('stage-detail-title') && (document.getElementById('stage-detail-title').innerText = 'Etapa 4: Enviar ao NPSO')
+                document.getElementById('stage-detail-subtitle') && (document.getElementById('stage-detail-subtitle').innerText = 'Unidades prontas para disparo do e-mail de inclusão ao NPSO')
                 
                 thead.innerHTML = `
                     <tr class="border-b border-slate-800/80">
@@ -2844,8 +3299,8 @@ function updateSidebarVisibility() {
                     `;
                 });
             } else if (currentStage === 'sig') {
-                document.getElementById('stage-detail-title').innerText = 'Aguardar Solicitação SIG';
-                document.getElementById('stage-detail-subtitle').innerText = 'Verificar solicitação no sistema e enviar e-mail de cobrança para a unidade, se necessário.';
+                document.getElementById('stage-detail-title') && (document.getElementById('stage-detail-title').innerText = 'Aguardar Solicitação SIG')
+                document.getElementById('stage-detail-subtitle') && (document.getElementById('stage-detail-subtitle').innerText = 'Verificar solicitação no sistema e enviar e-mail de cobrança para a unidade, se necessário.')
                 
                 thead.innerHTML = `
                     <tr class="border-b border-slate-800/80">
@@ -2883,8 +3338,8 @@ function updateSidebarVisibility() {
                     `;
                 });
             } else if (currentStage === 'disciplinas') {
-                document.getElementById('stage-detail-title').innerText = 'Solicitação de Disciplinas';
-                document.getElementById('stage-detail-subtitle').innerText = 'Disparo do número da OP para o RPA para solicitar a inclusão de disciplinas.';
+                document.getElementById('stage-detail-title') && (document.getElementById('stage-detail-title').innerText = 'Solicitação de Disciplinas')
+                document.getElementById('stage-detail-subtitle') && (document.getElementById('stage-detail-subtitle').innerText = 'Disparo do número da OP para o RPA para solicitar a inclusão de disciplinas.')
                 
                 thead.innerHTML = `
                     <tr class="border-b border-slate-800/80">
@@ -3107,7 +3562,7 @@ function updateSidebarVisibility() {
 
         <!-- Rodapé com Botão Vibrante em Gradiente -->
         <div class="pt-4 mt-2 relative z-10 border-t border-slate-800/80">
-            <button onclick="openDetailsModal('${op}')" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-indigo-600/30 hover:shadow-lg hover:shadow-indigo-600/50 group/btn">
+            <button type="button" data-action="open-details" data-op="${op}" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-md shadow-indigo-600/30 hover:shadow-lg hover:shadow-indigo-600/50 group/btn">
                 <span>Acessar Prontuário / Detalhes</span>
                 <i class="fa-solid fa-arrow-right text-[10px] group-hover/btn:translate-x-1.5 transition-transform"></i>
             </button>
@@ -3141,55 +3596,53 @@ function updateSidebarVisibility() {
 
         let activeDetailsOp = null;
 
+        function setElementText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value == null || value === '' ? 'N/D' : String(value); return el; }
+        function setElementValue(id, value) { const el = document.getElementById(id); if (el) el.value = value == null ? '' : String(value); return el; }
+        function showElement(id) { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); return el; }
+        function hideElement(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); return el; }
+
         function openDetailsModal(op) {
-            activeDetailsOp = op;
-            let unit = getUnitData(op); // Usa a função existente que busca no masterUnits/customUnits
-            
-            // Dados básicos e Identificação
-            document.getElementById('det-op').innerText = `OP ${op}`;
-            document.getElementById('det-unidade').innerText = unit.unidade || 'N/D';
-            document.getElementById('det-municipio').innerText = unit.cidade || 'N/D';
-            document.getElementById('det-telefone').innerText = unit.telefone || 'N/D';
-            document.getElementById('det-cnpj').innerText = unit.cnpj || 'N/D';
-            
-            // Localização e Estrutura
-            document.getElementById('det-regiao').innerText = unit.regiao || 'N/D';
-            document.getElementById('det-endereco').innerText = unit.endereco || 'N/D';
-            document.getElementById('det-aniversario').innerText = unit.aniversario || 'N/D';
-            
-            // Link do site com tratamento para abrir em nova aba
-            if (unit.site && unit.site !== '') {
-                const siteUrl = unit.site.startsWith('http') ? unit.site : `https://${unit.site}`;
-                document.getElementById('det-site').innerHTML = `<a href="${siteUrl}" target="_blank" class="hover:underline hover:text-sky-400 transition-colors">${unit.site}</a>`;
-            } else {
-                document.getElementById('det-site').innerText = 'N/D';
+            activeDetailsOp = String(op);
+            const unit = getUnitData(op) || {};
+            setElementText('det-op', `OP ${op}`);
+            setElementText('det-unidade', unit.unidade);
+            setElementText('det-municipio', unit.cidade);
+            setElementText('det-telefone', unit.telefone);
+            setElementText('det-cnpj', unit.cnpj);
+            setElementText('det-regiao', unit.regiao);
+            setElementText('det-endereco', unit.endereco);
+            setElementText('det-aniversario', unit.aniversario);
+            const siteEl = document.getElementById('det-site');
+            if (siteEl) {
+                siteEl.textContent = '';
+                if (unit.site) {
+                    const link = document.createElement('a');
+                    link.href = /^https?:\/\//i.test(String(unit.site)) ? String(unit.site) : `https://${unit.site}`;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.className = 'hover:underline hover:text-sky-400 transition-colors';
+                    link.textContent = String(unit.site);
+                    siteEl.appendChild(link);
+                } else siteEl.textContent = 'N/D';
             }
-
-            // Quadro de Gestão
-            document.getElementById('det-diretor').innerText = unit.diretor || 'N/D';
-            document.getElementById('det-email-diretor').innerText = unit.emailDiretor || 'N/D';
-            
-            document.getElementById('det-adm').innerText = unit.respAdm || 'N/D';
-            document.getElementById('det-email-adm').innerText = unit.emailAdm || 'N/D';
-            
-            document.getElementById('det-acad').innerText = unit.respAcad || 'N/D';
-            document.getElementById('det-email-acad').innerText = unit.emailAcad || 'N/D';
-
-            // Histórico
-            document.getElementById('det-historico').innerText = unit.historico || 'Nenhum histórico disponível cadastrado para esta unidade.';
-
-            // Observações
-            document.getElementById('det-obs').value = appData.observacoes[op] || '';
-            
-            // Exibe o Modal
-            document.getElementById('details-modal').classList.remove('hidden');
+            setElementText('det-diretor', unit.diretor);
+            setElementText('det-email-diretor', unit.emailDiretor);
+            setElementText('det-adm', unit.respAdm);
+            setElementText('det-email-adm', unit.emailAdm);
+            setElementText('det-acad', unit.respAcad);
+            setElementText('det-email-acad', unit.emailAcad);
+            setElementText('det-historico', unit.historico || 'Nenhum histórico disponível cadastrado para esta unidade.');
+            setElementValue('det-obs', appData.observacoes?.[op] || '');
+            const modal = showElement('details-modal');
+            if (!modal) { showToast('A janela de detalhes não está disponível nesta versão da página.', 'error'); return; }
+            requestAnimationFrame(() => modal.querySelector('button, input, textarea, [tabindex]')?.focus());
         }
 
         function closeDetailsModal() {
-            document.getElementById('details-modal').classList.add('hidden');
+            hideElement('details-modal');
             activeDetailsOp = null;
-            updateStageCounts();
-            if(currentStage) renderStageTable();
+            if (typeof updateStageCounts === 'function') updateStageCounts();
+            if (currentStage && typeof renderStageTable === 'function') renderStageTable();
         }
 
         async function saveUnitObs() {
@@ -3225,24 +3678,22 @@ function updateSidebarVisibility() {
         }
 
         function openCallModal(op, cidade, unidade, email) {
-            document.getElementById('modal-op').value = op;
-            document.getElementById('modal-cidade').value = cidade;
-            document.getElementById('modal-instituicao').value = unidade;
-            document.getElementById('modal-email').value = email;
-            document.getElementById('modal-data').value = '';
-            document.getElementById('modal-horario').value = '';
-            document.getElementById('modal-qtd').value = (appData.tempQtd && appData.tempQtd[op]) ? appData.tempQtd[op] : '';
-            document.getElementById('modal-subtitle').innerText = `OP ${op} - ${unidade} (${cidade})`;
-            
-            const expectedSpan = document.getElementById('modal-expected-op-text');
-            if (expectedSpan) expectedSpan.innerText = op;
-            const confirmInput = document.getElementById('confirmOpInput');
-            if (confirmInput) confirmInput.value = '';
-            const errorMsg = document.getElementById('opErrorMsg');
-            if (errorMsg) errorMsg.classList.add('hidden');
-
-            document.getElementById('call-modal').classList.remove('hidden');
+            setElementValue('modal-op', op);
+            setElementValue('modal-cidade', cidade);
+            setElementValue('modal-instituicao', unidade);
+            setElementValue('modal-email', email);
+            setElementValue('modal-data', '');
+            setElementValue('modal-horario', '');
+            setElementValue('modal-qtd', appData.tempQtd?.[op] || '');
+            setElementText('modal-subtitle', `OP ${op} - ${unidade || 'Unidade'} (${cidade || 'Cidade'})`);
+            const expectedSpan = document.getElementById('modal-expected-op-text'); if (expectedSpan) expectedSpan.textContent = op;
+            setElementValue('confirmOpInput', '');
+            hideElement('opErrorMsg');
+            const modal = showElement('call-modal');
+            if (!modal) { showToast('A janela de agendamento não está disponível nesta versão da página.', 'error'); return; }
+            setTimeout(() => document.getElementById('confirmOpInput')?.focus(), 50);
         }
+
         function closeCallModal() { document.getElementById('call-modal').classList.add('hidden'); }
 
         async function saveCallSchedulingDirect(e) {
@@ -3336,7 +3787,7 @@ function updateSidebarVisibility() {
         function closeConfirmEmailModal() {
             document.getElementById('school-email-modal').classList.add('hidden');
             updateStageCounts();
-            if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
         }
 
         function copyConfirmEmailContentOnly() {
@@ -3354,7 +3805,7 @@ function updateSidebarVisibility() {
             updateStageCounts();
             renderScheduling();
             renderUnidadesAgendadas();
-            if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
 
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(body).then(() => {
@@ -3386,7 +3837,7 @@ function updateSidebarVisibility() {
         function closeExcelRowModal() {
             document.getElementById('excel-row-modal').classList.add('hidden');
             updateStageCounts();
-            if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
         }
 
         function getExcelRowDataModal() {
@@ -3426,7 +3877,7 @@ function updateSidebarVisibility() {
             updateStageCounts();
             renderScheduling();
             renderUnidadesAgendadas();
-            if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
 
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(tsvStr).then(() => {
@@ -3467,7 +3918,7 @@ function updateSidebarVisibility() {
         function closeNpsoModal() {
             document.getElementById('npso-modal').classList.add('hidden');
             updateStageCounts();
-            if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
         }
 
         function copyNpsoContentOnly() {
@@ -3485,7 +3936,7 @@ function updateSidebarVisibility() {
             updateStageCounts();
             renderScheduling();
             renderUnidadesAgendadas();
-            if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
 
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(body).then(() => {
@@ -3501,43 +3952,35 @@ function updateSidebarVisibility() {
         function openEmailModal(op, email, unidade) {
             activeEmailOp = op;
             const mainEmail = email || `e${String(op).padStart(3, '0')}adm@cps.sp.gov.br`;
-            document.getElementById('email-dest').value = mainEmail;
-            
-            const ccEmail = mainEmail.replace('adm@', 'op@');
-            if (document.getElementById('email-cc')) {
-                document.getElementById('email-cc').value = ccEmail;
-            }
-
-            document.getElementById('email-modal-subtitle').innerText = `OP ${op} - ${unidade}`;
-            document.getElementById('email-data').value = '';
-            document.getElementById('email-horario').value = '';
-            
+            setElementValue('email-dest', mainEmail);
+            setElementValue('email-cc', mainEmail.replace('adm@', 'op@'));
+            setElementText('email-modal-subtitle', `OP ${op} - ${unidade || 'Unidade'}`);
+            setElementValue('email-data', '');
+            setElementValue('email-horario', '');
             updateEmailPreview();
-            
-            document.getElementById('email-data').oninput = updateEmailPreview;
-            document.getElementById('email-horario').oninput = updateEmailPreview;
-            
-            document.getElementById('email-modal').classList.remove('hidden');
+            const dataEl = document.getElementById('email-data'); const horaEl = document.getElementById('email-horario');
+            if (dataEl) dataEl.oninput = updateEmailPreview;
+            if (horaEl) horaEl.oninput = updateEmailPreview;
+            if (!showElement('email-modal')) showToast('A janela de proposta não está disponível nesta versão da página.', 'error');
         }
 
         function closeEmailModal() { document.getElementById('email-modal').classList.add('hidden'); }
 
         function updateEmailPreview() {
-            const data = document.getElementById('email-data').value || '******';
-            const horario = document.getElementById('email-horario').value || '******';
-            const emailDest = document.getElementById('email-dest').value;
-            let emailCc = document.getElementById('email-cc') ? document.getElementById('email-cc').value : emailDest.replace('adm@', 'op@');
-
-            const greeting = new Date().getHours() < 12 ? "Olá, bom dia!" : "Olá, boa tarde!";
-            const cleanBody = `${greeting} Espero que se encontre bem,\n\nPrezados(as) colaboradores(as),\n\nEm conformidade com o cronograma anual de Saúde Ocupacional, informamos que serão realizados os exames periódicos obrigatórios para todos os colaboradores desta unidade.\n\nPara melhor organização, disponibilizamos a data abaixo para realização dos exames, com horário fixo de atendimento médico. Solicitamos, por gentileza, que confirme a data para atendimento em sua unidade. Após a confirmação, encaminharemos o agendamento definitivo.\n\n📅 Data disponível: ${data}\n🕗 Horário: ${horario}\n\nAguardamos a gentileza do retorno com a data escolhida.`;
-            
-            document.getElementById('email-preview').value = cleanBody;
+            const dataEl = document.getElementById('email-data');
+            const horarioEl = document.getElementById('email-horario');
+            const destEl = document.getElementById('email-dest');
+            const previewEl = document.getElementById('email-preview');
             const mailtoLink = document.getElementById('mailto-link');
-            mailtoLink.href = `mailto:${emailDest}?cc=${emailCc}&subject=${encodeURIComponent("Agendamento de Exames Periódicos")}`;
-            
-            mailtoLink.onclick = function() {
-                if (activeEmailOp) markProposalSent(activeEmailOp);
-            };
+            if (!previewEl || !destEl || !mailtoLink) return;
+            const data = dataEl?.value || '******';
+            const horario = horarioEl?.value || '******';
+            const emailDest = destEl.value || '';
+            const emailCc = document.getElementById('email-cc')?.value || emailDest.replace('adm@', 'op@');
+            const greeting = new Date().getHours() < 12 ? 'Olá, bom dia!' : 'Olá, boa tarde!';
+            previewEl.value = `${greeting} Espero que se encontre bem,\n\nPrezados(as) colaboradores(as),\n\nEm conformidade com o cronograma anual de Saúde Ocupacional, informamos que serão realizados os exames periódicos obrigatórios para todos os colaboradores desta unidade.\n\nPara melhor organização, disponibilizamos a data abaixo para realização dos exames, com horário fixo de atendimento médico. Solicitamos, por gentileza, que confirme a data para atendimento em sua unidade. Após a confirmação, encaminharemos o agendamento definitivo.\n\n📅 Data disponível: ${data}\n🕗 Horário: ${horario}\n\nAguardamos a gentileza do retorno com a data escolhida.`;
+            mailtoLink.href = `mailto:${emailDest}?cc=${encodeURIComponent(emailCc)}&subject=${encodeURIComponent('Agendamento de Exames Periódicos')}`;
+            mailtoLink.onclick = function() { if (activeEmailOp && typeof markProposalSent === 'function') markProposalSent(activeEmailOp); };
         }
 
         // Marca as unidades atuais como confirmadas salvando diretamente no Supabase e na nuvem
@@ -3688,6 +4131,7 @@ if (inputBusca) {
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('bg-gradient-to-r', 'from-sky-600', 'to-sky-700', 'text-white', 'shadow-lg');
                 el.classList.add('text-slate-400', 'hover:bg-slate-800/50', 'hover:text-white');
+                el.style.background = '';
             });
             
             const targetTab = document.getElementById('tab-' + tabId);
@@ -3697,6 +4141,7 @@ if (inputBusca) {
             if(activeBtn) {
                 activeBtn.classList.add('bg-gradient-to-r', 'from-sky-600', 'to-sky-700', 'text-white', 'shadow-lg');
                 activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800/50', 'hover:text-white');
+                activeBtn.style.background = 'var(--theme-gradient)';
             }
 
             if (salvarNoHistorico) {
@@ -3949,15 +4394,21 @@ if (inputBusca) {
         }
 
         function confirmDeleteScheduling(id) {
-            showConfirm("Excluir Agendamento", "Tem certeza que deseja excluir este agendamento?", async () => {
-                await supabaseClient.from('agendamentos').delete().eq('id', id);
+            showConfirm("Excluir Agendamento", "Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.", async () => {
+                const { error } = await supabaseClient.from('agendamentos').delete().eq('id', id);
+                if (error) {
+                    console.error('Erro ao excluir agendamento:', error);
+                    showToast('Não foi possível excluir o agendamento. Verifique sua conexão e tente novamente.', 'error');
+                    return;
+                }
                 appData.scheduling = appData.scheduling.filter(s => s.id !== id);
                 updateStageCounts();
                 renderScheduling();
                 renderUnidadesAgendadas();
-                if(!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+                const stageDetail = document.getElementById('tab-stage-detail');
+                if (stageDetail && !stageDetail.classList.contains('hidden')) renderStageTable();
                 updateStats();
-                showToast("Agendamento excluído.");
+                showToast('Agendamento excluído com sucesso.');
             });
         }
 
@@ -4123,21 +4574,6 @@ if (inputBusca) {
     // REMOVIDO: A chamada automática de confirmação não ocorre mais aqui.
     showToast("Planilha exportada com sucesso!");
 }
-
-    // Atualize o seu seletor de telas (openStageView) existente para incluir o caso da parametrização
-    const originalOpenStageView = window.openStageView;
-    window.openStageView = function(stage) {
-        // Oculta todas as telas de etapa genéricas se houver lógica prévia
-        document.querySelectorAll('[id^="stage-view-"]').forEach(el => el.classList.add('hidden'));
-        document.getElementById('tab-sig-rpa')?.classList.add('hidden');
-
-        if (stage === 'parametrizacao') {
-            document.getElementById('stage-view-parametrizacao')?.classList.remove('hidden');
-            renderParametrizacaoTable();
-        } else if (typeof originalOpenStageView === 'function') {
-            originalOpenStageView(stage);
-        }
-    };
 
         function goBackFromStage() {
             if (currentStage === 'sig' || currentStage === 'disciplinas') {
@@ -4394,7 +4830,12 @@ if (inputBusca) {
 
         async function deleteUserProfile(id, email) {
             showConfirm("Revogar Acesso", `Tem certeza que deseja remover as permissões de ${email}?`, async () => {
-                await supabaseClient.from('perfis_operadores').delete().eq('id', id);
+                const { error } = await supabaseClient.from('perfis_operadores').delete().eq('id', id);
+                if (error) {
+                    console.error('Erro ao revogar acesso:', error);
+                    showToast('Não foi possível revogar o acesso. Verifique sua conexão e tente novamente.', 'error');
+                    return;
+                }
                 appData.usuarios = appData.usuarios.filter(u => u.id !== id);
                 renderUsersTable();
                 showToast(`Acesso de ${email} revogado.`);
@@ -4829,31 +5270,288 @@ if (inputBusca) {
         document.getElementById('global-stat-faltosos').innerText = totalFaltosos;
     }
 
-
-function confirmarFechamentoMensal() {
-    showConfirm(
-        "Fechar Ciclo Mensal",
-        "Deseja realmente arquivar os dados atuais e limpar o Relatório Master para o próximo mês? Os dados históricos ficarão salvos na base de auditoria.",
-        async () => {
-            try {
-                // Executa a procedure ou inserção de histórico no Supabase
-                const { error } = await supabaseClient.rpc('arquivar_ciclo_mensal'); 
-                
-                if (error) {
-                    // Se não usar função RPC, você pode executar as queries diretamente via API ou atualizar localmente
-                    showToast("Ciclo mensal fechado e arquivado com sucesso!");
-                    loadDataFromCloud(); // Recarrega o painel limpo
-                } else {
-                    showToast("Ciclo mensal fechado com sucesso!");
-                    loadDataFromCloud();
-                }
-            } catch (err) {
-                showToast("Erro ao processar fechamento: " + err.message, "error");
-            }
-        }
-    );
+// Função para extrair o Mês/Ano da string de data do agendamento
+function extrairMesReferencia(dataStr) {
+    if (!dataStr) return 'Sem Data';
+    // Procura por formatos MM/YYYY no final da string (ex: 18 e 19/08/2026 -> 08/2026)
+    const match = dataStr.match(/(\d{2})\/(\d{4})/);
+    if (match) {
+        return `${match[1]}/${match[2]}`;
+    }
+    return 'Indefinido';
 }
 
+
+async function exportarExcelHistorico() {
+    const select = document.getElementById('select-mes-historico');
+    const mes = select ? select.value : '';
+
+    if (!mes) {
+        showToast("Selecione uma competência para exportar.", "error");
+        return;
+    }
+
+    const btn = document.getElementById('btn-exportar-historico');
+    const originalText = btn.innerHTML;
+    
+    try {
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Gerando...';
+        btn.disabled = true;
+
+        // Busca a consolidação do histórico
+        const { data, error } = await supabaseClient
+            .from('relatorio_global_historico')
+            .select('*')
+            .eq('mes_referencia', mes)
+            .order('op', { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            showToast("Nenhum dado encontrado para exportação.", "error");
+            return;
+        }
+
+        // Monta o Cabeçalho da Planilha
+        let html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head><meta charset="UTF-8"><style>
+                table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+                th { background-color: #0f172a; color: #fff; padding: 10px; border: 1px solid #334155; font-size: 12px; }
+                td { padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 11px; vertical-align: middle; }
+                .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
+                .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
+                .op-col { text-align: center; font-weight: bold; background-color: #f8fafc; }
+            </style>
+    <style id="enterprise-ux-css">
+        /* Refinamento incremental: tabelas legíveis sem alterar a estrutura existente. */
+        .overflow-x-auto > table thead th, table thead th { position: sticky; top: 0; z-index: 5; }
+        .modal-panel { max-height: min(86vh, 820px); overflow-y: auto; }
+        .sidebar-section-label { user-select:none; }
+        @media (max-width: 1023px) {
+          #main-sidebar { position: fixed !important; inset: 0 auto 0 0; height: 100vh; z-index: 60; }
+          #main-sidebar:not(.mobile-open) { display:none !important; }
+        }
+    </style>
+</head>
+            <body><table>
+                <tr>
+                    <th>COMPETÊNCIA</th>
+                    <th>OP</th>
+                    <th>UNIDADE / INSTITUIÇÃO</th>
+                    <th>NOME DO COLABORADOR</th>
+                    <th>CARGO</th>
+                    <th>CPF</th>
+                    <th>STATUS</th>
+                </tr>
+        `;
+
+        // Preenche os dados lendo o snapshot ou puxando dinamicamente da base atual
+        data.forEach(s => {
+            let unidadeTexto = s.unidade || '';
+            let participantes = [];
+            
+            // 1. Tenta pegar do snapshot se existir (para fechamentos novos)
+            if (s.snapshot_participantes && s.snapshot_participantes !== '[]' && s.snapshot_participantes !== '') {
+                let snap = s.snapshot_participantes;
+                if (typeof snap === 'string') {
+                    try { snap = JSON.parse(snap); } catch(e) { snap = []; }
+                }
+                if (Array.isArray(snap) && snap.length > 0) {
+                    participantes = snap;
+                }
+            } 
+            
+            // 2. Se o snapshot estiver vazio (históricos antigos), cruza com a base live
+            if (participantes.length === 0) {
+                let itemLive = appData.scheduling.find(ag => Number(ag.op) === Number(s.op));
+                if (itemLive && itemLive.agendamento_participantes) {
+                    participantes = itemLive.agendamento_participantes.map(p => ({
+                        nome: p.colaboradores?.nome || 'Não informado',
+                        cargo: p.colaboradores?.cargo || 'N/D',
+                        cpf: p.colaboradores?.cpf || 'N/D',
+                        compareceu: p.compareceu
+                    }));
+                }
+            }
+
+            if (participantes.length === 0) {
+                html += `<tr>
+                    <td class="op-col">${s.mes_referencia}</td>
+                    <td class="op-col">${s.op || ''}</td>
+                    <td>${unidadeTexto}</td>
+                    <td colspan="4" style="text-align:center; color:#64748b;">Sem detalhamento de colaboradores arquivado</td>
+                </tr>`;
+            } else {
+                participantes.forEach(p => {
+                    let nome = p.nome || 'Não informado';
+                    let cargo = p.cargo || 'N/D';
+                    let cpf = p.cpf || 'N/D';
+                    let isFaltoso = p.compareceu === false;
+                    
+                    let status = isFaltoso ? 'FALTOU' : 'PRESENTE';
+                    let css = isFaltoso ? 'faltoso' : 'presente';
+
+                    html += `<tr>
+                        <td class="op-col">${s.mes_referencia}</td>
+                        <td class="op-col">${s.op || ''}</td>
+                        <td>${unidadeTexto}</td>
+                        <td><b>${nome}</b></td>
+                        <td>${cargo}</td>
+                        <td style="text-align:center;">${cpf}</td>
+                        <td class="${css}">${status}</td>
+                    </tr>`;
+                });
+            }
+        });
+
+        html += `</table></body></html>`;
+
+        // Dispara o download
+        let blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        
+        a.href = url;
+        let dataAtual = new Date().toISOString().slice(0, 10);
+        let nomeMesSeguro = mes.replace('/', '-'); // Evita erro no nome do arquivo
+        
+        a.download = `Historico_Completo_${nomeMesSeguro}_${dataAtual}.xls`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        showToast(`Excel de ${mes} gerado com sucesso!`);
+
+    } catch (err) {
+        console.error("Erro ao exportar excel do histórico:", err);
+        showToast("Erro ao baixar dados do banco.", "error");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+// Abre o modal listando todas as OPs finalizadas
+function abrirModalFechamento() {
+    const tbody = document.getElementById('tbody-fechamento-modal');
+    tbody.innerHTML = '';
+    
+    // Pega apenas as unidades que estão visíveis no Master (lista salva + tem colaboradores)
+    let listaFinalizada = appData.scheduling.filter(s => s.lista_presenca_salva === true && s.agendamento_participantes?.length > 0);
+    
+    if (listaFinalizada.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500 italic">Nenhuma unidade pronta para fechamento.</td></tr>`;
+        document.getElementById('fechamento-check-all').disabled = true;
+    } else {
+        document.getElementById('fechamento-check-all').disabled = false;
+        document.getElementById('fechamento-check-all').checked = false;
+        
+        listaFinalizada.sort((a, b) => Number(a.op) - Number(b.op)).forEach(s => {
+            let mesRef = extrairMesReferencia(s.data);
+            
+            tbody.innerHTML += `
+                <tr class="hover:bg-slate-900/50 transition">
+                    <td class="p-3.5 text-center">
+                        <input type="checkbox" value="${s.id}" onchange="atualizarContadorFechamento()" class="fechamento-checkbox w-4 h-4 rounded bg-slate-800 border-slate-700 text-rose-500 focus:ring-rose-500/20 cursor-pointer">
+                    </td>
+                    <td class="p-3.5 font-mono font-bold text-rose-400">OP ${s.op}</td>
+                    <td class="p-3.5 font-medium text-white">${s.cidade} ${s.instituicao ? '- ' + s.instituicao : ''}</td>
+                    <td class="p-3.5 font-mono text-slate-400">${s.data || '-'}</td>
+                    <td class="p-3.5 font-mono font-bold text-indigo-400">${mesRef}</td>
+                </tr>
+            `;
+        });
+    }
+    
+    atualizarContadorFechamento();
+    document.getElementById('modal-fechar-ciclo').classList.remove('hidden');
+}
+
+function fecharModalFechamento() {
+    document.getElementById('modal-fechar-ciclo').classList.add('hidden');
+}
+
+function toggleAllFechamento(source) {
+    const checkboxes = document.querySelectorAll('.fechamento-checkbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+    atualizarContadorFechamento();
+}
+
+function atualizarContadorFechamento() {
+    const marcados = document.querySelectorAll('.fechamento-checkbox:checked').length;
+    document.getElementById('fechamento-selecionados-count').innerText = `${marcados} unidade(s) selecionada(s)`;
+}
+
+// Processa o arquivamento das unidades marcadas
+async function processarFechamentoSeletivo() {
+    const checkboxes = document.querySelectorAll('.fechamento-checkbox:checked');
+    if (checkboxes.length === 0) {
+        showToast("Selecione pelo menos uma unidade para arquivar.", "error");
+        return;
+    }
+
+    const btn = document.getElementById('btn-processar-fechamento');
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Arquivando...';
+    btn.disabled = true;
+
+    try {
+        let historicoPayload = [];
+        let idsParaArquivar = [];
+
+        // Monta o pacote de dados para enviar ao histórico
+        for (let cb of checkboxes) {
+            let id = parseInt(cb.value);
+            let item = appData.scheduling.find(s => s.id === id);
+            if (!item) continue;
+
+            idsParaArquivar.push(id);
+            let mesRef = extrairMesReferencia(item.data);
+            
+            let participantes = item.agendamento_participantes || [];
+            let inscritos = participantes.length;
+            let presentes = participantes.filter(p => p.compareceu === true).length;
+            let faltosos = participantes.filter(p => p.compareceu === false).length;
+
+            // Cria um snapshot limpo em JSON dos colaboradores daquela OP
+            let snapshot = participantes.map(p => ({
+                nome: p.colaboradores?.nome || 'N/A',
+                cpf: p.colaboradores?.cpf || 'N/A',
+                cargo: p.colaboradores?.cargo || 'N/A',
+                compareceu: p.compareceu
+            }));
+
+            historicoPayload.push({
+                mes_referencia: mesRef,
+                op: parseInt(item.op),
+                unidade: item.cidade + (item.instituicao ? ' - ' + item.instituicao : ''),
+                total_inscritos: inscritos,
+                total_presentes: presentes,
+                total_faltosos: faltosos,
+                snapshot_participantes: snapshot
+            });
+        }
+
+        // 1. Grava tudo na tabela de Histórico no Supabase
+        const { error: errHist } = await supabaseClient.from('relatorio_global_historico').insert(historicoPayload);
+        if (errHist) throw errHist;
+
+        // 2. Tira do painel Master (alterando lista_presenca_salva para false)
+        for (let id of idsParaArquivar) {
+            await supabaseClient.from('agendamentos').update({ lista_presenca_salva: false }).eq('id', id);
+        }
+
+        showToast(`Sucesso! ${idsParaArquivar.length} unidade(s) movida(s) para o histórico de competência.`);
+        fecharModalFechamento();
+        loadDataFromCloud(); // Recarrega os dados e a tela limpa
+        
+    } catch (err) {
+        showToast("Erro ao arquivar: " + err.message, "error");
+    } finally {
+        btn.innerHTML = textoOriginal;
+        btn.disabled = false;
+    }
+}
 
 function fecharCardUrgencia() {
     const card = document.getElementById('card-urgencia-atencao'); // Certifique-se de que o container principal tem este ID
@@ -4925,7 +5623,240 @@ function exportarExcelGlobal() {
             .faltoso { background-color: #fee2e2; color: #991b1b; font-weight: bold; text-align: center; }
             .presente { background-color: #ecfdf5; color: #065f46; font-weight: bold; text-align: center; }
             .op-col { text-align: center; font-weight: bold; background-color: #f8fafc; }
-        </style></head>
+        </style>
+    <style id="enterprise-ux-css">
+        /* Refinamento incremental: tabelas legíveis sem alterar a estrutura existente. */
+        .overflow-x-auto > table thead th, table thead th { position: sticky; top: 0; z-index: 5; }
+        .modal-panel { max-height: min(86vh, 820px); overflow-y: auto; }
+        .sidebar-section-label { user-select:none; }
+        @media (max-width: 1023px) {
+          #main-sidebar { position: fixed !important; inset: 0 auto 0 0; height: 100vh; z-index: 60; }
+          #main-sidebar:not(.mobile-open) { display:none !important; }
+        }
+    </style>
+
+    
+<style id="premium-senior-layer">
+/* ==========================================================
+   Ambiental • Senior Enterprise Visual Layer
+   VISUAL ONLY — no event, ID, data or business-rule changes.
+   ========================================================== */
+:root {
+  --premium-bg: var(--bg-deep, #050914);
+  --premium-surface: color-mix(in srgb, var(--card-bg, #0b1220) 94%, white 6%);
+  --premium-surface-2: color-mix(in srgb, var(--card-bg, #0b1220) 88%, white 12%);
+  --premium-border: color-mix(in srgb, var(--card-border, #243244) 82%, white 18%);
+  --premium-border-soft: rgba(148,163,184,.12);
+  --premium-text: var(--text-main, #f8fafc);
+  --premium-muted: var(--text-muted, #94a3b8);
+  --premium-accent: var(--theme-accent, #38bdf8);
+  --premium-radius: 18px;
+  --premium-radius-sm: 13px;
+  --premium-shadow: 0 18px 48px -28px rgba(0,0,0,.78);
+  --premium-shadow-hover: 0 24px 58px -30px rgba(0,0,0,.86);
+}
+
+html, body { min-height: 100%; }
+body {
+  background-image:
+    radial-gradient(900px 420px at 72% -10%, color-mix(in srgb, var(--premium-accent) 8%, transparent), transparent 70%),
+    radial-gradient(700px 360px at 8% 92%, rgba(99,102,241,.045), transparent 70%) !important;
+  background-attachment: fixed;
+}
+
+/* App shell */
+#main-sidebar {
+  border-right-color: rgba(148,163,184,.10) !important;
+  box-shadow: 18px 0 50px -38px rgba(0,0,0,.95) !important;
+}
+#main-sidebar > div:first-child { padding-top: 1.15rem !important; }
+#main-sidebar nav { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.16) transparent; }
+#main-sidebar .tab-btn {
+  min-height: 48px;
+  border-radius: 14px !important;
+  letter-spacing: .005em;
+}
+#main-sidebar .tab-btn:hover {
+  background: rgba(255,255,255,.045) !important;
+  border-color: rgba(148,163,184,.11) !important;
+}
+#main-sidebar .tab-btn > div:first-child:not(.absolute) {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+#main-sidebar a[style*="background"] {
+  padding: 1rem 1.1rem !important;
+  border-radius: 16px !important;
+  box-shadow: 0 18px 38px -22px var(--premium-theme-glow, rgba(56,189,248,.45)) !important;
+}
+
+/* Header */
+main > header {
+  min-height: 72px;
+  background: color-mix(in srgb, var(--card-bg, #0b1220) 96%, transparent) !important;
+  border-bottom-color: rgba(148,163,184,.10) !important;
+  box-shadow: 0 14px 34px -28px rgba(0,0,0,.9) !important;
+}
+main > header > div:first-child { opacity: .96; }
+main > header button, main > header a {
+  border-radius: 12px !important;
+}
+
+/* Content rhythm */
+main section, main .p-8, main .p-6 { scroll-margin-top: 86px; }
+
+/* Surface system */
+.glass-panel {
+  background: linear-gradient(180deg, rgba(15,23,42,.78), rgba(8,13,24,.88)) !important;
+  border-color: rgba(148,163,184,.11) !important;
+  border-radius: var(--premium-radius) !important;
+  box-shadow: var(--premium-shadow) !important;
+  backdrop-filter: blur(16px) saturate(110%);
+  -webkit-backdrop-filter: blur(16px) saturate(110%);
+}
+.glass-panel:hover {
+  transform: none !important;
+  box-shadow: var(--premium-shadow-hover) !important;
+  border-color: rgba(148,163,184,.16) !important;
+}
+
+/* Home/action cards: remove the "too many effects" feel. */
+.group.relative.bg-gradient-to-b {
+  background: linear-gradient(180deg, rgba(15,23,42,.84), rgba(7,11,20,.94)) !important;
+  border-color: rgba(148,163,184,.10) !important;
+  border-radius: var(--premium-radius) !important;
+  box-shadow: 0 16px 40px -28px rgba(0,0,0,.78) !important;
+}
+.group.relative.bg-gradient-to-b:hover {
+  transform: translateY(-2px) !important;
+  border-color: color-mix(in srgb, var(--premium-accent) 30%, rgba(148,163,184,.12)) !important;
+  box-shadow: 0 24px 52px -30px rgba(0,0,0,.9) !important;
+}
+.group.relative.bg-gradient-to-b > .absolute.blur-2xl { opacity: .24 !important; }
+.group.relative.bg-gradient-to-b:hover > .absolute.blur-2xl { opacity: .38 !important; }
+
+/* KPI hierarchy */
+[id^="kpi-"] {
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+[id^="badge-count-"] {
+  border-radius: 999px !important;
+  background: rgba(148,163,184,.055) !important;
+  border-color: rgba(148,163,184,.11) !important;
+}
+
+/* Buttons — visual only, handlers untouched */
+button:not([disabled]), a {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  border-radius: 12px;
+  font-family: inherit;
+}
+button:not([disabled]):hover, a:not(.no-underline):hover {
+  filter: brightness(1.035);
+}
+button:not([disabled]):active { transform: translateY(1px) scale(.985) !important; }
+button[disabled], button[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  filter: saturate(.7);
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--premium-accent) 70%, white 0%) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--premium-accent) 12%, transparent) !important;
+}
+
+/* Primary action polish */
+button[class*="bg-gradient-to-r"],
+a[class*="bg-gradient-to-r"] {
+  box-shadow: 0 12px 26px -18px color-mix(in srgb, var(--premium-accent) 80%, transparent) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+}
+
+/* Form controls */
+input, select, textarea {
+  border-radius: var(--premium-radius-sm) !important;
+  border-color: rgba(148,163,184,.14) !important;
+  background: rgba(2,6,23,.42) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease !important;
+}
+input:hover, select:hover, textarea:hover { border-color: rgba(148,163,184,.22) !important; }
+input:focus, select:focus, textarea:focus {
+  border-color: color-mix(in srgb, var(--premium-accent) 55%, rgba(148,163,184,.18)) !important;
+  background: rgba(2,6,23,.58) !important;
+}
+
+/* Tables */
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+thead th {
+  background: rgba(15,23,42,.92) !important;
+  color: #cbd5e1 !important;
+  border-bottom: 1px solid rgba(148,163,184,.10) !important;
+  font-size: 10px !important;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+tbody td { border-bottom-color: rgba(148,163,184,.07) !important; }
+tbody tr:hover td { background: rgba(255,255,255,.022) !important; }
+tbody tr:last-child td { border-bottom: 0 !important; }
+
+/* Scroll containers */
+.overflow-x-auto, .overflow-auto, .overflow-y-auto {
+  scrollbar-color: rgba(148,163,184,.18) transparent;
+}
+
+/* Toasts */
+#toast-container > * {
+  border-radius: 14px !important;
+  border: 1px solid rgba(148,163,184,.12) !important;
+  box-shadow: 0 20px 50px -26px rgba(0,0,0,.92) !important;
+  backdrop-filter: blur(14px);
+}
+
+/* Modals */
+.fixed.inset-0[class*="bg-black"],
+.fixed.inset-0[class*="bg-slate"] {
+  background: rgba(2,6,23,.72) !important;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+.fixed.inset-0 > div[class*="rounded"] {
+  border-color: rgba(148,163,184,.13) !important;
+  box-shadow: 0 34px 90px -38px rgba(0,0,0,.98) !important;
+}
+
+/* Loading polish */
+#app-loader {
+  background: radial-gradient(circle at 50% 38%, rgba(56,189,248,.07), transparent 28%), rgba(2,6,23,.98) !important;
+}
+#app-loader p { letter-spacing: .03em; }
+
+/* Desktop density: keep content breathable without wasting space. */
+@media (min-width: 1280px) {
+  main > div.overflow-y-auto { scroll-behavior: smooth; }
+}
+
+/* Mobile */
+@media (max-width: 1023px) {
+  body { overflow: auto !important; }
+  #main-sidebar { box-shadow: 20px 0 60px -30px rgba(0,0,0,.95) !important; }
+  main > header { min-height: 68px; padding-left: 1rem !important; padding-right: 1rem !important; }
+  .glass-panel { border-radius: 16px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+
+</head>
         <body><table>
             <tr>
                 <th>OP</th>
@@ -5150,63 +6081,6 @@ async function runMacro(macroName) {
     }
 }
 
-function switchTab(tabId, salvarNoHistorico = true) {
-    const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
-        ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() 
-        : 'operador';
-    
-    if (tabId === 'home' && nivel !== 'master') {
-        tabId = 'home-visitor';
-    }
-
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('bg-theme-gradient', 'text-white', 'shadow-lg');
-        el.classList.add('text-slate-400', 'hover:bg-slate-800/50', 'hover:text-white');
-        el.style.background = ''; // Limpa estilo inline anterior
-    });
-    
-    const targetTab = document.getElementById('tab-' + tabId);
-    if (targetTab) targetTab.classList.remove('hidden');
-
-    const activeBtn = document.getElementById('btn-' + tabId);
-    if(activeBtn) {
-        // Aplica o gradiente dinâmico baseado no tema ativo atual
-        activeBtn.style.background = 'var(--theme-gradient)';
-        activeBtn.classList.add('text-white', 'shadow-lg');
-        activeBtn.classList.remove('text-slate-400', 'hover:bg-slate-800/50', 'hover:text-white');
-    }
-
-    if (salvarNoHistorico) {
-        localStorage.setItem('painel_ultima_aba', tabId);
-    }
-
-    const titleMap = {
-        'home': 'Sala ADM / Dashboard',
-        'home-visitor': 'Portal de Acompanhamento',
-        'batch': 'Central de Agendamentos',
-        'sig-rpa': 'Gestão SIG & Disciplinas',
-        'stage-detail': 'Central de Agendamentos (Etapa Detalhada)',
-        'directory': 'Diretório Geral (Unidades)',
-        'status-confirmacao': 'Status Unidades em Confirmação',
-        'presenca-detalhe': 'Lista de Presença Dedicada',
-        'unidades-agendadas': 'Unidades Agendadas',
-        'automations': 'Automações UI.Vision',
-        'logs': 'Logs & Auditoria',
-        'comparecimento-global': 'Comparecimento Global (Master)',
-        'wiki': 'Wiki Pessoal'
-    };
-    const pageTitleEl = document.getElementById('page-title');
-    if (pageTitleEl) pageTitleEl.innerText = titleMap[tabId] || 'Painel Operacional';
-
-    if(tabId === 'batch' || tabId === 'home') { updateStageCounts(); renderUsersTable(); }
-    if(tabId === 'directory') renderDirectory();
-    if(tabId === 'status-confirmacao') renderScheduling();
-    if(tabId === 'unidades-agendadas') renderUnidadesAgendadas();
-    if(tabId === 'comparecimento-global') renderComparecimentoGlobal();
-}
-
-
 function calcularDiasUteisAte(strData) {
     if (!strData) return 999;
     const match = strData.match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -5238,60 +6112,224 @@ function calcularDiasUteisAte(strData) {
 
         window.onload = async function() {
             localStorage.removeItem('urgent_banner_dismissed_time');
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    
-    if (!session) {
-        window.location.href = 'index.html';
-        return;
-    }
+            const loader = document.getElementById('app-loader');
 
-    document.getElementById('sidebar-username').innerText = session.user.email.split('@')[0];
-    
-    // Busca apenas as permissões essenciais primeiro para saber o nível de acesso
-    await applyUserPermissions(session.user.email);
+            try {
+                // Segurança: Tenta pegar a sessão com limite de tempo (8 segundos)
+                const sessionResult = await Promise.race([
+                    supabaseClient.auth.getSession(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Supabase')), 8000))
+                ]);
 
-    const ultimaAbaSalva = localStorage.getItem('painel_ultima_aba');
-    const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
-        ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() 
-        : 'operador';
+                const session = sessionResult?.data?.session;
+                
+                if (!session) {
+                    window.location.href = 'index.html';
+                    return;
+                }
 
-    const isMaster = (nivel === 'master');
+                document.getElementById('sidebar-username').innerText = session.user.email.split('@')[0];
+                await applyUserPermissions(session.user.email);
 
-    // Define a aba correta imediatamente
-    if (!isMaster) {
-        switchTab('home-visitor', false);
-    } else if (ultimaAbaSalva && document.getElementById('tab-' + ultimaAbaSalva) && ultimaAbaSalva !== 'home') {
-        switchTab(ultimaAbaSalva, false);
-    } else {
-        switchTab('home', false);
-    }
+                const ultimaAbaSalva = localStorage.getItem('painel_ultima_aba');
+                const nivel = appData.currentUserProfile?.nivel_acesso ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() : 'operador';
 
-    // LIBERA A TELA NA HORA: Remove o loader assim que a estrutura da página aparece
-    const loader = document.getElementById('app-loader');
-    if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 200);
-    }
+                if (nivel !== 'master') {
+                    switchTab('home-visitor', false);
+                } else if (ultimaAbaSalva && document.getElementById('tab-' + ultimaAbaSalva) && ultimaAbaSalva !== 'home') {
+                    switchTab(ultimaAbaSalva, false);
+                } else {
+                    switchTab('home', false);
+                }
 
-    // CARREGAMENTO EM SEGUNDO PLANO: Baixa os dados da nuvem sem travar a interface
-    (async () => {
-        try {
-            await DataService.init();
-            await loadDataFromCloud();
-            
-            // Se você tiver uma função que atualiza a tabela/componentes após os dados chegarem, 
-            // chame-a aqui (ex: atualizarTabelasNaTela();)
-        } catch (error) {
-            console.error("Erro ao sincronizar dados em background:", error);
+            } catch (error) {
+                console.error("Erro na inicialização ou sem internet:", error);
+                if (typeof showToast === 'function') showToast("Iniciando em modo restrito/offline.", "error");
+            } finally {
+                // GARANTIA: Oculta o loader aconteça o que acontecer, liberando o clique nos botões
+                if (loader) {
+                    loader.style.opacity = '0';
+                    loader.style.pointerEvents = 'none';
+                    setTimeout(() => loader.remove(), 250);
+                }
+            }
+
+            // CARREGAMENTO EM SEGUNDO PLANO
+            (async () => {
+                try {
+                    await DataService.init();
+                    await loadDataFromCloud();
+                } catch (error) {
+                    console.error("Erro ao sincronizar dados em background:", error);
+                }
+            })();
+
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_OUT' || !session) {
+                    window.location.href = 'index.html';
+                }
+            });
+        };
+    </script>
+
+
+<script id="compatibility-fixes">
+// Compatibilidade de ações já expostas na interface. Estas funções não criam novos dados:
+// apenas completam controles existentes que estavam sem implementação.
+function closeAddUserModal() {
+    const el = document.getElementById('add-user-modal');
+    if (el) el.classList.add('hidden');
+    const form = document.getElementById('add-user-form');
+    if (form) form.reset();
+}
+function closePresencaModal() {
+    const el = document.getElementById('modal-presenca');
+    if (el) el.classList.add('hidden');
+}
+async function savePresencaModal() {
+    if (!currentPresencaId) { showToast('Nenhum atendimento selecionado para a lista de presença.', 'error'); return; }
+    const checkboxes = [...document.querySelectorAll('#presenca-colaboradores-list input[type="checkbox"]')];
+    if (!checkboxes.length) { closePresencaModal(); return; }
+    const updates = checkboxes.map(cb => ({
+        agendamento_id: currentPresencaId,
+        colaborador_id: cb.dataset.colabId || cb.getAttribute('data-colab-id'),
+        compareceu: !cb.checked
+    })).filter(x => x.colaborador_id);
+    try {
+        if (updates.length) {
+            const { error } = await supabaseClient.from('agendamento_participantes').upsert(updates);
+            if (error) throw error;
         }
-    })();
-
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
-            window.location.href = 'index.html';
+        const { error } = await supabaseClient.from('agendamentos').update({ lista_presenca_salva: true, status: 'concluido' }).eq('id', currentPresencaId);
+        if (error) throw error;
+        showToast('Lista de presença salva com sucesso.');
+        closePresencaModal();
+        await loadDataFromCloud();
+    } catch (err) {
+        console.error('Erro ao salvar presença pelo modal:', err);
+        showToast('Não foi possível salvar a presença. Verifique a conexão e tente novamente.', 'error');
+    }
+}
+async function reverterParaDisciplinas(id) {
+    const item = appData.scheduling.find(s => String(s.id) === String(id));
+    const op = item?.op || id;
+    showConfirm('Retornar para Disciplinas', `A OP ${op} retornará para a etapa de Disciplinas.`, async () => {
+        try {
+            const { error } = await supabaseClient.from('agendamentos').update({ status: 'disciplinas' }).eq('id', id);
+            if (error) throw error;
+            if (item) item.status = 'disciplinas';
+            renderParametrizacaoTable();
+            renderScheduling();
+            updateStageCounts();
+            showToast(`OP ${op} retornada para Disciplinas.`);
+        } catch (err) {
+            console.error('Erro ao reverter etapa:', err);
+            showToast('Não foi possível retornar a OP para Disciplinas. Nenhuma alteração local foi aplicada.', 'error');
         }
     });
-};
-    </script>
+}
+</script>
+
+<!-- Camada UX incremental: feedback de rede, acessibilidade, atalhos e proteção contra ações duplicadas. -->
+<div id="ux-network-indicator" class="ux-network-indicator hidden" style="display: none !important;" role="status" aria-live="polite" aria-atomic="true">
+  <span class="ux-action-spinner" aria-hidden="true"></span><span id="ux-network-text">Atualizando dados...</span>
+</div>
+<script>
+(function initEnterpriseUX(){
+  if (window.__enterpriseUXReady) return;
+  window.__enterpriseUXReady = true;
+
+  const byId = (id) => document.getElementById(id);
+  const networkIndicator = byId('ux-network-indicator');
+  const networkText = byId('ux-network-text');
+  let networkDepth = 0;
+  let networkTimer = null;
+
+  function setNetwork(active, text='Atualizando dados...') {
+    if (!networkIndicator) return;
+    networkDepth = active ? networkDepth + 1 : Math.max(0, networkDepth - 1);
+    if (active) {
+      networkText.textContent = text;
+      networkIndicator.classList.add('is-active');
+      clearTimeout(networkTimer);
+    } else if (networkDepth === 0) {
+      networkTimer = setTimeout(() => networkIndicator.classList.remove('is-active'), 120);
+    }
+  }
+  window.showNetworkLoading = (text) => setNetwork(true, text);
+  window.hideNetworkLoading = () => setNetwork(false);
+
+  // Ponte segura para botões gerados dinamicamente. Os dados ficam em data-* e não em JavaScript inline.
+  document.addEventListener('click', (event) => {
+    const btn = event.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    try {
+      if (action === 'open-details' && typeof openDetailsModal === 'function') { event.preventDefault(); event.stopImmediatePropagation(); openDetailsModal(btn.dataset.op); return; }
+      if (action === 'open-email' && typeof openEmailModal === 'function') { event.preventDefault(); event.stopImmediatePropagation(); openEmailModal(btn.dataset.op, btn.dataset.email || '', btn.dataset.unidade || ''); return; }
+      if (action === 'open-call' && typeof openCallModal === 'function') { event.preventDefault(); event.stopImmediatePropagation(); openCallModal(btn.dataset.op, btn.dataset.cidade || '', btn.dataset.unidade || '', btn.dataset.email || ''); return; }
+    } catch (err) {
+      console.error('[Ambiental] Falha ao acionar botão:', action, err);
+      if (typeof showToast === 'function') showToast('Não foi possível abrir esta ação. Atualize a página e tente novamente.', 'error');
+    }
+  }, true);
+
+  // As ações existentes já possuem seus próprios fluxos de salvamento/loading.
+  // Não interceptamos o clique globalmente para não alterar handlers inline existentes.
+
+  // ESC fecha apenas modais que já possuem a classe hidden e não há texto digitado em um campo.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const active = document.activeElement;
+    if (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName)) return;
+    const openModal = [...document.querySelectorAll('[id$="-modal"], [id$="-modal"] *')]
+      .map(el => el.id && byId(el.id)).filter(Boolean).find(el => !el.classList.contains('hidden') && el.id.endsWith('-modal'));
+    if (!openModal) return;
+    const closeName = 'close' + openModal.id.replace(/-([a-z])/g, (_,c)=>c.toUpperCase()).replace(/-modal$/,'Modal');
+    if (typeof window[closeName] === 'function') window[closeName]();
+    else openModal.classList.add('hidden');
+  });
+
+  const stageSearch = byId('search-stage-detail');
+  if (stageSearch && !stageSearch.dataset.bound) {
+    stageSearch.dataset.bound = '1';
+    stageSearch.addEventListener('input', () => {
+      if (typeof renderStageTable === 'function') renderStageTable();
+    });
+  }
+
+  // Busca rápida sem remover a pesquisa atual: encaminha Ctrl+K para o campo de busca visível.
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      const inputs = [...document.querySelectorAll('input:not([type="hidden"]):not([disabled])')];
+      const visible = inputs.find(input => {
+        const r = input.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && /busca|pesquis|unidade|cidade|op|registro/i.test((input.placeholder||'')+' '+(input.getAttribute('aria-label')||'')+' '+(input.id||''));
+      });
+      (visible || inputs.find(i => i.getBoundingClientRect().width>0))?.focus();
+    }
+  });
+
+// Melhora o menu sem mover destinos nem remover itens: adiciona grupos visuais aos botões já existentes.
+
+  // O contador do rodapé passa a refletir a base carregada, sem alterar o banco.
+  const updateUnitCount = () => {
+    const count = (typeof getFullDirectory === 'function') ? Object.keys(getFullDirectory() || {}).length : 0;
+    const el = byId('sidebar-unit-count');
+    if (el) el.textContent = count ? String(count) : '—';
+  };
+  setTimeout(updateUnitCount, 2500);
+  setTimeout(updateUnitCount, 6000);
+
+  // Melhora semântica dos botões icon-only já existentes.
+  document.querySelectorAll('button').forEach(btn => {
+    if (!btn.getAttribute('aria-label') && !btn.innerText.trim()) {
+      const title = btn.getAttribute('title');
+      if (title) btn.setAttribute('aria-label', title);
+    }
+  });
+})();
+</script>
 </body>
 </html>
