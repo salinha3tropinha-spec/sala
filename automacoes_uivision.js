@@ -7,7 +7,10 @@
     'ATIVAR_FUNCIONARIOS':{id:'AUT-004',title:'ATIVAR FUNCIONÁRIOS',category:'EXECUÇÃO EM LOTE',icon:'fa-user-check',accent:'#fbbf24',soft:'rgba(251,191,36,.12)',description:'Atualização de dados e ativação de funcionários em lote por meio do Bridge local.',macro:'ATIVAR_FUNCIONARIOS',endpoint:'batch'}
   };
   const RUNS_KEY='uivision_standalone_runs', HISTORY_KEY='uivision_run_history';
-  const HEALTH='http://172.20.21.67:5000/health', MACRO_URL='http://127.0.0.1:5000/executar-macro', AUTO_URL='http://172.20.21.67:5000/executar-automacao', SOC_URL='http://172.20.21.67:5000/executar-soc';
+  const HEALTH = 'http://172.20.21.67:5000/health', 
+      MACRO_URL = 'http://172.20.21.67:5000/executar-macro', 
+      AUTO_URL = 'http://172.20.21.67:5000/executar-automacao', 
+      SOC_URL = 'http://172.20.21.67:5000/executar-soc';
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const fmt=v=>{if(!v)return '—';try{return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v))}catch{return '—'}};
