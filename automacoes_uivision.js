@@ -115,79 +115,106 @@
   }
 
   async function executeAutomation(cfg){
-    const started = new Date().toISOString();
+    const started=new Date().toISOString();
     const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-    const run = { id: runId, macro: cfg.macro, status: 'info', startedAt: started, message: 'Enviando comando para a fila...', browser: 'Cloud Worker' };
+    const run={id:runId, macro:cfg.macro, status:'info', startedAt:started, message:'Execução iniciada em nuvem.', browser:'Web Nativo'};
     
     $('progressTrack')?.removeAttribute('hidden');
-    document.querySelectorAll('.step .step-state').forEach((x,i)=>x.textContent=i===0?'ENVIANDO':'AGUARDANDO');
+    document.querySelectorAll('.step .step-state').forEach((x,i)=>x.textContent=i===0?'PROCESSANDO':'AGUARDANDO');
     document.querySelectorAll('.step').forEach((s,i)=>{s.classList.remove('active','done','failed');if(i===0)s.classList.add('active')});
-    $('logOutput')&&($('logOutput').innerHTML='');
+    $('logOutput')&&( $('logOutput').innerHTML='');
     
-    addLog('info', `Enviando ordem para a fila em nuvem: ${cfg.title}`);
-    updateExecutionView(cfg, 'running', 'ENVIANDO PARA A FILA');
+    addLog('info',`Solicitação iniciada 100% web: ${cfg.title}`);
+    updateExecutionView(cfg,'running','PREPARANDO AUTOMAÇÃO');
     
     try {
-      let payloadDados = {};
-      
-      if(cfg.endpoint === 'soc'){
+      let cmdVar2 = "";
+      if(cfg.endpoint==='soc'){
           const d = validateSoc();
           if(!d.valid.length) throw new Error('Informe ao menos um ID numérico válido.');
-          payloadDados = { ids: d.valid };
-          addLog('info', `${d.valid.length} ID(s) válidos empacotados para o SOC.`);
-      } else if (cfg.endpoint === 'batch'){
+          cmdVar2 = d.valid.join(',');
+          addLog('info',`${d.valid.length} ID(s) válidos preparados para o SOC.`);
+      } else if (cfg.endpoint==='batch'){
           const d = validateBatch();
           if(!d.valid.length) throw new Error('Nenhum registro válido.');
-          payloadDados = { colaboradores: d.valid };
-          addLog('info', `${d.valid.length} colaborador(es) empacotados.`);
+          cmdVar2 = d.valid.map(r => `${r.cpf};${r.cargo};${r.unidade}`).join('|||');
+          addLog('info',`${d.valid.length} colaborador(es) preparados.`);
       }
       
-      setStep(1, 'active', 'GRAVANDO NA NUVEM');
+      setStep(1,'active','DISPARANDO NAVEGADOR');
       
-      // Conecta ao Supabase para inserir o comando na fila
-      const supbUrl = 'https://wukxupvwnagtdbvwdqlt.supabase.co';
-      const supbKey = 'sb_publishable_-wMyexJm-TEbqx_CtYr-9Q_2ASKEBfs';
-      const client = window.supabase ? window.supabase.createClient(supbUrl, supbKey) : window.supabaseClient;
+      const macroEnc = encodeURIComponent(cfg.macro + (cfg.macro.endsWith('.js') ? '' : '.js'));
+      const var1Enc = encodeURIComponent(runId);
+      const var2Enc = encodeURIComponent(cmdVar2);
       
-      const macroName = cfg.macro + (cfg.macro.endsWith('.js') ? '' : '.js');
-
-      const { error } = await client.from('fila_comandos').insert([{
-          run_id: runId,
-          macro: macroName,
-          payload: payloadDados,
-          status: 'pendente'
-      }]);
-
-      if (error) throw error;
+      // Abre o HTML que "acorda" a extensão nativamente
+      const url = `ui.vision.html?macro=${macroEnc}&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0&cmd_var1=${var1Enc}&cmd_var2=${var2Enc}`;
+      window.open(url, '_blank');
       
-      addLog('ok', 'Comando gravado na fila com sucesso! O robô local processará em instantes.');
-      setStep(3, 'done', 'NA FILA');
+      addLog('ok', 'Nova aba aberta. O UI.Vision vai assumir o controle!');
+      setStep(3,'done','EM EXECUÇÃO');
       
-      run.status = 'success';
-      run.finishedAt = new Date().toISOString();
-      run.message = 'Aguardando execução do motor local.';
+      run.status='success';
+      run.finishedAt=new Date().toISOString();
+      run.message='Comando enviado ao navegador.';
       $('progressTrack')?.setAttribute('hidden','hidden');
       addHistory(run);
-      updateExecutionView(cfg, 'success', 'ENVIADO PARA A FILA');
+      updateExecutionView(cfg,'success','DISPARADO NO NAVEGADOR');
       renderCentral();
       refreshExecutionKpis(cfg.macro);
-      toast('Comando enviado! Assim que o motor ligar, a macro rodará.');
-      setTimeout(()=>updateExecutionView(cfg,'ready','SISTEMA PRONTO'), 2000);
+      toast('Automação iniciada! O robô assumiu em nova aba.');
+      setTimeout(()=>updateExecutionView(cfg,'ready','SISTEMA PRONTO'),2000);
       
     } catch(err) {
-      run.status = 'error'; 
-      run.finishedAt = new Date().toISOString(); 
-      run.message = err?.message || 'Falha ao enviar comando.';
-      addLog('error', run.message); 
-      setStep(2, 'failed', 'FALHA'); 
-      $('progressTrack')?.setAttribute('hidden','hidden');
-      addHistory(run); 
-      updateExecutionView(cfg, 'error', 'ERRO NO ENVIO'); 
-      renderCentral(); 
-      refreshExecutionKpis(cfg.macro); 
-      toast(run.message, 'error');
+      run.status='error'; run.finishedAt=new Date().toISOString(); run.message=err?.message||'Falha não identificada.';
+      addLog('error',run.message); setStep(2,'failed','FALHA'); $('progressTrack')?.setAttribute('hidden','hidden');
+      addHistory(run); updateExecutionView(cfg,'error','EXECUÇÃO COM ERRO'); renderCentral(); refreshExecutionKpis(cfg.macro); toast(run.message,'error');
     }
   }
+
+  window.carregarDadosExtraidos = async function(runId, btn) {
+      const box = document.getElementById(`extraDataBox-${runId}`);
+      if(!box) return;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando na Nuvem (Supabase)...';
+      btn.disabled = true;
+      try {
+          const supbUrl = 'https://wukxupvwnagtdbvwdqlt.supabase.co';
+          const supbKey = 'sb_publishable_-wMyexJm-TEbqx_CtYr-9Q_2ASKEBfs';
+          // Se for pela Central, a variável do supabase fica aqui, caso contrário pega do window
+          const client = window.supabase ? window.supabase.createClient(supbUrl, supbKey) : window.supabaseClient;
+          
+          // Lê os resultados diretamente da sua nuvem
+          const { data, error } = await client.from('resultados_robos').select('*').eq('run_id', runId);
+          
+          if(error) throw error;
+          
+          if(!data || data.length === 0) {
+              box.innerHTML = '<div style="padding: 12px; font-size: 11px; color: #94a3b8; background: rgba(0,0,0,0.2); border-radius: 8px; text-align: center;">Nenhum dado capturado ainda. (O robô pode estar rodando ou a execução falhou).</div>';
+          } else {
+              box.innerHTML = data.map(item => {
+                  const d = item.dados || {};
+                  const s = item.dados_soc || {};
+                  
+                  if (d.erro && d.erro.length > 0) {
+                      return `<div style="background:rgba(225,29,72,0.1); border:1px solid rgba(225,29,72,0.3); padding:12px; border-radius:10px; margin-bottom:8px; font-size:11px;"><div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid rgba(225,29,72,0.2); padding-bottom:6px;"><strong style="color:#f43f5e; font-size:12px;"><i class="fa-solid fa-circle-xmark"></i> ID: ${esc(item.id_colaborador)}</strong><span style="color:#f43f5e; font-family: monospace; font-weight: bold;">FALHA DE EXECUÇÃO</span></div><strong style="color:#f43f5e; font-size:10px; display:block; margin-bottom:4px;">MOTIVO DO ERRO IDENTIFICADO PELO ROBÔ:</strong><span style="color:#cbd5e1;">${esc(d.erro)}</span></div>`;
+                  }
+
+                  let socHtml = '';
+                  if (s.unidade || s.cargo) {
+                      socHtml = `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(129,140,248,0.3);"><strong style="color:#34d399; font-size:10px; display:block; margin-bottom:8px;"><i class="fa-solid fa-check-double"></i> SALVO NO SOC (CONFIRMAÇÃO)</strong><div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; color:#cbd5e1;"><div style="grid-column: 1 / -1;"><strong style="color:#94a3b8; display:block; font-size:9px;">UNIDADE (SOC)</strong> ${esc(s.unidade)}</div><div style="grid-column: 1 / -1;"><strong style="color:#94a3b8; display:block; font-size:9px;">SETOR (SOC)</strong> ${esc(s.setor)}</div><div style="grid-column: 1 / -1;"><strong style="color:#94a3b8; display:block; font-size:9px;">CARGO (SOC)</strong> ${esc(s.cargo)}</div><div><strong style="color:#94a3b8; display:block; font-size:9px;">MATRÍCULA</strong> ${esc(s.mat)}</div><div><strong style="color:#94a3b8; display:block; font-size:9px;">CPF</strong> ${esc(s.cpf)}</div></div></div>`;
+                  }
+
+                  return `<div style="background:rgba(2,6,23,0.4); border:1px solid rgba(129,140,248,0.2); padding:12px; border-radius:10px; margin-bottom:8px; font-size:11px;"><div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid rgba(129,140,248,0.1); padding-bottom:6px;"><strong style="color:#818cf8; font-size:12px;"><i class="fa-solid fa-id-card"></i> ID FLOW: ${esc(item.id_colaborador)}</strong><span style="color:#cbd5e1; font-family: monospace; font-weight: bold;">OP ${esc(d.op)}</span></div><strong style="color:#38bdf8; font-size:10px; display:block; margin-bottom:8px;"><i class="fa-solid fa-cloud-arrow-down"></i> EXTRAÍDO DO FLOW</strong><div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; color:#cbd5e1;"><div style="grid-column: 1 / -1;"><strong style="color:#94a3b8; display:block; font-size:9px;">NOME</strong> ${esc(d.nome)}</div><div style="grid-column: 1 / -1;"><strong style="color:#94a3b8; display:block; font-size:9px;">CARGO (FLOW)</strong> ${esc(d.cargo)}</div><div style="grid-column: 1 / -1;"><strong style="color:#94a3b8; display:block; font-size:9px;">SETOR (FLOW)</strong> ${esc(d.setor)}</div></div>${socHtml}</div>`;
+              }).join('');
+          }
+          box.style.display = 'block';
+          btn.style.display = 'none';
+      } catch(err) {
+          box.innerHTML = '<div style="color: #fb7185; font-size: 11px;">Erro ao conectar com o banco de dados da nuvem.</div>';
+          box.style.display = 'block';
+          btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Tentar novamente';
+          btn.disabled = false;
+      }
   };
   function closeHistory(){ $('historyModal')?.classList.remove('show') }
   window.closeHistory=closeHistory;
