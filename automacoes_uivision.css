@@ -28,3 +28,115 @@ button,input,textarea{font:inherit}button{cursor:pointer}.wrap{position:relative
 @media(max-width:780px){.wrap{padding:12px}.topbar{align-items:flex-start}.topbar-right{flex-wrap:wrap;justify-content:flex-end}.hero{padding:18px}.hero-grid{grid-template-columns:1fr}.hero-side{align-items:flex-start}.hero-main{align-items:flex-start}.hero-title,.detail-title{font-size:23px}.kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(2)::after{display:none}.kpi:nth-child(1),.kpi:nth-child(3){border-right:1px solid rgba(148,163,184,.09)}.engine-grid{grid-template-columns:1fr}.engine-visual{grid-column:auto;grid-row:auto;justify-self:start}.automation-grid{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.flow-step:not(:last-child)::after{display:none}.detail-title-row{flex-direction:column}.form-grid,.detail-grid,.environment-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.history-table{min-width:620px}}
 @media(max-width:540px){.topbar-right{display:none}.hero-main{gap:12px}.orb-wrap{width:58px;height:58px;flex-basis:58px}.orb{width:42px;height:42px}.action-row{width:100%}.action-row .btn{flex:1}.kpis{grid-template-columns:1fr}.kpi:not(:last-child){border-bottom:1px solid rgba(148,163,184,.08)}.kpi::after{display:none!important}.flow{grid-template-columns:1fr}.validation{grid-template-columns:1fr}.card-footer{align-items:stretch;flex-direction:column}.open-btn{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+
+/* ===== SOC WORKSPACE POLISH / BUTTON VISIBILITY FIX ===== */
+.execute{min-height:0;overflow:visible}
+.execute .section-head{margin-bottom:16px}
+.execute-layout{align-items:stretch}
+.execute-core{
+  min-height:360px;
+  padding:24px 26px;
+  position:relative;
+  overflow:visible;
+  background:
+    radial-gradient(circle at 50% 32%,var(--card-accent-soft),transparent 36%),
+    linear-gradient(180deg,rgba(4,10,20,.62),rgba(2,6,14,.44));
+  box-shadow:inset 0 1px rgba(255,255,255,.018),0 18px 45px rgba(0,0,0,.10);
+}
+.execute-core::after{content:"CONTROLE DE EXECUÇÃO";position:absolute;top:14px;left:16px;color:#4f5d70;font-size:7px;font-weight:900;letter-spacing:.16em}
+.robot-visual{width:156px;height:156px;margin-bottom:4px}
+.robot-ring.r1{inset:10px}.robot-ring.r2{inset:0}.robot-pulse{inset:31px}
+.robot-core{width:72px;height:72px;border-radius:21px}.robot-core i{font-size:22px}
+.execute-state{font-size:19px;letter-spacing:-.02em;margin-top:2px}
+.execute-hint{max-width:380px;font-size:9px;line-height:1.55}
+.big-run{
+  position:relative;z-index:5;min-width:280px;width:min(100%,320px);height:50px;margin-top:18px;
+  border:1px solid color-mix(in srgb,var(--card-accent) 38%,transparent);border-radius:14px;font-size:10px;letter-spacing:.06em;
+  box-shadow:0 16px 34px var(--card-accent-soft),inset 0 1px rgba(255,255,255,.18)
+}
+.big-run i{font-size:11px}.big-run:hover{transform:translateY(-2px) scale(1.01)}
+.big-run:focus-visible{outline:2px solid color-mix(in srgb,var(--card-accent) 65%,white);outline-offset:3px}
+.execute .step{min-height:58px;padding:11px 12px}.execute .step strong{font-size:9px}.execute .step span{font-size:7.5px}.execute .step .step-state{font-size:7.5px}
+.execute .progress-track{width:min(320px,100%)}
+.section .textarea{min-height:170px;font-size:10px}.section .field label{font-size:8.5px}.section .validation-card{padding:11px}.section .validation-card strong{font-size:15px}.section .validation-card span{font-size:7.5px}
+@media(max-width:780px){.execute-core{min-height:340px;padding:22px 16px}.robot-visual{width:138px;height:138px}.big-run{min-width:0;width:100%;max-width:360px}}
+
+/* =========================================================
+   PREMIUM UX LAYER — UI.VISION RPA CENTRAL / v3
+   Visual-only enhancement. Existing structure and behavior preserved.
+   ========================================================= */
+:root{
+  --motion-fast:160ms;
+  --motion-base:260ms;
+  --motion-smooth:cubic-bezier(.22,.78,.2,1);
+}
+html{scroll-behavior:smooth}
+body{overflow-x:hidden;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:150;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 12%,rgba(255,255,255,.035),transparent 32%),linear-gradient(180deg,rgba(2,6,23,.18),transparent 24%);transition:opacity 700ms ease}
+body.app-ready::before{opacity:1}
+.app-boot{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,rgba(56,189,248,.085),transparent 24%),radial-gradient(circle at 20% 0%,rgba(251,191,36,.06),transparent 28%),rgba(3,7,15,.98);backdrop-filter:blur(18px);opacity:1;visibility:visible;transition:opacity .55s var(--motion-smooth),visibility .55s ease}
+.app-boot.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.app-boot-card{width:min(360px,calc(100vw - 36px));padding:24px 24px 21px;border:1px solid rgba(148,163,184,.13);border-radius:22px;background:linear-gradient(180deg,rgba(12,20,34,.88),rgba(6,12,22,.92));box-shadow:0 28px 90px rgba(0,0,0,.48),0 0 60px rgba(56,189,248,.05);text-align:center;transform:translateY(8px) scale(.985);animation:bootCardIn .65s var(--motion-smooth) forwards}
+.app-boot-orb{width:54px;height:54px;margin:0 auto 15px;border-radius:17px;display:grid;place-items:center;color:#fbbf24;background:linear-gradient(180deg,rgba(251,191,36,.16),rgba(251,191,36,.045));border:1px solid rgba(251,191,36,.25);box-shadow:0 0 0 8px rgba(251,191,36,.028),0 0 42px rgba(251,191,36,.12)}
+.app-boot-orb i{font-size:20px;filter:drop-shadow(0 0 9px rgba(251,191,36,.35))}
+.app-boot-title{color:#f3f7fb;font-size:12px;font-weight:900;letter-spacing:.02em}
+.app-boot-sub{margin-top:5px;color:#69788b;font-size:9px}
+.app-boot-bar{height:4px;margin-top:18px;border-radius:999px;overflow:hidden;background:rgba(148,163,184,.075)}
+.app-boot-bar::before{content:"";display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,transparent,#38bdf8,#fbbf24,transparent);transform:translateX(-120%);animation:bootSweep 1.25s linear infinite}
+.app-shell .reveal{animation-name:premiumReveal;animation-duration:.62s;animation-timing-function:var(--motion-smooth)}
+.app-shell .auto-card,.app-shell .kpi,.app-shell .run-row,.app-shell .step,.app-shell .env-item,.app-shell .validation-card{will-change:transform,opacity}
+.panel{background:linear-gradient(180deg,rgba(14,22,35,.90),rgba(7,13,23,.96)),radial-gradient(circle at 100% 0%,rgba(56,189,248,.028),transparent 25%);box-shadow:0 24px 70px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.03),0 0 0 1px rgba(255,255,255,.008);transition:border-color .28s ease,box-shadow .28s ease,transform .28s var(--motion-smooth)}
+.panel:hover{border-color:rgba(148,163,184,.16);box-shadow:0 28px 80px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035)}
+.auto-card{transform:translateZ(0);transition:transform .28s var(--motion-smooth),border-color .24s ease,box-shadow .28s ease,background .28s ease}
+.auto-card::before{height:2px;transition:opacity .28s ease,transform .28s var(--motion-smooth)}
+.auto-card:hover::before{opacity:1;transform:scaleX(1.12);transform-origin:left}
+.auto-card:hover .card-icon{transform:translateY(-2px) rotate(-2deg);box-shadow:0 10px 24px var(--card-accent-soft)}
+.card-icon{transition:transform .28s var(--motion-smooth),box-shadow .28s ease}
+.card-index{transition:color .2s ease}.auto-card:hover .card-index{color:#7f8da0}
+.kpi{transition:background .2s ease,transform .2s var(--motion-smooth)}.kpi:hover{background:rgba(255,255,255,.012);transform:translateY(-1px)}
+.kpi-icon{transition:transform .25s var(--motion-smooth),box-shadow .25s ease}.kpi:hover .kpi-icon{transform:scale(1.05);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.btn,.open-btn,.back-link,.top-action,.filter,.link-btn,.icon-btn{position:relative;overflow:hidden;transition:transform .22s var(--motion-smooth),border-color .2s ease,box-shadow .25s ease,background .2s ease,color .2s ease}
+.btn::after,.open-btn::after,.big-run::after{content:"";position:absolute;top:-40%;left:-120%;width:42%;height:180%;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.20),transparent);opacity:0;transition:left .5s ease,opacity .2s ease;pointer-events:none}
+.btn:hover::after,.open-btn:hover::after,.big-run:hover::after{left:150%;opacity:1}
+.ripple-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.34);transform:translate(-50%,-50%) scale(0);pointer-events:none;animation:ripple .62s ease-out forwards}
+.state{position:relative;transition:color .25s ease,border-color .25s ease,background .25s ease,box-shadow .25s ease}
+.state.running{box-shadow:0 0 0 1px rgba(251,191,36,.025),0 0 28px rgba(251,191,36,.055)}
+.state.error{box-shadow:0 0 28px rgba(251,113,133,.045)}
+#globalState .dot{transition:transform .25s ease,box-shadow .25s ease}.state.running .dot{animation:pulse 1.15s ease-in-out infinite}
+.execute-core{isolation:isolate;transition:border-color .3s ease,box-shadow .3s ease,background .3s ease,transform .3s var(--motion-smooth)}
+.execute-core::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;border-radius:inherit;background:radial-gradient(circle at 50% 45%,var(--card-accent-soft),transparent 45%);transition:opacity .35s ease}
+.execute-core.is-running{border-color:color-mix(in srgb,var(--card-accent) 30%,rgba(148,163,184,.08));box-shadow:inset 0 1px rgba(255,255,255,.022),0 18px 50px rgba(0,0,0,.13),0 0 50px var(--card-accent-soft)}
+.execute-core.is-running::before{opacity:1}.execute-core.is-running .robot-core{animation:coreFloat 2.1s ease-in-out infinite}.execute-core.is-running .robot-pulse{animation:enginePulse .95s ease-in-out infinite}
+.execute-core.is-success .robot-core{animation:successPop .55s var(--motion-smooth) both}.execute-core.is-error .robot-core{animation:errorShake .42s ease both}
+.robot-core{transition:transform .25s var(--motion-smooth),box-shadow .3s ease,filter .3s ease}.robot-core i{transition:transform .25s var(--motion-smooth)}
+.execute-core.is-running .robot-core i{animation:iconBreath 1.4s ease-in-out infinite}.execute-core.is-success .robot-core i{animation:successCheck .55s var(--motion-smooth) both}
+.big-run{overflow:hidden;isolation:isolate;transition:transform .25s var(--motion-smooth),box-shadow .25s ease,filter .25s ease,opacity .2s ease}
+.big-run::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.14),transparent 56%);opacity:0;transition:opacity .25s ease;pointer-events:none}
+.big-run:hover::before{opacity:1}.big-run.is-launching{animation:buttonLaunch .9s var(--motion-smooth) both}.big-run.is-launching::before{opacity:1;animation:buttonFlash .85s ease both}
+.step{transition:transform .24s var(--motion-smooth),border-color .2s ease,background .2s ease,box-shadow .25s ease}.step.active{transform:translateX(2px);box-shadow:0 10px 28px rgba(0,0,0,.11)}.step.done .num{animation:donePop .42s var(--motion-smooth) both}.step.failed .num{animation:failedPop .42s ease both}
+.progress-track{position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.018)}
+.progress-track::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.11),transparent);transform:translateX(-100%);animation:progressSheen 1.45s linear infinite}
+.run-row{position:relative;transition:transform .2s var(--motion-smooth),border-color .18s ease,background .18s ease,box-shadow .2s ease}
+.run-row::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:transparent;transition:background .2s ease,box-shadow .2s ease}
+.run-row:hover{transform:translateX(3px);box-shadow:0 9px 24px rgba(0,0,0,.13)}.run-row:hover::before{background:var(--accent);box-shadow:0 0 12px rgba(251,191,36,.18)}
+.history-table tbody tr{transition:background .16s ease,transform .18s var(--motion-smooth)}.history-table tbody tr:hover{transform:translateX(2px)}
+.detail-modal.show .modal-card{animation:modalIn .34s var(--motion-smooth) both}.detail-modal.show .modal-head,.detail-modal.show .modal-body{animation:modalContentIn .4s .04s var(--motion-smooth) both}
+.icon-btn:hover{transform:rotate(3deg) scale(1.03)}
+.toast-item{position:relative;overflow:hidden;box-shadow:0 22px 48px rgba(0,0,0,.34),0 0 0 1px rgba(255,255,255,.012)}.toast-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:currentColor;opacity:.55}
+.toast-item.success{color:#bcefd7}.toast-item.error{color:#ffd2d9}.toast-item.warning{color:#fde6a1}
+#refreshCentral.is-refreshing i,.refreshing i{animation:spin .75s linear infinite}#refreshCentral.is-refreshing{pointer-events:none;opacity:.78}
+.topbar .back-link:hover i{transform:translateX(-2px)}.topbar .back-link i,.topbar .open-btn i{transition:transform .2s var(--motion-smooth)}
+[data-skeleton="true"]{position:relative;overflow:hidden;color:transparent!important;background:linear-gradient(90deg,rgba(148,163,184,.045) 25%,rgba(148,163,184,.095) 50%,rgba(148,163,184,.045) 75%);background-size:220% 100%;animation:shimmer 1.2s linear infinite}
+*{scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.20) transparent}*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(148,163,184,.16);border-radius:999px;border:2px solid transparent;background-clip:padding-box}*::-webkit-scrollbar-thumb:hover{background:rgba(148,163,184,.25);background-clip:padding-box}
+@keyframes premiumReveal{0%{opacity:0;transform:translateY(14px) scale(.992);filter:blur(3px)}70%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none}}
+@keyframes bootCardIn{to{opacity:1;transform:none}}@keyframes bootSweep{to{transform:translateX(380%)}}@keyframes ripple{to{transform:translate(-50%,-50%) scale(18);opacity:0}}
+@keyframes coreFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.025)}}@keyframes iconBreath{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-2deg)}}
+@keyframes successPop{0%{transform:scale(.9)}55%{transform:scale(1.10)}100%{transform:scale(1)}}@keyframes successCheck{0%{transform:scale(.7) rotate(-10deg)}60%{transform:scale(1.12) rotate(2deg)}100%{transform:none}}
+@keyframes errorShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes buttonLaunch{0%{transform:translateY(0) scale(1)}32%{transform:translateY(-2px) scale(1.025)}100%{transform:none}}
+@keyframes buttonFlash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}@keyframes donePop{0%{transform:scale(.78)}70%{transform:scale(1.12)}100%{transform:none}}
+@keyframes failedPop{0%,100%{transform:scale(1)}35%{transform:scale(1.1)}70%{transform:scale(.96)}}@keyframes progressSheen{to{transform:translateX(100%)}}
+@keyframes shimmer{to{background-position:-220% 0}}@keyframes modalIn{0%{opacity:0;transform:translateY(12px) scale(.985)}100%{opacity:1;transform:none}}
+@keyframes modalContentIn{0%{opacity:0;transform:translateY(5px)}100%{opacity:1;transform:none}}
+@media(max-width:780px){.app-boot-card{padding:22px 18px 19px}.auto-card:hover{transform:translateY(-2px)}.run-row:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.app-shell .reveal{animation:none;opacity:1;transform:none;filter:none}.app-boot{transition:none}.app-boot-card{animation:none;transform:none}.progress-track::after,.btn::after,.open-btn::after,.big-run::before{animation:none}}

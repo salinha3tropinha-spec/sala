@@ -8,83 +8,130 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link rel="stylesheet" href="automacoes_uivision.css">
+<style>
+  /* Ajustes cirúrgicos para cockpit compacto (sem rolagem desnecessária) */
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 14px 20px; }
+  .compact-hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; margin-bottom: 12px; }
+  .compact-hero-left { display: flex; align-items: center; gap: 14px; }
+  .compact-hero-left h1 { font-size: 18px; margin: 0; font-weight: 900; }
+  .compact-hero-left p { margin: 2px 0 0; font-size: 12px; color: #94a3b8; }
+  .status-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .status-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.12); color: #cbd5e1; }
+  .kpis-compact { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  .kpis-compact .kpi { padding: 10px 14px; min-height: unset; }
+  .kpis-compact .kpi-copy strong { font-size: 18px; line-height: 1.2; }
+  .main-cockpit { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; align-items: start; }
+  @media(max-width: 1024px) {
+    .main-cockpit { grid-template-columns: 1fr; }
+    .kpis-compact { grid-template-columns: repeat(2, 1fr); }
+    .compact-hero { flex-direction: column; align-items: flex-start; }
+  }
+</style>
 </head>
-<body data-page="central">
+<body data-page="central" class="app-shell">
 <div class="page-bg"></div>
 <div class="wrap">
-  <div class="topbar reveal"><a class="back-link" href="painel.html"><i class="fa-solid fa-arrow-left"></i><span>Voltar ao painel</span></a><div class="topbar-right"><span class="eyebrow"><span class="eyebrow-dot"></span>CENTRAL DEDICADA</span><a class="top-action" href="painel.html"><i class="fa-solid fa-clock-rotate-left"></i> Histórico global</a></div></div>
+  <!-- Topbar Superior -->
+  <div class="topbar reveal" style="margin-bottom: 10px;">
+    <a class="back-link" href="painel.html"><i class="fa-solid fa-arrow-left"></i><span>Voltar ao painel</span></a>
+    <div class="topbar-right">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>CENTRAL OPERACIONAL RPA</span>
+      <button id="refreshCentral" class="btn" style="padding: 6px 12px; font-size: 11px;"><i class="fa-solid fa-rotate"></i> Atualizar</button>
+    </div>
+  </div>
 
-  <header class="panel hero reveal d1">
-    <div class="hero-grid">
-      <div class="hero-main"><div class="orb-wrap" aria-hidden="true"><div class="orb-ring"></div><div class="orb-ring alt"></div><div class="orb"><i class="fa-solid fa-robot"></i></div></div><div><div class="eyebrow"><span class="eyebrow-dot"></span>AUTOMAÇÃO &amp; CONTROLE</div><h1 class="hero-title">Automações UI.Vision</h1><p class="hero-subtitle">Central enterprise para selecionar, monitorar e acessar cada processo RPA. A execução deixou de ser um atalho do card: cada automação agora possui seu próprio workspace operacional.</p><div class="meta"><span><i class="fa-solid fa-microchip"></i> Engine Local</span><span class="meta-sep"></span><span><i class="fa-solid fa-plug"></i> Bridge 127.0.0.1:5000</span><span class="meta-sep"></span><span><i class="fa-solid fa-shield-halved"></i> Ambiente controlado</span></div></div></div>
-      <div class="hero-side"><div id="globalState" class="state"><span class="dot"></span><span class="state-label">SISTEMA PRONTO</span></div><div class="action-row"><button id="refreshCentral" class="btn"><i class="fa-solid fa-rotate"></i> Atualizar status</button><a class="btn" href="painel.html"><i class="fa-solid fa-clock-rotate-left"></i> Histórico</a></div></div>
+  <!-- Header Unificado e Compacto -->
+  <header class="panel compact-hero reveal d1">
+    <div class="compact-hero-left">
+      <div class="orb-wrap" style="width:42px;height:42px;" aria-hidden="true">
+        <div class="orb" style="width:32px;height:32px;font-size:14px;"><i class="fa-solid fa-robot"></i></div>
+      </div>
+      <div>
+        <h1 class="hero-title">Automações UI.Vision</h1>
+        <p id="envSummary">Selecione uma rotina para iniciar a operação.</p>
+      </div>
+    </div>
+    <div class="status-badges">
+      <div id="globalState" class="state" style="padding: 6px 12px;"><span class="dot"></span><span class="state-label">SISTEMA PRONTO</span></div>
+      <span class="status-tag"><i class="fa-solid fa-plug" style="color:#38bdf8;"></i> BRIDGE: <strong class="mini-status" data-env="bridge">127.0.0.1:5000</strong></span>
+      <span class="status-tag"><i class="fa-solid fa-puzzle-piece" style="color:#34d399;"></i> UI.VISION: <strong class="mini-status" data-env="uivision">ui.vision.html</strong></span>
+      <span style="display:none;" data-env="browser"></span>
+      <span style="display:none;" data-env="browser-state"></span>
     </div>
   </header>
 
-  <section class="panel kpis reveal d2" aria-label="Indicadores globais">
-    <div class="kpi"><div class="kpi-icon sky"><i class="fa-solid fa-list-check"></i></div><div class="kpi-copy"><label>EXECUÇÕES</label><strong id="globalRuns">—</strong><small>registros conhecidos</small></div></div>
-    <div class="kpi"><div class="kpi-icon green"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-copy"><label>SUCESSOS</label><strong id="globalSuccess">—</strong><small>solicitações aceitas</small></div></div>
-    <div class="kpi"><div class="kpi-icon indigo"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-copy"><label>FALHAS</label><strong id="globalFailures">—</strong><small>execuções com erro</small></div></div>
-    <div class="kpi"><div class="kpi-icon amber"><i class="fa-solid fa-clock"></i></div><div class="kpi-copy"><label>ÚLTIMA EXECUÇÃO</label><strong id="globalLast">—</strong><small>histórico mais recente</small></div></div>
+  <!-- KPIs em Linha Fina -->
+  <section class="panel kpis kpis-compact reveal d2" aria-label="Indicadores globais">
+    <div class="kpi"><div class="kpi-icon sky" style="width:34px;height:34px;font-size:12px;"><i class="fa-solid fa-list-check"></i></div><div class="kpi-copy"><label>EXECUÇÕES</label><strong id="globalRuns">—</strong><small>total histórico</small></div></div>
+    <div class="kpi"><div class="kpi-icon green" style="width:34px;height:34px;font-size:12px;"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-copy"><label>SUCESSOS</label><strong id="globalSuccess">—</strong><small>concluídas</small></div></div>
+    <div class="kpi"><div class="kpi-icon indigo" style="width:34px;height:34px;font-size:12px;"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-copy"><label>FALHAS</label><strong id="globalFailures">—</strong><small>com erro</small></div></div>
+    <div class="kpi"><div class="kpi-icon amber" style="width:34px;height:34px;font-size:12px;"><i class="fa-solid fa-clock"></i></div><div class="kpi-copy"><label>ÚLTIMA</label><strong id="globalLast">—</strong><small>registro recente</small></div></div>
   </section>
 
-  <section class="panel section reveal d3" style="margin-top:14px">
-    <div class="section-head"><div><span class="section-kicker">NÚCLEO OPERACIONAL</span><h2 class="section-title">Ambiente RPA</h2><p id="envSummary" class="muted" style="margin:5px 0 0">Verificando Bridge local e ambiente UI.Vision...</p></div><span class="badge info">HEALTH CHECK</span></div>
-    <div class="engine-grid"><div class="engine-copy"><div class="eyebrow"><span class="eyebrow-dot"></span>COMMAND CENTER</div><h3 style="font-size:22px;margin:7px 0 0;font-weight:900">Selecione uma automação e entre no seu workspace.</h3><p>Cada rotina possui uma tela própria com execução controlada, logs, histórico, validações, indicadores e diagnóstico. A Central apenas organiza a operação; o Bridge continua responsável pela execução real.</p></div><div class="engine-visual" aria-hidden="true"><div class="engine-ring r1"></div><div class="engine-ring r2"></div><div class="engine-pulse"></div><div class="engine-pulse alt"></div><div class="engine-core"><i class="fa-solid fa-robot"></i></div></div><div class="conn"><div class="conn-row"><div class="conn-icon"><i class="fa-solid fa-plug"></i></div><div class="conn-copy"><small>BRIDGE LOCAL</small><strong>127.0.0.1:5000</strong></div><span class="mini-status pending" data-env="bridge">VERIFICANDO</span></div><div class="conn-row"><div class="conn-icon"><i class="fa-solid fa-puzzle-piece"></i></div><div class="conn-copy"><small>UI.VISION</small><strong>ui.vision.html</strong></div><span class="mini-status pending" data-env="uivision">VERIFICANDO</span></div><div class="conn-row"><div class="conn-icon"><i class="fa-solid fa-window-maximize"></i></div><div class="conn-copy"><small>BROWSER</small><strong data-env="browser">—</strong></div><span class="mini-status" data-env="bridge">—</span></div></div></div>
-  </section>
+  <!-- Divisão Central: Cards Operacionais à Esquerda + Histórico Imediato à Direita -->
+  <div class="main-cockpit reveal d3">
+    <!-- Grade de Rotinas Disponíveis -->
+    <section>
+      <div class="cards-head" style="margin-bottom:10px;">
+        <div><span class="section-kicker">WORKSPACES DISPONÍVEIS</span><h2 class="section-title" style="font-size:15px;">Escolha a Rotina</h2></div>
+        <span class="count">03 PROCESSOS</span>
+      </div>
+      <div class="automation-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+        
+        <!-- AUT-001: SOC - CRIAR CADASTRO -->
+        <article class="auto-card" style="--card-accent:#818cf8;--card-accent-soft:rgba(129,140,248,.12);border-color:rgba(129,140,248,.4)">
+          <div class="card-top"><div class="card-icon"><i class="fa-solid fa-user-plus"></i></div><span class="card-index">AUT-001</span></div>
+          <span class="card-type">SOC / CADASTRO</span>
+          <h3 class="card-title">SOC - CRIAR CADASTRO</h3>
+          <p class="card-description">Criação automatizada de cadastros no SOC com validação de IDs.</p>
+          <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Disponível para todos</div><a class="open-btn" href="automacao_soc_criar_cadastro.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
+        </article>
 
-  <section class="section-full reveal d4">
-    <div class="cards-head">
-      <div><span class="section-kicker">ROTINAS DISPONÍVEIS</span><h2 class="section-title">Escolha uma automação para abrir seu workspace</h2></div>
-      <span class="count">04 PROCESSOS</span>
-    </div>
-    <div class="automation-grid">
-      <!-- Oculto para não-masters, exibe apenas se master ou adaptado -->
-      <article class="auto-card master-only-card" style="--card-accent:#38bdf8;--card-accent-soft:rgba(56,189,248,.12)">
-        <div class="card-top"><div class="card-icon"><i class="fa-solid fa-stethoscope"></i></div><span class="card-index">AUT-001</span></div>
-        <span class="card-type">AUTOMAÇÃO OPERACIONAL</span>
-        <h3 class="card-title">TESTE_SESI</h3>
-        <p class="card-description">Preenchimento automatizado de fichas clínicas e rotinas associadas ao SESI/SOC.</p>
-        <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Restrito a Master</div><a class="open-btn" href="automacao_teste_sesi.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
-      </article>
+        <!-- NOVO: AUT-002: VERIFICAR EXAMES -->
+        <article class="auto-card" style="--card-accent:#06b6d4;--card-accent-soft:rgba(6,182,212,.12);border-color:rgba(6,182,212,.35)">
+          <div class="card-top"><div class="card-icon"><i class="fa-solid fa-file-waveform"></i></div><span class="card-index">AUT-002</span></div>
+          <span class="card-type">SOC / EXAMES</span>
+          <h3 class="card-title">VERIFICAR EXAMES</h3>
+          <p class="card-description">Verificação, validação e conferência automatizada de exames ocupacionais no SOC.</p>
+          <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Disponível para todos</div><a class="open-btn" href="automacao_verificar_exames.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
+        </article>
 
-      <article class="auto-card master-only-card" style="--card-accent:#34d399;--card-accent-soft:rgba(52,211,153,.12)">
-        <div class="card-top"><div class="card-icon"><i class="fa-solid fa-file-medical"></i></div><span class="card-index">AUT-002</span></div>
-        <span class="card-type">DADOS CLÍNICOS</span>
-        <h3 class="card-title">PREENCHER_FC_SESI</h3>
-        <p class="card-description">Processamento automatizado de dados de exames ocupacionais em rotina de lote.</p>
-        <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Restrito a Master</div><a class="open-btn" href="automacao_preencher_fc_sesi.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
-      </article>
+        <!-- AUT-003: ATIVAR FUNCIONÁRIOS (Master) -->
+        <article class="auto-card master-only-card" style="--card-accent:#fbbf24;--card-accent-soft:rgba(251,191,36,.12)">
+          <div class="card-top"><div class="card-icon"><i class="fa-solid fa-user-check"></i></div><span class="card-index">AUT-003</span></div>
+          <span class="card-type">EXECUÇÃO EM LOTE</span>
+          <h3 class="card-title">ATIVAR FUNCIONÁRIOS</h3>
+          <p class="card-description">Atualização e ativação de colaboradores em lote via Bridge local.</p>
+          <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Restrito a Master</div><a class="open-btn" href="automacao_ativar_funcionarios.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
+        </article>
 
-      <!-- ÚNICO DISPONÍVEL PARA TODOS -->
-      <article class="auto-card" style="--card-accent:#818cf8;--card-accent-soft:rgba(129,140,248,.12)">
-        <div class="card-top"><div class="card-icon"><i class="fa-solid fa-user-plus"></i></div><span class="card-index">AUT-003</span></div>
-        <span class="card-type">SOC / CADASTRO</span>
-        <h3 class="card-title">SOC - CRIAR CADASTRO</h3>
-        <p class="card-description">Criação automatizada de cadastros no SOC a partir de uma lista validada de IDs.</p>
-        <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Disponível para todos</div><a class="open-btn" href="automacao_soc_criar_cadastro.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
-      </article>
+      </div>
+    </section>
 
-      <article class="auto-card master-only-card" style="--card-accent:#fbbf24;--card-accent-soft:rgba(251,191,36,.12)">
-        <div class="card-top"><div class="card-icon"><i class="fa-solid fa-user-check"></i></div><span class="card-index">AUT-004</span></div>
-        <span class="card-type">EXECUÇÃO EM LOTE</span>
-        <h3 class="card-title">ATIVAR FUNCIONÁRIOS</h3>
-        <p class="card-description">Atualização de dados e ativação de funcionários em lote por meio do Bridge local.</p>
-        <div class="card-footer"><div class="card-status"><span class="status-dot"></span>Restrito a Master</div><a class="open-btn" href="automacao_ativar_funcionarios.html">ABRIR <i class="fa-solid fa-arrow-right"></i></a></div>
-      </article>
-    </div>
-  </section>
-
-  <div class="activity-grid reveal d5">
-    <section class="panel section"><div class="section-head"><div><span class="section-kicker">AUDITORIA</span><h2 class="section-title">Atividade recente</h2></div><a class="link-btn" href="painel.html">Ver histórico completo <i class="fa-solid fa-arrow-up-right-from-square"></i></a></div><div id="activityList" class="list"></div></section>
-    <section class="panel section"><div class="section-head"><div><span class="section-kicker">FLUXO</span><h2 class="section-title">Como funciona</h2></div><span class="chip success"><i class="fa-solid fa-shield-halved"></i> CONTROLE LOCAL</span></div><div class="flow"><div class="flow-step"><i class="fa-solid fa-list-check"></i><strong>01 · Selecione</strong><span>Escolha a automação</span></div><div class="flow-step"><i class="fa-solid fa-window-maximize"></i><strong>02 · Abra</strong><span>Entre no workspace</span></div><div class="flow-step"><i class="fa-solid fa-play"></i><strong>03 · Execute</strong><span>Confirme a operação</span></div><div class="flow-step"><i class="fa-solid fa-robot"></i><strong>04 · Monitore</strong><span>Veja logs e histórico</span></div></div></section>
+    <!-- Auditoria Recente Direta no Cockpit -->
+    <section class="panel section" style="margin:0; min-height: 380px;">
+      <div class="section-head" style="margin-bottom:10px;">
+        <div><span class="section-kicker">AUDITORIA</span><h2 class="section-title" style="font-size:15px;">Últimas Execuções</h2></div>
+        <a class="link-btn" href="painel.html" style="font-size:11px;">Histórico <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+      </div>
+      <div id="activityList" class="list" style="max-height: 320px; overflow-y: auto;"></div>
+    </section>
   </div>
-
-  <div style="display:flex;justify-content:space-between;gap:12px;margin-top:12px;padding:0 4px;color:#4f5c6f;font-size:8px;font-weight:800"><span><i class="fa-solid fa-lock"></i> Execução permanece no Bridge local</span><span>UI.VISION · ENTERPRISE RPA CONTROL CENTER</span></div>
 </div>
-<div id="historyModal" class="detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes da execução"><div class="modal-card"><div class="modal-head"><div><div class="modal-title">Detalhes da execução</div><div class="modal-sub">Registro selecionado no histórico global.</div></div><button class="icon-btn" onclick="closeHistory()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></div><div class="modal-body"><div id="historyDetail" class="detail-grid"></div></div></div></div>
+
+<!-- Modal de Detalhes -->
+<div id="historyModal" class="detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes da execução">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><div class="modal-title">Detalhes da execução</div><div class="modal-sub">Registro selecionado no histórico global.</div></div>
+      <button class="icon-btn" onclick="closeHistory()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body"><div id="historyDetail" class="detail-grid"></div></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="automacoes_uivision.js"></script>
+<script src="automacoes_uivision.js?v=1003"></script>
 </body>
 </html>
