@@ -6,24 +6,8 @@
     <title>Centro de Comando Operacional | Sala ADM Cloud Core v7.2</title>
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/png" href="logo-maykon.png">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-    tailwind.config = {
-        darkMode: 'class',
-        theme: {
-            extend: {
-                colors: {
-                    darker: '#030712',      // Cor de fundo principal
-                    darkcard: '#0b0f19',    // Cor de fundo dos cards/painéis
-                    bordercolor: '#1e293b', // Cor das bordas
-                    accent: '#38bdf8',      // Cor de destaque (azul céu)
-                    dourado: '#fcd34d'      // Cor secundária/dourada
-                }
-            }
-        }
-    }
-    </script>
+    <!-- Tailwind CSS (Pré-compilado para Produção) -->
+    <link rel="stylesheet" href="dist/tailwind.css">
     <!-- FontAwesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -3266,11 +3250,11 @@ function updateSidebarVisibility() {
         const { data: unitData } = await supabaseClient.from('unidades_customizadas').select('*');
         if (unitData) {
             unitData.forEach(u => {
-                appData.customUnits[u.OP || u.op] = { 
-                    unidade: u.Unidade || u.unidade, 
-                    cidade: u.Cidade || u.cidade, 
-                    email: u['Email Institucional'] || u.email || '', 
-                    telefone: u.Telefone || u.telefone || '' 
+                appData.customUnits[u.op || u.OP] = { 
+                    unidade: u.unidade || u.Unidade, 
+                    cidade: u.cidade || u.Cidade, 
+                    email: u.email_institucional || u['Email Institucional'] || u.email || '', 
+                    telefone: u.telefone || u.Telefone || '' 
                 };
             });
         }
@@ -3337,6 +3321,26 @@ function updateSidebarVisibility() {
     renderLogs();
     renderWiki();
     updateStats();
+
+    // Sincronização em Tempo Real (Realtime) nativa do Supabase
+    if (!window._realtimeInitialized && typeof supabaseClient !== 'undefined') {
+        window._realtimeInitialized = true;
+        try {
+            supabaseClient
+                .channel('painel-live-sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, () => {
+                    console.log('[Realtime] Agendamentos atualizados na nuvem, sincronizando...');
+                    loadDataFromCloud();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamento_participantes' }, () => {
+                    console.log('[Realtime] Participantes atualizados na nuvem, sincronizando...');
+                    loadDataFromCloud();
+                })
+                .subscribe();
+        } catch(e) {
+            console.warn('[Realtime] Falha ao assinar canal em tempo real:', e);
+        }
+    }
 }
 
         function getUnitData(op) {
@@ -4012,7 +4016,13 @@ function updateSidebarVisibility() {
             const email = document.getElementById('new-email').value;
 
             appData.customUnits[op] = { unidade, cidade, telefone, email };
-            await supabaseClient.from('unidades_customizadas').upsert({ OP: op, Unidade: unidade, Cidade: cidade, "Email Institucional": email, Telefone: telefone }, { onConflict: 'OP' });
+            await supabaseClient.from('unidades_customizadas').upsert({ 
+                op: op, 
+                unidade: unidade, 
+                cidade: cidade, 
+                email_institucional: email, 
+                telefone: telefone 
+            }, { onConflict: 'op' });
 
             if (!appData.currentBatch.includes(op)) {
                 appData.currentBatch.unshift(op);
@@ -4639,9 +4649,9 @@ if (inputBusca) {
 
             let schedList;
             if (isMaster) {
-                schedList = appData.scheduling.filter(s => s.status === 'concluido');
+                schedList = appData.scheduling.filter(s => s.status === 'concluido' || (s.agendamento_participantes && s.agendamento_participantes.length > 0));
             } else {
-                schedList = appData.scheduling.filter(s => s.status === 'sig' || s.status === 'disciplinas' || s.status === 'concluido');
+                schedList = appData.scheduling.filter(s => s.status === 'sig' || s.status === 'disciplinas' || s.status === 'concluido' || (s.agendamento_participantes && s.agendamento_participantes.length > 0));
             }
             
             tbody.innerHTML = '';
@@ -4651,25 +4661,48 @@ if (inputBusca) {
                 return Number(a.op || 0) - Number(b.op || 0);
             });
 
-            const filtered = schedListOrdenada.filter(s => `${s.cidade || ''} ${s.medico || ''} ${s.op || ''}`.toLowerCase().includes(filter));
+            const filtered = schedListOrdenada.filter(s => `${s.cidade || ''} ${s.instituicao || ''} ${s.medico || ''} ${s.op || ''}`.toLowerCase().includes(filter));
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-8">${getEmptyStateHtml('fa-calendar-xmark', 'Nenhuma unidade encontrada', 'Nenhum agendamento correspondente aos filtros.')}</td></tr>`;
                 return;
             }
 
             filtered.forEach(s => {
-                let statusBadge = '';
-                if (isMaster) {
-                    if (s.status === 'concluido') statusBadge = `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Concluído</span>`;
-                    else if (s.status === 'sig') {
-                        statusBadge = s.sig_enviado 
-                            ? `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">SIG Enviado</span>` 
-                            : `<span class="inline-block mt-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Aguardando SIG</span>`;
-                    } else if (s.status === 'disciplinas') {
-                        statusBadge = `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Concluído</span>`;
-                    }
+                let participantes = s.agendamento_participantes || [];
+                let temColaboradores = participantes.length > 0;
+                let listaRealizada = s.lista_presenca_salva === true; 
+
+                let btnClass = '';
+                let btnIcon = '';
+                let btnText = '';
+
+                if (listaRealizada) {
+                    btnClass = 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40';
+                    btnIcon = 'fa-circle-check text-emerald-400';
+                    btnText = 'Lista Realizada';
+                } else if (temColaboradores) {
+                    btnClass = 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 ring-1 ring-amber-500/30 animate-pulse';
+                    btnIcon = 'fa-clock text-amber-400';
+                    btnText = 'Aguardando Fechamento';
                 } else {
-                    statusBadge = `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Concluído</span>`;
+                    btnClass = 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 border-slate-700/60';
+                    btnIcon = 'fa-folder-open text-slate-400';
+                    btnText = 'Lista Vazia';
+                }
+
+                let statusBadge = '';
+                if (listaRealizada) {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"><i class="fa-solid fa-circle-check text-[10px]"></i> Lista Realizada</span>`;
+                } else if (temColaboradores) {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 mt-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider animate-pulse"><i class="fa-solid fa-clock text-[10px]"></i> Aguardando Fechamento</span>`;
+                } else if (s.status === 'concluido') {
+                    statusBadge = `<span class="inline-block mt-1 bg-slate-800/80 text-slate-400 border border-slate-700/60 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Aguardando Lista</span>`;
+                } else if (s.status === 'sig') {
+                    statusBadge = s.sig_enviado 
+                        ? `<span class="inline-block mt-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">SIG Enviado</span>` 
+                        : `<span class="inline-block mt-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">Aguardando SIG</span>`;
+                } else {
+                    statusBadge = `<span class="inline-block mt-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">${s.status || 'Agendado'}</span>`;
                 }
 
                 let actionHtml = '';
@@ -4679,36 +4712,17 @@ if (inputBusca) {
                 if (isMaster) {
                     actionHtml = `
                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                            <button onclick="openColaboradoresMasterModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Gerenciar Colaboradores (Master)"><i class="fa-solid fa-users-gear"></i></button>
-                            <a href="presenca.html?id=${s.id}" target="_blank" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 no-underline" title="Abrir Chamada Oficial"><i class="fa-solid fa-clipboard-user"></i></a>
-                            <button onclick="openConfirmEmailModal(${safeId})" class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="E-mail Confirmação"><i class="fa-solid fa-envelope-circle-check"></i></button>
-                            <button onclick="openExcelRowModal(${safeId})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Linha Excel"><i class="fa-solid fa-file-excel"></i></button>
-                            <button onclick="openNpsoModal(${safeId})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5" title="Enviar NPSO"><i class="fa-solid fa-paper-plane"></i></button>
+                            <a href="presenca.html?id=${s.id}" target="_blank" class="${btnClass} px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 no-underline border shadow-sm" title="Realizar Lista de Presença">
+                                <i class="fa-solid ${btnIcon}"></i> 
+                                <span>${btnText}</span>
+                            </a>
+                            <button onclick="openColaboradoresMasterModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="Gerenciar Colaboradores (Master)"><i class="fa-solid fa-users-gear"></i></button>
+                            <button onclick="openConfirmEmailModal(${safeId})" class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="E-mail Confirmação"><i class="fa-solid fa-envelope-circle-check"></i></button>
+                            <button onclick="openExcelRowModal(${safeId})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="Linha Excel"><i class="fa-solid fa-file-excel"></i></button>
+                            <button onclick="openNpsoModal(${safeId})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="Enviar NPSO"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     `;
                 } else {
-                    let participantes = s.agendamento_participantes || [];
-                    let temColaboradores = participantes.length > 0;
-                    let listaRealizada = s.lista_presenca_salva === true; 
-
-                    let btnClass = '';
-                    let btnIcon = '';
-                    let btnText = '';
-
-                    if (listaRealizada) {
-                        btnClass = 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40';
-                        btnIcon = 'fa-circle-check text-emerald-400';
-                        btnText = 'Lista Realizada';
-                    } else if (temColaboradores) {
-                        btnClass = 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20';
-                        btnIcon = 'fa-clock text-amber-400';
-                        btnText = 'Aguardando Fechamento';
-                    } else {
-                        btnClass = 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 border-slate-700/60';
-                        btnIcon = 'fa-folder-open text-slate-400';
-                        btnText = 'Lista Vazia';
-                    }
-
                     actionHtml = `
                         <div class="flex items-center justify-end gap-2">
                             <button onclick="openVisitorDetailsModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
@@ -4986,7 +5000,11 @@ if (inputBusca) {
         } catch(e) {}
 
         // Tenta salvar no Supabase em segundo plano
-        await supabaseClient.from('agendamentos').update({ sig_enviado: true }).eq('id', id);
+        try {
+            await supabaseClient.from('agendamentos').update({ sig_enviado: true }).eq('id', id);
+        } catch(e) {
+            console.warn('[Ambiental] Coluna sig_enviado pendente no Supabase:', e.message);
+        }
 
         updateStageCounts();
         if (!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
@@ -5050,7 +5068,11 @@ if (inputBusca) {
             let item = appData.scheduling.find(s => String(s.id) === String(id));
             if (item) {
                 item.disciplinas_enviado = true;
-                await supabaseClient.from('agendamentos').update({ disciplinas_enviado: true }).eq('id', id);
+                try {
+                    await supabaseClient.from('agendamentos').update({ disciplinas_enviado: true }).eq('id', id);
+                } catch(e) {
+                    console.warn('[Ambiental] Coluna disciplinas_enviado pendente no Supabase:', e.message);
+                }
                 updateStageCounts();
                 if (!document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
                 renderScheduling();
@@ -6503,10 +6525,10 @@ async function runMacro(macroName) {
 
     if (typeof supabaseClient !== 'undefined') {
         try {
-            await supabaseClient.from('logs_automacao').insert([{
-                operacao: macro,
-                status: 'DISPARADO',
-                timestamp: new Date().toISOString()
+            await supabaseClient.from('logs_auditoria').insert([{
+                time: new Date().toLocaleString('pt-BR'),
+                process: `Automação RPA: ${macro}`,
+                status: 'DISPARADO'
             }]);
         } catch (logError) {
             console.warn('[AUTOMAÇÃO] Macro aceita, mas o log no Supabase falhou:', logError);

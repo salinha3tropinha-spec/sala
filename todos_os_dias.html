@@ -4,28 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logística Médica | Central de Despacho Enterprise</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        dark: {
-                            950: '#05080f',
-                            900: '#0a0f1c',
-                            800: '#11192b',
-                            700: '#1c2842',
-                        }
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (Pré-compilado para Produção) -->
+    <link rel="stylesheet" href="dist/tailwind.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Supabase CDN -->
@@ -360,6 +340,58 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
         </div>
     </div>
 
+    <!-- Modal Dedicado para Upload de Planilha de Colaboradores -->
+    <div id="modal-upload-dedicado" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-dark-900 border border-dark-700 w-full max-w-lg rounded-3xl p-6 shadow-2xl transform scale-95 transition-transform duration-300" id="modal-upload-box">
+            <div class="flex items-center justify-between pb-4 border-b border-dark-800 mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-file-excel text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Importar Lista de Colaboradores</h3>
+                        <p id="upload-dedicado-sub" class="text-xs text-slate-400">Subir planilha para criar lista de presença</p>
+                    </div>
+                </div>
+                <button onclick="fecharModalUploadDedicado()" class="w-8 h-8 rounded-lg bg-dark-800 hover:bg-dark-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Carregue a planilha contendo as colunas <strong class="text-sky-400">Nome</strong>, <strong class="text-sky-400">Cargo</strong> e <strong class="text-sky-400">CPF</strong>.
+                    Ao importar, esta unidade será movida automaticamente para <strong class="text-emerald-400">Unidades Agendadas</strong> com status <strong class="text-amber-400">Aguardando Fechamento</strong> para realização da chamada.
+                </p>
+
+                <!-- Dropzone Dedicado -->
+                <div id="dropzone-dedicado" class="border-2 border-dashed border-dark-700 bg-dark-950 rounded-2xl p-6 text-center hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all cursor-pointer relative group">
+                    <input type="file" id="input-planilha-dedicado" accept=".xlsx, .xls, .csv" onchange="processarPlanilhaDedicada(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    
+                    <div id="dropzone-dedicado-content" class="flex flex-col items-center justify-center pointer-events-none">
+                        <div class="w-12 h-12 rounded-full bg-dark-800 group-hover:bg-emerald-500/20 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 transition-colors mb-3">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-300">Arraste a planilha ou clique para buscar</p>
+                        <p class="text-[10px] text-slate-500 mt-1 font-mono">Formatos suportados: .xlsx, .xls ou .csv</p>
+                    </div>
+                </div>
+                
+                <!-- Feedback do Upload Dedicado -->
+                <div id="feedback-dedicado" class="hidden bg-dark-950 border rounded-xl p-3 flex items-center gap-3"></div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-dark-800 flex justify-end gap-3">
+                <button onclick="fecharModalUploadDedicado()" class="bg-dark-800 hover:bg-dark-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition border border-dark-700">
+                    Cancelar
+                </button>
+                <button id="btn-executar-upload-dedicado" onclick="confirmarUploadDedicado()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/20 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Subir e Liberar Presença
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Container de Notificações Toast -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
@@ -613,6 +645,9 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                     <td class="p-5 align-middle">${badgeStatus}</td>
                     <td class="p-5 text-right align-middle">
                         <div class="flex items-center justify-end gap-2">
+                            <button onclick="abrirModalUploadDedicado('${item.id}', '${nomeExibicao.replace(/'/g, "")}', '${item.op || ""}')" class="bg-dark-800 hover:bg-emerald-600 text-slate-300 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all border border-dark-700 hover:border-emerald-500 shadow-sm flex items-center gap-1.5" title="Subir Planilha de Colaboradores (Nomes, Cargos, CPFs)">
+                                <i class="fa-solid fa-file-excel text-emerald-400"></i> Planilha
+                            </button>
                             <button onclick="abrirModalDetalhes('${item.id}')" class="bg-dark-800 hover:bg-sky-600 text-slate-300 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all border border-dark-700 hover:border-sky-500 shadow-sm flex items-center gap-2" title="Abrir Dossiê Completo">
                                 <i class="fa-solid fa-magnifying-glass"></i> Detalhes
                             </button>
@@ -679,7 +714,164 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             }
         });
 
-        function processarPlanilha(event) {
+        // =================================================================
+        // EXTRAÇÃO ROBUSTA DE COLABORADORES DA PLANILHA (.xlsx, .xls, .csv)
+        // =================================================================
+        function extrairColaboradoresDePlanilha(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheet];
+                        
+                        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        if (json.length < 2) throw new Error("A planilha está vazia ou sem cabeçalhos.");
+                        
+                        const header = json[0].map(h => String(h || '').toLowerCase().trim());
+                        const nomeIdx = header.findIndex(h => h.includes('nome') || h.includes('colaborador') || h.includes('funcionario') || h.includes('funcionário') || h.includes('empregado'));
+                        const cargoIdx = header.findIndex(h => h.includes('cargo') || h.includes('função') || h.includes('funcao') || h.includes('ocupação') || h.includes('ocupacao'));
+                        const cpfIdx = header.findIndex(h => h.includes('cpf') || h.includes('documento') || h.includes('doc'));
+
+                        if (nomeIdx === -1) throw new Error("A coluna com os nomes dos colaboradores não foi localizada. Certifique-se de que a planilha possui cabeçalho com 'Nome'.");
+
+                        let colaboradores = [];
+                        for (let i = 1; i < json.length; i++) {
+                            const row = json[i];
+                            if (!row || row.length === 0) continue;
+                            const nomeVal = String(row[nomeIdx] || '').trim();
+                            if (!nomeVal || nomeVal.toLowerCase() === 'nome') continue;
+
+                            let rawCpf = cpfIdx !== -1 && row[cpfIdx] ? String(row[cpfIdx]).replace(/[^\d]/g, '') : '';
+                            let cleanCpf = rawCpf.length === 11 ? rawCpf : (rawCpf.length > 8 ? rawCpf.padStart(11, '0') : null);
+
+                            colaboradores.push({
+                                nome: nomeVal.toUpperCase(),
+                                cargo: cargoIdx !== -1 && row[cargoIdx] ? String(row[cargoIdx]).trim() : 'Funcionário',
+                                cpf: cleanCpf
+                            });
+                        }
+
+                        if (colaboradores.length === 0) throw new Error("Nenhum colaborador válido foi extraído da planilha.");
+                        resolve(colaboradores);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = () => reject(new Error("Falha técnica ao ler o arquivo."));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // =================================================================
+        // SINCRONIZAÇÃO EM LOTE NO SUPABASE (COLABORADORES + PRESENÇA + AGENDAMENTO)
+        // =================================================================
+        async function salvarColaboradoresAgendamento(idNumerico, colabs) {
+            if (!colabs || colabs.length === 0) return 0;
+
+            // 1. Coleta todos os CPFs válidos
+            const cpfsValidos = colabs.map(p => {
+                const raw = String(p.cpf || '').replace(/[^\d]/g, '');
+                return raw.length === 11 ? raw : (raw.length > 8 ? raw.padStart(11, '0') : null);
+            }).filter(Boolean);
+
+            // 2. Busca os existentes no banco em lote (única requisição)
+            let existingMap = new Map();
+            if (cpfsValidos.length > 0) {
+                const { data: existingList } = await supabaseClient
+                    .from('colaboradores')
+                    .select('id, cpf')
+                    .in('cpf', cpfsValidos);
+                if (existingList) {
+                    existingList.forEach(c => existingMap.set(c.cpf, c.id));
+                }
+            }
+
+            // 3. Identifica novos para inserir
+            let toInsert = [];
+            let seenCpfs = new Set();
+            for (let p of colabs) {
+                const raw = String(p.cpf || '').replace(/[^\d]/g, '');
+                const cleanCpf = raw.length === 11 ? raw : (raw.length > 8 ? raw.padStart(11, '0') : null);
+                const nome = String(p.nome || 'Não informado').trim().toUpperCase();
+                const cargo = String(p.cargo || 'Funcionário').trim();
+
+                if (cleanCpf) {
+                    if (!existingMap.has(cleanCpf) && !seenCpfs.has(cleanCpf)) {
+                        seenCpfs.add(cleanCpf);
+                        toInsert.push({ nome, cargo, cpf: cleanCpf });
+                    }
+                } else {
+                    toInsert.push({ nome, cargo });
+                }
+            }
+
+            let insertTracker = [];
+            if (toInsert.length > 0) {
+                const { data: insertedList, error: insErr } = await supabaseClient
+                    .from('colaboradores')
+                    .insert(toInsert)
+                    .select('id, cpf, nome');
+                if (insErr) throw insErr;
+                if (insertedList) {
+                    insertedList.forEach(c => {
+                        if (c.cpf) existingMap.set(c.cpf, c.id);
+                        else insertTracker.push(c);
+                    });
+                }
+            }
+
+            // 4. Prepara vínculos de presença (N:N em agendamento_participantes)
+            let participantesParaInserir = [];
+            let noCpfIdx = 0;
+            let seenColabs = new Set();
+            for (let p of colabs) {
+                const raw = String(p.cpf || '').replace(/[^\d]/g, '');
+                const cleanCpf = raw.length === 11 ? raw : (raw.length > 8 ? raw.padStart(11, '0') : null);
+                let colabId = cleanCpf ? existingMap.get(cleanCpf) : null;
+                if (!colabId && noCpfIdx < insertTracker.length) {
+                    colabId = insertTracker[noCpfIdx++].id;
+                }
+                if (colabId && !seenColabs.has(colabId)) {
+                    seenColabs.add(colabId);
+                    participantesParaInserir.push({
+                        agendamento_id: idNumerico,
+                        colaborador_id: colabId,
+                        compareceu: true
+                    });
+                }
+            }
+
+            // Substitui vínculos anteriores pelos novos
+            await supabaseClient.from('agendamento_participantes').delete().eq('agendamento_id', idNumerico);
+            if (participantesParaInserir.length > 0) {
+                const { error: pivErr } = await supabaseClient.from('agendamento_participantes').insert(participantesParaInserir);
+                if (pivErr) throw pivErr;
+            }
+
+            // 5. Atualiza o agendamento:
+            // - status: 'concluido' (faz com que apareça em Unidades Agendadas)
+            // - lista_presenca_salva: false (para aparecer com o badge "Aguardando Fechamento")
+            // - material_enviado: true
+            // - qtd: total real importado
+            const { error: updErr } = await supabaseClient
+                .from('agendamentos')
+                .update({
+                    status: 'concluido',
+                    lista_presenca_salva: false,
+                    material_enviado: true,
+                    qtd: participantesParaInserir.length
+                })
+                .eq('id', idNumerico);
+
+            if (updErr) throw updErr;
+
+            return participantesParaInserir.length;
+        }
+
+        async function processarPlanilha(event) {
             const file = event.target.files[0];
             if (!file) {
                 colaboradoresImportados = null;
@@ -692,62 +884,29 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheet];
-                    
-                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                    if (json.length < 2) throw new Error("A planilha está vazia ou sem cabeçalhos.");
-                    
-                    const header = json[0].map(h => String(h).toLowerCase().trim());
-                    const nomeIdx = header.findIndex(h => h.includes('nome') || h === 'colaborador');
-                    const cargoIdx = header.findIndex(h => h.includes('cargo') || h.includes('função') || h.includes('funcao'));
-                    const cpfIdx = header.findIndex(h => h.includes('cpf') || h.includes('documento'));
-
-                    if (nomeIdx === -1) throw new Error("A coluna 'Nome' não foi localizada.");
-
-                    let colaboradores = [];
-                    for (let i = 1; i < json.length; i++) {
-                        const row = json[i];
-                        if (!row || row.length === 0 || !row[nomeIdx]) continue;
-                        colaboradores.push({
-                            nome: row[nomeIdx] || 'Não informado',
-                            cargo: cargoIdx !== -1 && row[cargoIdx] ? String(row[cargoIdx]) : 'Funcionário',
-                            cpf: cpfIdx !== -1 && row[cpfIdx] ? String(row[cpfIdx]) : '000.000.000-00'
-                        });
-                    }
-
-                    if (colaboradores.length === 0) throw new Error("Nenhum dado extraído.");
-
-                    colaboradoresImportados = colaboradores;
-                    
-                    // Sucesso Visual no Dropzone
-                    dropzoneContent.innerHTML = `
-                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3"><i class="fa-solid fa-file-excel text-xl"></i></div>
-                        <p class="text-xs font-bold text-emerald-400">${file.name}</p>
-                    `;
-                    feedbackEl.innerHTML = `<div class="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0"><i class="fa-solid fa-check text-[10px]"></i></div> <p class="text-[11px] font-medium text-emerald-300">Pronto! Snapshot de ${colaboradores.length} pessoas capturado para auditoria.</p>`;
-                    feedbackEl.classList.remove('hidden', 'border-rose-500/30', 'bg-rose-950/50');
-                    feedbackEl.classList.add('border-emerald-500/30', 'bg-emerald-950/50');
-                    
-                } catch (err) {
-                    colaboradoresImportados = null;
-                    uploadInput.value = '';
-                    
-                    dropzoneContent.innerHTML = `
-                        <div class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 mb-3"><i class="fa-solid fa-file-circle-xmark text-xl"></i></div>
-                        <p class="text-xs font-bold text-rose-400">Falha na leitura</p>
-                    `;
-                    feedbackEl.innerHTML = `<div class="w-6 h-6 rounded bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i></div> <p class="text-[11px] font-medium text-rose-300">${err.message}</p>`;
-                    feedbackEl.classList.remove('hidden', 'border-emerald-500/30', 'bg-emerald-950/50');
-                    feedbackEl.classList.add('border-rose-500/30', 'bg-rose-950/50');
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            try {
+                const colaboradores = await extrairColaboradoresDePlanilha(file);
+                colaboradoresImportados = colaboradores;
+                
+                dropzoneContent.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3"><i class="fa-solid fa-file-excel text-xl"></i></div>
+                    <p class="text-xs font-bold text-emerald-400">${file.name}</p>
+                `;
+                feedbackEl.innerHTML = `<div class="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0"><i class="fa-solid fa-check text-[10px]"></i></div> <p class="text-[11px] font-medium text-emerald-300">Pronto! <strong>${colaboradores.length} colaboradores</strong> identificados para lista de presença.</p>`;
+                feedbackEl.classList.remove('hidden', 'border-rose-500/30', 'bg-rose-950/50');
+                feedbackEl.classList.add('border-emerald-500/30', 'bg-emerald-950/50');
+            } catch (err) {
+                colaboradoresImportados = null;
+                uploadInput.value = '';
+                
+                dropzoneContent.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 mb-3"><i class="fa-solid fa-file-circle-xmark text-xl"></i></div>
+                    <p class="text-xs font-bold text-rose-400">Falha na leitura</p>
+                `;
+                feedbackEl.innerHTML = `<div class="w-6 h-6 rounded bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i></div> <p class="text-[11px] font-medium text-rose-300">${err.message}</p>`;
+                feedbackEl.classList.remove('hidden', 'border-emerald-500/30', 'bg-emerald-950/50');
+                feedbackEl.classList.add('border-rose-500/30', 'bg-rose-950/50');
+            }
         }
 
         function cancelarConfirmacaoEnvio() {
@@ -778,15 +937,11 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             }, 300);
         }
 
-        // =================================================================
-        // INSERT NA NOVA TABELA DE AUDITORIA DE DESPACHOS
-        // =================================================================
         async function executarConfirmacaoEnvio() {
             const modal = document.getElementById('modal-confirmacao');
             const box = document.getElementById('modal-confirm-box');
             const btnSalvar = document.getElementById('btn-executar-despacho');
             
-            // UI Feedback
             btnSalvar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Registrando...';
             btnSalvar.disabled = true;
             
@@ -805,7 +960,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 if (curCheckbox && curId) {
                     const idNumerico = Number(curId);
 
-                    // Payload Relacional Perfeito
                     const payloadDespacho = {
                         agendamento_id: idNumerico,
                         observacao: "Despachado via Painel Logístico Online",
@@ -813,86 +967,45 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                     };
 
                     try {
-                        // Tenta puxar o usuário autenticado da sessão para auditoria
                         const { data: { user } } = await supabaseClient.auth.getUser();
                         if (user && user.id) {
                             payloadDespacho.usuario_id = user.id;
                         }
 
-                        // 1. Grava na tabela de Despachos (Auditoria Logística)
+                        // 1. Grava na tabela de Despachos
                         const { error: errorDespacho } = await supabaseClient
                             .from('agendamento_despachos')
                             .insert([payloadDespacho]);
 
                         if (errorDespacho) throw errorDespacho;
 
-                        // =================================================================
-                        // INTEGRAÇÃO AUTOMÁTICA: PREENCHER LISTA DE PRESENÇA OFICIAL
-                        // =================================================================
+                        // 2. Se houver planilha anexada, processa e sincroniza colaboradores
+                        let totalColabs = 0;
                         if (colabsAnexados && colabsAnexados.length > 0) {
-                            let participantesParaInserir = [];
-                            
-                            for (let p of colabsAnexados) {
-                                let nome = p.nome || 'Não informado';
-                                let cargo = p.cargo || 'Funcionário';
-                                // Garante que CPFs inválidos ou vazios fiquem como null
-                                let cpf = p.cpf && p.cpf.length > 8 && p.cpf !== '000.000.000-00' ? p.cpf : null;
-                                let colabId;
-
-                                // Busca inteligente para não duplicar CPFs na tabela mestra
-                                if (cpf) {
-                                    const { data: existing } = await supabaseClient.from('colaboradores').select('id').eq('cpf', cpf).maybeSingle();
-                                    if (existing) {
-                                        colabId = existing.id;
-                                    } else {
-                                        const { data: newC } = await supabaseClient.from('colaboradores').insert([{ nome, cargo, cpf }]).select().single();
-                                        if (newC) colabId = newC.id;
-                                    }
-                                } else {
-                                    const { data: newC } = await supabaseClient.from('colaboradores').insert([{ nome, cargo }]).select().single();
-                                    if (newC) colabId = newC.id;
-                                }
-
-                                // Prepara para ligar a pessoa à OP na tabela de presença
-                                if (colabId) {
-                                    participantesParaInserir.push({
-                                        agendamento_id: idNumerico,
-                                        colaborador_id: colabId,
-                                        compareceu: true // Inicia todos como PRESENTES por padrão
-                                    });
-                                }
-                            }
-
-                            // Limpa a lista antiga da OP (se houver) e insere a nova de uma vez
-                            await supabaseClient.from('agendamento_participantes').delete().eq('agendamento_id', idNumerico);
-                            
-                            if (participantesParaInserir.length > 0) {
-                                const { error: pivErr } = await supabaseClient.from('agendamento_participantes').insert(participantesParaInserir);
-                                if (pivErr) throw pivErr;
-                            }
+                            totalColabs = await salvarColaboradoresAgendamento(idNumerico, colabsAnexados);
+                        } else {
+                            // Se não anexou planilha, avança o status do agendamento mantendo a esteira
+                            await supabaseClient
+                                .from('agendamentos')
+                                .update({ status: 'concluido', material_enviado: true }) 
+                                .eq('id', idNumerico);
                         }
-                        // =================================================================
-
-                        // 2. Atualiza o status base para manter a esteira
-                        await supabaseClient
-                            .from('agendamentos')
-                            .update({ status: 'concluido' }) 
-                            .eq('id', idNumerico);
 
                         let msg = `Material de "${curNome}" despachado com sucesso!`;
-                        if (colabsAnexados && colabsAnexados.length > 0) msg += ` (Lista de Presença pré-preenchida automaticamente!)`;
+                        if (totalColabs > 0) {
+                            msg += ` (${totalColabs} colaboradores salvos. Unidade em "Unidades Agendadas" como "Aguardando Fechamento")`;
+                        }
                         
                         mostrarToast(msg, 'success');
-                        carregarOrganizadorMateriais(); // Baixa os dados novos
+                        await carregarOrganizadorMateriais();
 
                     } catch (err) {
                         mostrarToast('Falha na requisição com o banco: ' + err.message, 'error');
                         console.error(err);
-                        curCheckbox.checked = false; // Reverte erro em caso de falha
+                        curCheckbox.checked = false;
                     }
                 }
 
-                // Restaura o Modal para o padrão
                 btnSalvar.innerHTML = '<i class="fa-solid fa-lock"></i> Registrar Despacho';
                 btnSalvar.disabled = false;
                 
@@ -907,7 +1020,122 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                     <p class="text-xs font-bold text-slate-300">Arraste o arquivo ou clique para buscar</p>
                     <p class="text-[10px] text-slate-500 mt-1 font-mono">Formatos: .xlsx ou .csv</p>
                 `;
-            }, 500); // Dá um tempo pro botão mostrar o "carregando"
+            }, 500);
+        }
+
+        // =================================================================
+        // UPLOAD DIRETO DE PLANILHA (SEM PRECISAR MARCAR DESPACHO)
+        // =================================================================
+        let uploadDedicadoId = null;
+        let uploadDedicadoNome = '';
+        let uploadDedicadoColabs = null;
+
+        function abrirModalUploadDedicado(id, nome, op) {
+            uploadDedicadoId = id;
+            uploadDedicadoNome = nome;
+            uploadDedicadoColabs = null;
+
+            const modal = document.getElementById('modal-upload-dedicado');
+            const box = document.getElementById('modal-upload-box');
+            const sub = document.getElementById('upload-dedicado-sub');
+            const input = document.getElementById('input-planilha-dedicado');
+            const feedback = document.getElementById('feedback-dedicado');
+            const dropzoneContent = document.getElementById('dropzone-dedicado-content');
+
+            if (input) input.value = '';
+            if (feedback) feedback.classList.add('hidden');
+            if (sub) sub.textContent = `Unidade: ${nome} | OP ${op || 'N/A'}`;
+
+            if (dropzoneContent) {
+                dropzoneContent.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-dark-800 group-hover:bg-emerald-500/20 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 transition-colors mb-3">
+                        <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-300">Arraste a planilha ou clique para buscar</p>
+                    <p class="text-[10px] text-slate-500 mt-1 font-mono">Formatos suportados: .xlsx, .xls ou .csv</p>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function fecharModalUploadDedicado() {
+            const modal = document.getElementById('modal-upload-dedicado');
+            const box = document.getElementById('modal-upload-box');
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            if (box) {
+                box.classList.remove('scale-100');
+                box.classList.add('scale-95');
+            }
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                uploadDedicadoId = null;
+                uploadDedicadoNome = '';
+                uploadDedicadoColabs = null;
+            }, 300);
+        }
+
+        async function processarPlanilhaDedicada(event) {
+            const file = event.target.files[0];
+            const feedbackEl = document.getElementById('feedback-dedicado');
+            const dropzoneContent = document.getElementById('dropzone-dedicado-content');
+            if (!file) return;
+
+            try {
+                const colabs = await extrairColaboradoresDePlanilha(file);
+                uploadDedicadoColabs = colabs;
+
+                dropzoneContent.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mb-3"><i class="fa-solid fa-file-excel text-xl"></i></div>
+                    <p class="text-xs font-bold text-emerald-400">${file.name}</p>
+                `;
+                feedbackEl.innerHTML = `<div class="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0"><i class="fa-solid fa-check text-[10px]"></i></div> <p class="text-[11px] font-medium text-emerald-300">Excelente! <strong>${colabs.length} colaboradores</strong> identificados na planilha (Nome, Cargo, CPF).</p>`;
+                feedbackEl.classList.remove('hidden', 'border-rose-500/30', 'bg-rose-950/50');
+                feedbackEl.classList.add('border-emerald-500/30', 'bg-emerald-950/50');
+            } catch(err) {
+                uploadDedicadoColabs = null;
+                dropzoneContent.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 mb-3"><i class="fa-solid fa-file-circle-xmark text-xl"></i></div>
+                    <p class="text-xs font-bold text-rose-400">Falha na leitura da planilha</p>
+                `;
+                feedbackEl.innerHTML = `<div class="w-6 h-6 rounded bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i></div> <p class="text-[11px] font-medium text-rose-300">${err.message}</p>`;
+                feedbackEl.classList.remove('hidden', 'border-emerald-500/30', 'bg-emerald-950/50');
+                feedbackEl.classList.add('border-rose-500/30', 'bg-rose-950/50');
+            }
+        }
+
+        async function confirmarUploadDedicado() {
+            if (!uploadDedicadoId) return;
+            if (!uploadDedicadoColabs || uploadDedicadoColabs.length === 0) {
+                mostrarToast('Selecione uma planilha válida com colaboradores antes de enviar.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-executar-upload-dedicado');
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Subindo para o Supabase...';
+            btn.disabled = true;
+
+            try {
+                const idNumerico = Number(uploadDedicadoId);
+                const total = await salvarColaboradoresAgendamento(idNumerico, uploadDedicadoColabs);
+
+                mostrarToast(`Sucesso! ${total} colaboradores salvos. A unidade agora aparece em "Unidades Agendadas" como "Aguardando Fechamento" para a chamada!`, 'success');
+                fecharModalUploadDedicado();
+                await carregarOrganizadorMateriais();
+            } catch(err) {
+                console.error(err);
+                mostrarToast('Erro ao salvar no banco: ' + err.message, 'error');
+            } finally {
+                btn.innerHTML = textoOriginal;
+                btn.disabled = false;
+            }
         }
 
         function exportarCSV() {
