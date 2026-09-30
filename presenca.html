@@ -24,6 +24,35 @@
  table thead th { position: sticky; top: 0; z-index: 5; }
  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:2px solid rgba(56,189,248,.32); outline-offset:2px; }
  @media (max-width: 640px) { .overflow-x-auto { -webkit-overflow-scrolling: touch; } }
+ 
+ /* Animação de Entrada em Cascata (Staggered Reveal) */
+ @keyframes rowEnter {
+     0% {
+         opacity: 0;
+         transform: translateY(12px) scale(0.99);
+     }
+     100% {
+         opacity: 1;
+         transform: translateY(0) scale(1);
+     }
+ }
+ .row-enter-animate {
+     animation: rowEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+     opacity: 0;
+     will-change: transform, opacity;
+ }
+
+ /* Efeito Shimmer Holográfico para Skeleton Loader */
+ @keyframes shimmer {
+     0% { background-position: -200% 0; }
+     100% { background-position: 200% 0; }
+ }
+ .skeleton-shimmer {
+     background: linear-gradient(90deg, rgba(30,41,59,0.4) 0%, rgba(56,189,248,0.08) 50%, rgba(30,41,59,0.4) 100%);
+     background-size: 200% 100%;
+     animation: shimmer 1.6s infinite ease-in-out;
+     border-radius: 6px;
+ }
 </style>
 
 <style id="senior-shared-v10">
@@ -59,7 +88,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 <div class="flex items-center gap-4">
                     <div class="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 shadow-inner shrink-0 group-hover:border-slate-500 transition-colors">
                         <i class="fa-solid fa-clipboard-user text-slate-300 text-xl group-hover:text-white transition-colors"></i>
-                        <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" id="status-dot"></span>
+                        <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3.5 w-3.5 border-2 border-slate-900 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" id="status-dot"></span>
+                        </span>
                     </div>
                     <div class="flex flex-col">
                         <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight leading-none mb-1">
@@ -90,7 +122,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
 
                 <button id="btn-salvar" onclick="salvarChamada()" class="w-full sm:w-auto relative overflow-hidden group/save p-[1px] rounded-[18px] shrink-0" title="Atalho: Ctrl + S">
                     <span class="absolute inset-0 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600 rounded-[18px] opacity-70 group-hover/save:opacity-100 transition-opacity duration-300"></span>
-                    <div class="relative bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 rounded-[17px] flex items-center justify-center gap-2.5 text-white shadow-[0_0_20px_rgba(52,211,153,0.3)] transition-all">
+                    <div id="btn-salvar-content" class="relative bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 rounded-[17px] flex items-center justify-center gap-2.5 text-white shadow-[0_0_20px_rgba(52,211,153,0.3)] transition-all">
                         <i class="fa-solid fa-floppy-disk text-sm"></i> 
                         <span class="text-sm font-extrabold tracking-wide">Salvar Chamada</span>
                     </div>
@@ -186,7 +218,35 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                         </tr>
                     </thead>
                     <tbody id="table-body" class="divide-y divide-slate-800/40 bg-slate-950/20">
-                        <tr><td colspan="5" class="text-center py-24 text-slate-500 text-xs font-medium">Carregando dados estruturados...</td></tr>
+                        <!-- Skeleton Loaders Shimmer (Feedback de Carregamento) -->
+                        <tr>
+                            <td class="py-4 px-4 text-center"><div class="h-3.5 w-6 skeleton-shimmer mx-auto"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-52 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-40 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-28 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-5 text-center"><div class="h-7 w-24 skeleton-shimmer rounded-full mx-auto"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-4 text-center"><div class="h-3.5 w-6 skeleton-shimmer mx-auto"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-64 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-36 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-28 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-5 text-center"><div class="h-7 w-24 skeleton-shimmer rounded-full mx-auto"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-4 text-center"><div class="h-3.5 w-6 skeleton-shimmer mx-auto"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-44 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-48 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-28 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-5 text-center"><div class="h-7 w-24 skeleton-shimmer rounded-full mx-auto"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="py-4 px-4 text-center"><div class="h-3.5 w-6 skeleton-shimmer mx-auto"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-56 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-32 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-4"><div class="h-3.5 w-28 skeleton-shimmer"></div></td>
+                            <td class="py-4 px-5 text-center"><div class="h-7 w-24 skeleton-shimmer rounded-full mx-auto"></div></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -297,6 +357,32 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             }
         });
 
+        // Função de Interpolação Numérica Fluida (Rolling Counter-Up)
+        function animarNumero(elementoId, valorFinal, duracaoMs = 600) {
+            const el = document.getElementById(elementoId);
+            if (!el) return;
+            const valorInicial = parseInt(el.innerText) || 0;
+            if (valorInicial === valorFinal) return;
+
+            const inicio = performance.now();
+
+            function update(agora) {
+                const decorrido = agora - inicio;
+                const progresso = Math.min(decorrido / duracaoMs, 1);
+                // Easing suave (easeOutExpo)
+                const fator = progresso === 1 ? 1 : 1 - Math.pow(2, -10 * progresso);
+                const valorAtual = Math.round(valorInicial + (valorFinal - valorInicial) * fator);
+                el.innerText = valorAtual;
+
+                if (progresso < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.innerText = valorFinal;
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
         function renderizarTabela() {
             // Agora lemos direto do relacionamento do Supabase
             let participantes = currentRecord.agendamento_participantes || [];
@@ -306,9 +392,9 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
 
             if (participantes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-400 text-xs font-semibold">Nenhum colaborador alocado.</td></tr>`;
-                document.getElementById('stat-total').innerText = '0';
-                document.getElementById('stat-presentes').innerText = '0';
-                document.getElementById('stat-faltosos').innerText = '0';
+                animarNumero('stat-total', 0);
+                animarNumero('stat-presentes', 0);
+                animarNumero('stat-faltosos', 0);
                 return;
             }
 
@@ -321,10 +407,12 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 
                 let isFaltoso = p.compareceu === false; 
 
-                let rowClass = 'group/tr transition-all duration-300 colaborador-tr hover:bg-slate-800/40 relative';
+                // Entrada em Cascata fluida com limite de delay para grandes listas
+                let staggerDelay = Math.min(index * 22, 550);
+                let rowClass = 'group/tr transition-all duration-300 colaborador-tr hover:bg-slate-800/40 relative row-enter-animate';
                 
                 tbody.innerHTML += `
-                    <tr class="${rowClass}" data-nome="${nome.toLowerCase()}" data-cpf="${cpf}">
+                    <tr class="${rowClass}" style="animation-delay: ${staggerDelay}ms;" data-nome="${nome.toLowerCase()}" data-cpf="${cpf}">
                         <td class="py-3.5 px-4 font-mono text-[11px] text-slate-500 text-center w-16 relative">
                             <div class="absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 status-bar ${isFaltoso ? 'bg-rose-500' : 'bg-transparent group-hover/tr:bg-slate-600'}"></div>
                             ${String(index + 1).padStart(2, '0')}
@@ -364,7 +452,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 const toggleDot = container.querySelector('.toggle-dot');
                 const icon = toggleDot.querySelector('i');
                 const statusBar = tr.querySelector('.status-bar');
-                const avatar = tr.querySelector('.avatar-icon');
 
                 const isDuplicado = tr.classList.contains('bg-amber-950/20');
 
@@ -381,7 +468,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                     icon.className = 'fa-solid fa-xmark text-[10px] text-white';
                     
                     if (statusBar) statusBar.className = 'absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 status-bar bg-rose-500';
-                    if (avatar) avatar.className = 'w-8 h-8 rounded-full flex items-center justify-center text-[10px] tracking-wider border shadow-inner transition-colors duration-300 avatar-icon bg-rose-500/10 text-rose-400 border-rose-500/30';
                 } else {
                     label.innerText = 'PRESENÇA';
                     label.className = 'ml-3 text-[10px] font-bold tracking-widest uppercase transition-colors duration-300 status-label w-16 text-left text-emerald-400';
@@ -395,7 +481,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                     icon.className = 'fa-solid fa-check text-[10px] text-white';
                     
                     if (statusBar) statusBar.className = 'absolute left-0 top-0 bottom-0 w-1 transition-colors duration-300 status-bar bg-transparent group-hover/tr:bg-slate-600';
-                    if (avatar) avatar.className = 'w-8 h-8 rounded-full flex items-center justify-center text-[10px] tracking-wider border shadow-inner transition-colors duration-300 avatar-icon bg-slate-700/50 text-slate-300 border-slate-600 group-hover/tr:bg-slate-600 group-hover/tr:text-white';
                 }
             }
 
@@ -407,9 +492,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 else p++;
             });
 
-            document.getElementById('stat-total').innerText = checkboxes.length;
-            document.getElementById('stat-presentes').innerText = p;
-            document.getElementById('stat-faltosos').innerText = f;
+            // Contagem animada fluida dos KPIs
+            animarNumero('stat-total', checkboxes.length);
+            animarNumero('stat-presentes', p);
+            animarNumero('stat-faltosos', f);
         }
 
         function filtrarColaboradores() {
@@ -517,7 +603,11 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             fecharConfirmacao();
             
             const btn = document.getElementById('btn-salvar');
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Salvando...`;
+            const btnContent = document.getElementById('btn-salvar-content');
+            if (btnContent) {
+                btnContent.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> <span class="text-sm font-extrabold tracking-wide">Salvando...</span>`;
+            }
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
             btn.disabled = true;
 
             try {
@@ -574,7 +664,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             } catch (err) {
                 alert("Erro ao salvar no banco: " + err.message);
             } finally {
-                btn.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i> Salvar Chamada`;
+                if (btnContent) {
+                    btnContent.innerHTML = `<i class="fa-solid fa-floppy-disk text-sm"></i> <span class="text-sm font-extrabold tracking-wide">Salvar Chamada</span>`;
+                }
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
                 btn.disabled = false;
             }
         }
@@ -706,15 +799,17 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
     </script>
 <script data-presenca-ux>
 (function(){
- const save=document.getElementById('btn-salvar-presenca')||document.querySelector('button[onclick*="savePresencaPage"]');
- if(!save) return;
- let busy=false;
- save.addEventListener('click',()=>{
-   if(busy) return;
-   busy=true; save.disabled=true; save.setAttribute('aria-busy','true');
-   const original=save.innerHTML; save.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
-   setTimeout(()=>{ if(!save.isConnected)return; busy=false; save.disabled=false; save.removeAttribute('aria-busy'); save.innerHTML=original; },1800);
- }, true);
+    ['confirm-modal', 'mass-action-modal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    if (id === 'confirm-modal') fecharConfirmacao();
+                    else if (id === 'mass-action-modal') fecharModalMassa();
+                }
+            });
+        }
+    });
 })();
 </script>
 </body>

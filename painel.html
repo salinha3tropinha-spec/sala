@@ -505,7 +505,10 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 @media(max-width:1100px){#tab-home>.glass-panel:first-child{padding-right:280px!important}#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:800px){main>header{padding:0 14px!important}main>.p-6{padding:14px!important}#tab-home>.glass-panel:first-child{min-height:auto;padding:22px!important}#tab-home>.glass-panel:first-child h2{font-size:22px!important}#tab-home>a[href="todos_os_dias.html"]{position:static;width:100%!important;max-width:none;min-width:0}#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important}#tab-home>.grid.md\\:grid-cols-3{grid-template-columns:1fr!important}}
 @media(max-width:480px){#tab-home>.grid.md\\:grid-cols-5{grid-template-columns:1fr 1fr!important}#tab-home>.grid.md\\:grid-cols-5>.glass-panel{min-height:96px;padding:15px!important}#tab-home>.grid.md\\:grid-cols-5 [id^="kpi-"]{font-size:27px!important}}
-
+/* Garante que todos os modais fiquem acima da sidebar (z-60) */
+div[id*="modal"], #add-user-modal, #add-unit-modal, #batch-config-modal, #details-modal, #call-modal, #email-modal, #school-email-modal, #excel-row-modal, #npso-modal, #sig-modal, #disc-modal, #visitor-details-modal, #custom-confirm-modal {
+    z-index: 70 !important;
+}
 </style>
 
 <style id="premium-navigation-loading-v17">
@@ -2661,7 +2664,7 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,te
 
             <div class="flex justify-end gap-3 pt-3 border-t border-bordercolor/60 shrink-0">
                 <button onclick="closeMasterColaboradoresModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold transition">Cancelar</button>
-                <button onclick="saveMasterColaboradores()" class="bg-gradient-to-r from-indigo-600 to-sky-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 hover:opacity-90 transition">Salvar Colaboradores</button>
+                <button id="btn-save-master-colab" onclick="saveMasterColaboradores()" class="bg-gradient-to-r from-indigo-600 to-sky-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 hover:opacity-90 transition">Salvar Colaboradores</button>
             </div>
         </div>
     </div>
@@ -4158,27 +4161,32 @@ function updateSidebarVisibility() {
             const body = document.getElementById('confirm-email-body').value;
             if (!id) return;
 
-            await supabaseClient.from('agendamentos').update({ status: 'excel' }).eq('id', id);
-            appData.scheduling = appData.scheduling.map(s => { if (String(s.id) === String(id)) s.status = 'excel'; return s; });
-            updateStageCounts();
-            renderScheduling();
-            renderUnidadesAgendadas();
-            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            try {
+                await supabaseClient.from('agendamentos').update({ status: 'excel' }).eq('id', id);
+                appData.scheduling = appData.scheduling.map(s => { if (String(s.id) === String(id)) s.status = 'excel'; return s; });
+                updateStageCounts();
+                renderScheduling();
+                renderUnidadesAgendadas();
+                if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
 
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(body).then(() => {
-                    let item = appData.scheduling.find(s => String(s.id) === String(id));
-                    if (item) logAction(`OP ${item.op} avançou (Etapa 2 ➔ Etapa 3)`, 'Sucesso');
-                    
-                    showToast('Avançou para Etapa 3 (Linha Excel).');
-                    closeConfirmEmailModal();
-                    openExcelRowModal(id);
-                });
+                let item = appData.scheduling.find(s => String(s.id) === String(id));
+                if (item) logAction(`OP ${item.op} avançou (Etapa 2 ➔ Etapa 3)`, 'Sucesso');
+
+                if (navigator.clipboard) {
+                    try { await navigator.clipboard.writeText(body); } catch(e) {}
+                }
+                
+                showToast('Avançou para Etapa 3 (Linha Excel).');
+                closeConfirmEmailModal();
+                openExcelRowModal(id);
+            } catch(err) {
+                console.error('Erro ao avançar etapa:', err);
+                showToast('Erro ao avançar: ' + err.message, 'error');
             }
         }
 
         function openExcelRowModal(id) {
-            let item = appData.scheduling.find(s => s.id === id);
+            let item = appData.scheduling.find(s => String(s.id) === String(id));
             if (!item) return;
 
             document.getElementById('excel-item-id').value = item.id;
@@ -4199,8 +4207,8 @@ function updateSidebarVisibility() {
         }
 
         function getExcelRowDataModal() {
-            const id = parseInt(document.getElementById('excel-item-id').value);
-            let item = appData.scheduling.find(s => s.id === id);
+            const id = document.getElementById('excel-item-id').value;
+            let item = appData.scheduling.find(s => String(s.id) === String(id));
             if (!item) return { displayStr: '', tsvStr: '', medico: '', faturamento: '', item: null };
 
             const medico = document.getElementById('excel-medico').value.toUpperCase() || 'DRA. [MÉDICO]';
@@ -4220,35 +4228,42 @@ function updateSidebarVisibility() {
             const { tsvStr, medico, faturamento, item } = getExcelRowDataModal();
             if (!item) return;
             await supabaseClient.from('agendamentos').update({ medico, faturamento }).eq('id', item.id);
-            appData.scheduling = appData.scheduling.map(s => { if (s.id === item.id) { s.medico = medico; s.faturamento = faturamento; } return s; });
+            appData.scheduling = appData.scheduling.map(s => { if (String(s.id) === String(item.id)) { s.medico = medico; s.faturamento = faturamento; } return s; });
             renderScheduling();
             renderUnidadesAgendadas();
-            if (navigator.clipboard) navigator.clipboard.writeText(tsvStr).then(() => showToast('Linha copiada para o Excel!'));
+            if (navigator.clipboard) {
+                try { await navigator.clipboard.writeText(tsvStr); } catch(e) {}
+            }
+            showToast('Linha copiada para o Excel!');
         }
 
         async function copyExcelRowAndAdvance() {
             const { tsvStr, medico, faturamento, item } = getExcelRowDataModal();
             if (!item) return;
 
-            await supabaseClient.from('agendamentos').update({ medico, faturamento, status: 'npso' }).eq('id', item.id);
-            appData.scheduling = appData.scheduling.map(s => { if (s.id === item.id) { s.medico = medico; s.faturamento = faturamento; s.status = 'npso'; } return s; });
-            updateStageCounts();
-            renderScheduling();
-            renderUnidadesAgendadas();
-            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            try {
+                await supabaseClient.from('agendamentos').update({ medico, faturamento, status: 'npso' }).eq('id', item.id);
+                appData.scheduling = appData.scheduling.map(s => { if (String(s.id) === String(item.id)) { s.medico = medico; s.faturamento = faturamento; s.status = 'npso'; } return s; });
+                updateStageCounts();
+                renderScheduling();
+                renderUnidadesAgendadas();
+                if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
 
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(tsvStr).then(() => {
-                    logAction(`OP ${item.op} avançou (Etapa 3 ➔ Etapa 4)`, 'Sucesso');
-                    showToast('Avançou para Etapa 4 (NPSO).');
-                    closeExcelRowModal();
-                    openNpsoModal(item.id);
-                });
+                if (navigator.clipboard) {
+                    try { await navigator.clipboard.writeText(tsvStr); } catch(e) {}
+                }
+                logAction(`OP ${item.op} avançou (Etapa 3 ➔ Etapa 4)`, 'Sucesso');
+                showToast('Avançou para Etapa 4 (NPSO).');
+                closeExcelRowModal();
+                openNpsoModal(item.id);
+            } catch(err) {
+                console.error('Erro ao avançar etapa:', err);
+                showToast('Erro ao avançar: ' + err.message, 'error');
             }
         }
 
         function openNpsoModal(id) {
-            let item = appData.scheduling.find(s => s.id === id);
+            let item = appData.scheduling.find(s => String(s.id) === String(id));
             if (!item) return;
 
             document.getElementById('npso-item-id').value = item.id;
@@ -4285,25 +4300,29 @@ function updateSidebarVisibility() {
 
         // Modificado: após NPSO, encaminha automaticamente para o SIG ('sig')
         async function copyNpsoContentAndFinish() {
-            const id = parseInt(document.getElementById('npso-item-id').value);
+            const id = document.getElementById('npso-item-id').value;
             const body = document.getElementById('npso-body').value;
             if (!id) return;
 
-            await supabaseClient.from('agendamentos').update({ status: 'sig' }).eq('id', id);
-            appData.scheduling = appData.scheduling.map(s => { if (s.id === id) s.status = 'sig'; return s; });
-            updateStageCounts();
-            renderScheduling();
-            renderUnidadesAgendadas();
-            if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
+            try {
+                await supabaseClient.from('agendamentos').update({ status: 'sig' }).eq('id', id);
+                appData.scheduling = appData.scheduling.map(s => { if (String(s.id) === String(id)) s.status = 'sig'; return s; });
+                updateStageCounts();
+                renderScheduling();
+                renderUnidadesAgendadas();
+                if(document.getElementById('tab-stage-detail') && !document.getElementById('tab-stage-detail').classList.contains('hidden')) renderStageTable();
 
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(body).then(() => {
-                    let item = appData.scheduling.find(s => String(s.id) === String(id));
-                    if (item) logAction(`OP ${item.op} avançou (Etapa 4 ➔ Aguardar SIG)`, 'Sucesso');
-                    
-                    showToast('Encaminhado para Aguardar Solicitação SIG!');
-                    closeNpsoModal();
-                });
+                if (navigator.clipboard) {
+                    try { await navigator.clipboard.writeText(body); } catch(e) {}
+                }
+                let item = appData.scheduling.find(s => String(s.id) === String(id));
+                if (item) logAction(`OP ${item.op} avançou (Etapa 4 ➔ Aguardar SIG)`, 'Sucesso');
+                
+                showToast('Encaminhado para Aguardar Solicitação SIG!');
+                closeNpsoModal();
+            } catch(err) {
+                console.error('Erro ao avançar etapa:', err);
+                showToast('Erro ao avançar: ' + err.message, 'error');
             }
         }
 
@@ -5086,9 +5105,10 @@ if (inputBusca) {
         }
 
         function copyDiscContentOnly() {
-            const txt = document.getElementById('disc-email-body').value;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(txt).then(() => showToast('Assunto da OP copiado para a área de transferência!'));
+            const el = document.getElementById('disc-email-subject');
+            const txt = el ? el.value : '';
+            if (navigator.clipboard && txt) {
+                navigator.clipboard.writeText(txt).then(() => showToast('Assunto da OP copiado para a área de transferência!')).catch(() => {});
             }
         }
 
@@ -5461,12 +5481,14 @@ if (inputBusca) {
             const id = document.getElementById('master-colab-item-id').value;
             const rawText = document.getElementById('master-colab-textarea').value.trim();
             
-            // Pegando o botão original para fazer o loading
-            const btn = document.querySelector('#modal-master-colaboradores button.bg-indigo-600') || document.getElementById('btn-save-master-colab');
-            const textoOriginalBtn = btn.innerHTML;
+            // Pegando o botão para fazer o loading seguro
+            const btn = document.getElementById('btn-save-master-colab') || document.querySelector('#modal-master-colaboradores button[onclick*="saveMasterColaboradores"]');
+            const textoOriginalBtn = btn ? btn.innerHTML : 'Salvar Colaboradores';
             
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando no Banco...';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando no Banco...';
+            }
 
             let linhas = rawText.split('\n').filter(l => l.trim() !== '');
             
@@ -5521,8 +5543,10 @@ if (inputBusca) {
             } catch (err) {
                 showToast("Erro ao processar: " + err.message, "error");
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = textoOriginalBtn;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = textoOriginalBtn;
+                }
             }
         }
 
@@ -6371,30 +6395,28 @@ function openAtivarFuncionariosModal() {
     if (modal) modal.classList.remove('hidden');
 }
 
-// Dentro de executarAtivacaoUIVision(), salve a lista quando o envio der certo:
-// Adicione esta linha logo após const data = await resposta.json();
-localStorage.setItem('uivision_ultimo_lote', rawText);
-
 function closeAtivarFuncionariosModal() {
     const modal = document.getElementById('modal-ativar-funcionarios');
     if (modal) modal.classList.add('hidden');
 }
 
 function executarAtivacaoUIVision() {
-        const input = document.getElementById('uivision-colabs-input').value;
-        const linhas = input.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-        if (linhas.length === 0) { showToast('Insira ao menos um colaborador', 'error'); return; }
+    const input = document.getElementById('uivision-colabs-input').value;
+    const linhas = input.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (linhas.length === 0) { showToast('Insira ao menos um colaborador', 'error'); return; }
 
-        const runId = 'run-' + Date.now();
-        const dadosString = encodeURIComponent(linhas.join('|||'));
-        const macroName = encodeURIComponent('ATIVAR_FUNCIONARIOS.js');
+    localStorage.setItem('uivision_ultimo_lote', input);
 
-        const url = `ui.vision.html?macro=${macroName}&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0&cmd_var1=${runId}&cmd_var2=${dadosString}`;
-        window.open(url, '_blank');
+    const runId = 'run-' + Date.now();
+    const dadosString = encodeURIComponent(linhas.join('|||'));
+    const macroName = encodeURIComponent('ATIVAR_FUNCIONARIOS.js');
 
-        showToast('Automação iniciada! O robô assumirá o controle na nova aba.');
-        closeAtivarFuncionariosModal();
-    }
+    const url = `ui.vision.html?macro=${macroName}&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0&cmd_var1=${runId}&cmd_var2=${dadosString}`;
+    window.open(url, '_blank');
+
+    showToast('Automação iniciada! O robô assumirá o controle na nova aba.');
+    closeAtivarFuncionariosModal();
+}
 
 // --- FUNÇÕES DO MODAL SOC (UI.VISION) ---
 function openCriarCadastroSocModal() {
@@ -6613,12 +6635,20 @@ function calcularDiasUteisAte(strData) {
 
 <script id="compatibility-fixes">
 // Compatibilidade de ações já expostas na interface. Estas funções não criam novos dados:
-// apenas completam controles existentes que estavam sem implementação.
+function openAddUserModal() {
+    const el = document.getElementById('add-user-modal');
+    if (el) el.classList.remove('hidden');
+}
 function closeAddUserModal() {
     const el = document.getElementById('add-user-modal');
     if (el) el.classList.add('hidden');
     const form = document.getElementById('add-user-form');
     if (form) form.reset();
+}
+function openPresencaModal(id) {
+    if (id) currentPresencaId = id;
+    const el = document.getElementById('modal-presenca');
+    if (el) el.classList.remove('hidden');
 }
 function closePresencaModal() {
     const el = document.getElementById('modal-presenca');
@@ -6666,6 +6696,53 @@ async function reverterParaDisciplinas(id) {
         }
     });
 }
+
+// Fechamento de todos os modais ao clicar no backdrop (fora da caixa) ou pressionar ESC
+document.addEventListener('DOMContentLoaded', () => {
+    const modalCloseMap = {
+        'modal-historico-global': () => typeof fecharModalHistorico === 'function' && fecharModalHistorico(),
+        'modal-fechar-ciclo': () => typeof fecharModalFechamento === 'function' && fecharModalFechamento(),
+        'add-user-modal': () => typeof closeAddUserModal === 'function' && closeAddUserModal(),
+        'custom-confirm-modal': () => document.getElementById('confirm-cancel-btn')?.click(),
+        'add-unit-modal': () => typeof closeAddUnitModal === 'function' && closeAddUnitModal(),
+        'batch-config-modal': () => typeof closeBatchConfigModal === 'function' && closeBatchConfigModal(),
+        'details-modal': () => typeof closeDetailsModal === 'function' && closeDetailsModal(),
+        'call-modal': () => typeof closeCallModal === 'function' && closeCallModal(),
+        'email-modal': () => typeof closeEmailModal === 'function' && closeEmailModal(),
+        'school-email-modal': () => typeof closeConfirmEmailModal === 'function' && closeConfirmEmailModal(),
+        'excel-row-modal': () => typeof closeExcelRowModal === 'function' && closeExcelRowModal(),
+        'npso-modal': () => typeof closeNpsoModal === 'function' && closeNpsoModal(),
+        'sig-modal': () => typeof closeSigModal === 'function' && closeSigModal(),
+        'disc-modal': () => typeof closeDiscModal === 'function' && closeDiscModal(),
+        'visitor-details-modal': () => typeof closeVisitorDetailsModal === 'function' && closeVisitorDetailsModal(),
+        'modal-presenca': () => typeof closePresencaModal === 'function' && closePresencaModal(),
+        'modal-master-colaboradores': () => typeof closeMasterColaboradoresModal === 'function' && closeMasterColaboradoresModal(),
+        'modal-ativar-funcionarios': () => typeof closeAtivarFuncionariosModal === 'function' && closeAtivarFuncionariosModal(),
+        'modal-criar-cadastro-soc': () => typeof closeCriarCadastroSocModal === 'function' && closeCriarCadastroSocModal()
+    };
+
+    Object.entries(modalCloseMap).forEach(([id, closeFn]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', (e) => {
+                if (e.target === el) {
+                    try { closeFn(); } catch(err) { el.classList.add('hidden'); }
+                }
+            });
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            Object.entries(modalCloseMap).forEach(([id, closeFn]) => {
+                const el = document.getElementById(id);
+                if (el && !el.classList.contains('hidden')) {
+                    try { closeFn(); } catch(err) { el.classList.add('hidden'); }
+                }
+            });
+        }
+    });
+});
 </script>
 
 <!-- Camada UX incremental: feedback de rede, acessibilidade, atalhos e proteção contra ações duplicadas. -->

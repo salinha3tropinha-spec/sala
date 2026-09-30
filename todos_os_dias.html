@@ -1266,16 +1266,19 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
     </script>
 <script data-todos-dias-ux>
 (function(){
- const critical=[...document.querySelectorAll('button')].filter(b=>/(despach|process|confirm|enviar|salvar)/i.test(b.innerText||''));
- critical.forEach(btn=>{
-   btn.addEventListener('click',()=>{
-     if(btn.dataset.uxBusy==='1') return;
-     btn.dataset.uxBusy='1'; const original=btn.innerHTML;
-     btn.disabled=true; btn.setAttribute('aria-busy','true');
-     btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...';
-     setTimeout(()=>{if(btn.isConnected){btn.innerHTML=original;btn.disabled=false;btn.removeAttribute('aria-busy');btn.dataset.uxBusy='0';}},1800);
-   },true);
- });
+    // Permite fechar modais clicando no fundo escuro (backdrop)
+    ['modal-confirmacao', 'modal-detalhes', 'modal-upload-dedicado'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    if (id === 'modal-confirmacao') cancelarConfirmacaoEnvio();
+                    else if (id === 'modal-detalhes') fecharModalDetalhes();
+                    else if (id === 'modal-upload-dedicado') fecharModalUploadDedicado();
+                }
+            });
+        }
+    });
 })();
 </script>
 </body>
