@@ -3229,8 +3229,11 @@ function updateSidebarVisibility() {
         const { data: masterData } = await supabaseClient.from('unidades_oficiais').select('*');
         if (masterData) {
             masterData.forEach(u => {
-                appData.masterUnits[u.OP || u.op] = { 
-                    unidade: u.Unidade || u.unidade || '', 
+                const op = u.OP || u.op;
+                const nomeUnidade = u.Unidade || u.unidade || '';
+                const emailAdm = u['E-mail Administrativo'] || u.email_administrativo || '';
+                appData.masterUnits[op] = { 
+                    unidade: nomeUnidade, 
                     cidade: u.Município || u.municipio || u.Cidade || u.cidade || '',
                     telefone: u.Telefone || u.telefone || '',
                     // Novos campos inseridos da nova tabela
@@ -3240,7 +3243,8 @@ function updateSidebarVisibility() {
                     diretor: u['Diretor(a)'] || u.diretor || '',
                     emailDiretor: u['E-mail Diretor(a)'] || u.email_diretor || '',
                     respAdm: u['Responsável Administrativo'] || u.responsavel_administrativo || '',
-                    emailAdm: u['E-mail Administrativo'] || u.email_administrativo || '',
+                    emailAdm: emailAdm,
+                    email: emailAdm || getDefaultInstitutionalEmail(op, nomeUnidade),
                     respAcad: u['Responsável Acadêmico'] || u.responsavel_academico || '',
                     emailAcad: u['E-mail Acadêmico'] || u.email_academico || '',
                     aniversario: u['Aniversário da Cidade'] || u.aniversario_cidade || '',
@@ -3253,10 +3257,13 @@ function updateSidebarVisibility() {
         const { data: unitData } = await supabaseClient.from('unidades_customizadas').select('*');
         if (unitData) {
             unitData.forEach(u => {
-                appData.customUnits[u.op || u.OP] = { 
-                    unidade: u.unidade || u.Unidade, 
-                    cidade: u.cidade || u.Cidade, 
-                    email: u.email_institucional || u['Email Institucional'] || u.email || '', 
+                const op = u.op || u.OP;
+                const nomeUnidade = u.unidade || u.Unidade || '';
+                const emailInst = u.email_institucional || u['Email Institucional'] || u.email || '';
+                appData.customUnits[op] = { 
+                    unidade: nomeUnidade, 
+                    cidade: u.cidade || u.Cidade || '', 
+                    email: emailInst || getDefaultInstitutionalEmail(op, nomeUnidade), 
                     telefone: u.telefone || u.Telefone || '' 
                 };
             });
@@ -3346,9 +3353,74 @@ function updateSidebarVisibility() {
     }
 }
 
+        function getDefaultInstitutionalEmail(op, unidadeNome) {
+            if (!op && op !== 0) return '';
+            const cleanOpMatch = String(op || '').match(/\d+/);
+            const cleanOpNum = cleanOpMatch ? parseInt(cleanOpMatch[0], 10) : null;
+            const opFormatted = cleanOpNum !== null ? String(cleanOpNum).padStart(3, '0') : String(op || '').padStart(3, '0');
+
+            let nome = String(unidadeNome || '').toLowerCase();
+            if (!nome) {
+                const u = (appData?.masterUnits?.[op]) || (appData?.customUnits?.[op]);
+                if (u?.unidade) {
+                    nome = u.unidade.toLowerCase();
+                } else if (appData?.scheduling) {
+                    const sched = appData.scheduling.find(s => String(s.op) === String(op));
+                    if (sched?.instituicao) nome = sched.instituicao.toLowerCase();
+                }
+            }
+
+            const isFatec = nome.includes('fatec') || nome.includes('faculdade');
+            const prefix = isFatec ? 'f' : 'e';
+            return `${prefix}${opFormatted}adm@cps.sp.gov.br`;
+        }
+
+        function resolveInstitutionalEmail(op, currentEmail, unidadeNome) {
+            let email = (currentEmail || '').trim();
+            let nome = String(unidadeNome || '').toLowerCase();
+            if (!nome && (op || op === 0)) {
+                const u = (appData?.masterUnits?.[op]) || (appData?.customUnits?.[op]);
+                if (u?.unidade) {
+                    nome = u.unidade.toLowerCase();
+                } else if (appData?.scheduling) {
+                    const sched = appData.scheduling.find(s => String(s.op) === String(op));
+                    if (sched?.instituicao) nome = sched.instituicao.toLowerCase();
+                }
+            }
+
+            const defaultInstEmail = getDefaultInstitutionalEmail(op, nome);
+
+            if (!email) {
+                const master = (appData?.masterUnits?.[op]) || (appData?.customUnits?.[op]);
+                if (master?.emailAdm) return master.emailAdm;
+                if (master?.email) return master.email;
+                return defaultInstEmail;
+            }
+
+            // Se o e-mail for o padrão genérico (e...adm@cps.sp.gov.br ou f...adm@cps.sp.gov.br),
+            // garante o prefixo correto de acordo com o tipo da unidade (Fatec -> f, Etec -> e)
+            const genericPattern = /^[ef]\d+adm@cps\.sp\.gov\.br$/i;
+            if (genericPattern.test(email)) {
+                return defaultInstEmail;
+            }
+
+            return email;
+        }
+
         function getUnitData(op) {
             let fullDir = getFullDirectory();
-            return fullDir[op] || { unidade: `Unidade CEETEPS OP ${op}`, cidade: "Interior / SP", telefone: "(11) 0000-0000", email: `e${String(op).padStart(3, '0')}adm@cps.sp.gov.br` };
+            if (fullDir[op]) {
+                if (!fullDir[op].email) {
+                    fullDir[op].email = fullDir[op].emailAdm || getDefaultInstitutionalEmail(op, fullDir[op].unidade);
+                }
+                return fullDir[op];
+            }
+            return { 
+                unidade: `Unidade CEETEPS OP ${op}`, 
+                cidade: "Interior / SP", 
+                telefone: "(11) 0000-0000", 
+                email: getDefaultInstitutionalEmail(op) 
+            };
         }
         function getCurrentBatch() { return appData.currentBatch; }
 
@@ -3514,9 +3586,11 @@ function updateSidebarVisibility() {
                     }
 
                     const isProposalSent = appData.propostasEnviadas && appData.propostasEnviadas[op] === true;
+                    const safeUnitName = (unit.unidade || '').replace(/"/g, '&quot;');
+                    const safeUnitEmail = unit.email || unit.emailAdm || '';
                     const proposalBtnHtml = isProposalSent 
                         ? `<button type="button" onclick="unmarkProposalSent('${op}')" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:bg-emerald-500/20 cursor-pointer" title="Proposta já enviada! Clique para desmarcar"><i class="fa-solid fa-circle-check"></i> Enviada</button>`
-                        : `<button type="button" data-action="open-email" data-op="${op}" onclick="openEmailModal('${op}')" class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:bg-sky-500/20 cursor-pointer"><i class="fa-solid fa-envelope"></i> Proposta</button>`;
+                        : `<button type="button" data-action="open-email" data-op="${op}" data-unidade="${safeUnitName}" data-email="${safeUnitEmail}" onclick="openEmailModal('${op}', '${safeUnitEmail.replace(/'/g, "\\'")}', '${(unit.unidade || '').replace(/'/g, "\\'")}')" class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:bg-sky-500/20 cursor-pointer"><i class="fa-solid fa-envelope"></i> Proposta</button>`;
 
                     tbody.innerHTML += `
                         <tr class="group hover:bg-slate-800/40 transition-all duration-200 border-b border-slate-800/50 last:border-0 relative">
@@ -4016,7 +4090,8 @@ function updateSidebarVisibility() {
             const cidade = document.getElementById('new-cidade').value;
             const unidade = document.getElementById('new-unidade').value;
             const telefone = document.getElementById('new-telefone').value;
-            const email = document.getElementById('new-email').value;
+            const emailInput = document.getElementById('new-email').value;
+            const email = resolveInstitutionalEmail(op, emailInput, unidade);
 
             appData.customUnits[op] = { unidade, cidade, telefone, email };
             await supabaseClient.from('unidades_customizadas').upsert({ 
@@ -4043,8 +4118,9 @@ function updateSidebarVisibility() {
                 const u = (typeof getUnitData === 'function') ? (getUnitData(op) || {}) : {};
                 cidade = cidade || u.cidade || '';
                 unidade = unidade || u.unidade || '';
-                email = email || u.email || '';
+                email = email || u.email || u.emailAdm || '';
             }
+            email = resolveInstitutionalEmail(op, email, unidade);
             setElementValue('modal-op', op);
             setElementValue('modal-cidade', cidade);
             setElementValue('modal-instituicao', unidade);
@@ -4083,7 +4159,7 @@ function updateSidebarVisibility() {
 
             const cidade = document.getElementById('modal-cidade').value;
             const instituicao = document.getElementById('modal-instituicao').value;
-            const email = document.getElementById('modal-email').value;
+            const email = resolveInstitutionalEmail(op, document.getElementById('modal-email').value, instituicao);
             const data = document.getElementById('modal-data').value;
             const horario = document.getElementById('modal-horario').value;
             const qtd = parseInt(document.getElementById('modal-qtd').value) || 0;
@@ -4121,12 +4197,14 @@ function updateSidebarVisibility() {
             let item = appData.scheduling.find(s => String(s.id) === String(id));
             if (!item) return;
 
-            const destinatarioEmail = item.email || `e${String(item.op).padStart(3, '0')}adm@cps.sp.gov.br`;
+            const unitInfo = (typeof getUnitData === 'function') ? getUnitData(item.op) : null;
+            const unitName = item.instituicao || unitInfo?.unidade || '';
+            const destinatarioEmail = resolveInstitutionalEmail(item.op, item.email, unitName);
             document.getElementById('confirm-email-item-id').value = item.id;
             document.getElementById('confirm-email-dest').value = destinatarioEmail;
             
             const subject = "CONFIRMAÇÃO DE AGENDAMENTO DE VISITA MÉDICA - PERIÓDICOS 2026";
-            document.getElementById('confirm-modal-subtitle').innerText = `OP ${item.op} - ${item.instituicao || item.cidade}`;
+            document.getElementById('confirm-modal-subtitle').innerText = `OP ${item.op} - ${unitName || item.cidade}`;
 
             const currentHour = new Date().getHours();
             let greeting = currentHour < 12 ? "Bom dia," : "Boa tarde,";
@@ -4335,11 +4413,11 @@ function updateSidebarVisibility() {
         function openEmailModal(op, email, unidade) {
             if (!email || !unidade) {
                 const u = (typeof getUnitData === 'function') ? (getUnitData(op) || {}) : {};
-                email = email || u.email || '';
+                email = email || u.email || u.emailAdm || '';
                 unidade = unidade || u.unidade || '';
             }
             activeEmailOp = op;
-            const mainEmail = email || `e${String(op).padStart(3, '0')}adm@cps.sp.gov.br`;
+            const mainEmail = resolveInstitutionalEmail(op, email, unidade);
             setElementValue('email-dest', mainEmail);
             setElementValue('email-cc', mainEmail.replace('adm@', 'op@'));
             setElementText('email-modal-subtitle', `OP ${op} - ${unidade || 'Unidade'}`);
@@ -4996,9 +5074,11 @@ if (inputBusca) {
     if (!item) return;
 
     document.getElementById('sig-item-id').value = item.id;
-    const dest = item.email || `e${String(item.op).padStart(3, '0')}adm@cps.sp.gov.br`;
+    const unitInfo = (typeof getUnitData === 'function') ? getUnitData(item.op) : null;
+    const unitName = item.instituicao || unitInfo?.unidade || '';
+    const dest = resolveInstitutionalEmail(item.op, item.email, unitName);
     document.getElementById('sig-email-dest').value = dest;
-    document.getElementById('sig-modal-subtitle').innerText = `OP ${item.op} - ${item.instituicao || item.cidade}`;
+    document.getElementById('sig-modal-subtitle').innerText = `OP ${item.op} - ${unitName || item.cidade}`;
 
     const currentHour = new Date().getHours();
     const greeting = currentHour < 12 ? "Olá, bom dia!" : "Olá, boa tarde!";
