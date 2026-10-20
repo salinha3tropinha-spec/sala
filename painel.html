@@ -890,7 +890,14 @@ div[id*="modal"], #add-user-modal, #add-unit-modal, #batch-config-modal, #detail
                         <i class="fa-solid fa-calendar-check text-xs"></i>
                     </div>
                     <span class="sidebar-text font-medium">Unidades Agendadas</span>
-                </button>             
+                </button>
+
+                <button onclick="switchTab('listas-realizadas')" id="btn-listas-realizadas" class="tab-btn w-full flex items-center space-x-3.5 px-3.5 py-3 rounded-2xl text-xs font-medium text-slate-400 hover:bg-slate-900/90 hover:text-white transition-all duration-200 group border border-transparent hover:border-slate-800/80" title="Unidades com listas realizadas">
+                    <div class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30 transition-all">
+                        <i class="fa-solid fa-box-archive text-xs"></i>
+                    </div>
+                    <span class="sidebar-text font-medium">Unidades com listas realizadas</span>
+                </button>
 
                 <div class="nav-section-label">Automação & controle</div>
 
@@ -1680,6 +1687,76 @@ div[id*="modal"], #add-user-modal, #add-unit-modal, #batch-config-modal, #detail
                     </div>
                 </div>
             </section>
+
+            <!-- TAB: UNIDADES COM LISTAS REALIZADAS (ARQUIVADAS) -->
+            <section id="tab-listas-realizadas" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
+                <div class="glass-panel p-8 rounded-3xl flex-1 flex flex-col shadow-2xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <!-- Cabeçalho -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 pb-6 border-b border-slate-800/80 relative z-10 shrink-0">
+                        <div>
+                            <span class="text-[11px] font-mono text-cyan-400 font-semibold uppercase tracking-widest block mb-1">Histórico & Arquivo de Atendimentos</span>
+                            <h3 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+                                <i class="fa-solid fa-box-archive text-cyan-400"></i> Unidades com Listas Realizadas
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Consulte as unidades arquivadas com lista de presença finalizada. Todos os registros de atendimentos e faltantes permanecem preservados.</p>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto">
+                            <div class="relative w-full md:w-72 group">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                                    <i class="fa-solid fa-search text-slate-500 group-focus-within:text-cyan-400 transition-colors"></i>
+                                </div>
+                                <input type="text" id="search-listas-realizadas" oninput="renderListasRealizadas()" placeholder="Filtrar por cidade, OP ou médico..." class="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 transition-all font-medium shadow-inner backdrop-blur-sm">
+                            </div>
+                            <button onclick="exportarListasRealizadasCSV()" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0" title="Exportar CSV com dados e faltantes">
+                                <i class="fa-solid fa-file-csv"></i> Exportar
+                            </button>
+                            <button onclick="switchTab('unidades-agendadas')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border border-bordercolor flex items-center gap-2 shrink-0">
+                                <i class="fa-solid fa-arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mini Cards de Estatísticas -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 relative z-10 shrink-0">
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-md">
+                            <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">Unidades Arquivadas</span>
+                            <div id="kpi-arquivadas-total" class="text-xl font-mono font-extrabold text-cyan-400">0</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-md">
+                            <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">Total Convocados</span>
+                            <div id="kpi-arquivadas-convocados" class="text-xl font-mono font-extrabold text-slate-100">0</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-md">
+                            <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">Total Presentes</span>
+                            <div id="kpi-arquivadas-presentes" class="text-xl font-mono font-extrabold text-emerald-400">0</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-md">
+                            <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">Total Faltantes</span>
+                            <div id="kpi-arquivadas-faltantes" class="text-xl font-mono font-extrabold text-rose-400">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Unidades Arquivadas -->
+                    <div class="flex-1 overflow-y-auto rounded-2xl border border-slate-800/80 bg-slate-950/40 relative z-10 shadow-inner">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-900/90 backdrop-blur-md text-slate-400 text-[11px] font-bold uppercase tracking-widest border-b border-slate-800/80 sticky top-0 z-20 shadow-sm">
+                                <tr>
+                                    <th class="p-4">OP</th>
+                                    <th class="p-4">Cidade / Instituição</th>
+                                    <th class="p-4">Data / Horário</th>
+                                    <th class="p-4">Médico</th>
+                                    <th class="p-4 text-center">Atendimento (Presença / Faltantes)</th>
+                                    <th class="p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listas-realizadas-table-body" class="divide-y divide-slate-800/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 5: LOGS E AUDITORIA -->
             <section id="tab-logs" class="tab-content hidden flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
                 <div class="glass-panel p-8 rounded-2xl flex-1 flex flex-col">
@@ -2230,10 +2307,24 @@ div[id*="modal"], #add-user-modal, #add-unit-modal, #batch-config-modal, #detail
                 </div>
                 <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-md flex flex-col justify-between">
                     <div>
-                        <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">Observações Internas</span>
-                        <textarea id="det-obs" class="w-full mt-1 bg-slate-950/80 border border-slate-700/60 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors resize-none h-20" placeholder="Insira observações..."></textarea>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block">Observações Internas</span>
+                            <span id="det-obs-status" class="text-[10px] text-slate-500 font-mono">Salvamento automático</span>
+                        </div>
+                        <textarea id="det-obs" oninput="debouncedSaveUnitObs()" onblur="saveUnitObs(false)" class="w-full mt-1 bg-slate-950/80 border border-slate-700/60 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors resize-none h-24" placeholder="Insira observações desta unidade (ex: contatos adicionais, particularidades, horários)..."></textarea>
+                    </div>
+                    <div class="flex justify-end mt-2 pt-2 border-t border-slate-800/80">
+                        <button type="button" onclick="saveUnitObs(true)" id="btn-save-obs" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-floppy-disk text-xs"></i> <span>Salvar Observação</span>
+                        </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Rodapé do Modal -->
+            <div class="px-6 py-4 border-t border-slate-800/80 bg-slate-900/50 flex justify-between items-center rounded-b-3xl">
+                <span class="text-xs text-slate-400 font-mono flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-indigo-400"></i> Observações salvas em tempo real</span>
+                <button type="button" onclick="closeDetailsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">Fechar</button>
             </div>
 
         </div>
@@ -3001,17 +3092,19 @@ document.addEventListener('DOMContentLoaded', initUserTheme);
         let savedTempQtd = {};
         let savedLockedQtd = {};
         let savedPropostas = {};
+        let savedObservacoes = {};
         try {
             savedTempQtd = JSON.parse(localStorage.getItem('app_temp_qtd')) || {};
             savedLockedQtd = JSON.parse(localStorage.getItem('app_locked_qtd')) || {};
             savedPropostas = JSON.parse(localStorage.getItem('app_propostas_enviadas')) || {};
+            savedObservacoes = JSON.parse(localStorage.getItem('app_observacoes')) || {};
         } catch(e) {}
 
         let appData = {
             scheduling: [],
             masterUnits: {},
             customUnits: {},
-            observacoes: {},
+            observacoes: savedObservacoes,
             wiki: [],
             logs: [],
             usuarios: [],
@@ -3076,6 +3169,7 @@ function updateSidebarVisibility() {
             const btnDirectory = document.getElementById('btn-directory');
             const btnStatusConfirmacao = document.getElementById('btn-status-confirmacao');
             const btnUnidadesAgendadas = document.getElementById('btn-unidades-agendadas');
+            const btnListasRealizadas = document.getElementById('btn-listas-realizadas');
             const btnAutomations = document.getElementById('btn-automations');
             const btnLogs = document.getElementById('btn-logs');
             const btnWiki = document.getElementById('btn-wiki');
@@ -3101,6 +3195,7 @@ function updateSidebarVisibility() {
                 if (btnDirectory) btnDirectory.classList.remove('hidden');
                 if (btnStatusConfirmacao) btnStatusConfirmacao.classList.remove('hidden');
                 if (btnUnidadesAgendadas) btnUnidadesAgendadas.classList.remove('hidden');
+                if (btnListasRealizadas) btnListasRealizadas.classList.remove('hidden');
                 if (btnWiki) btnWiki.classList.remove('hidden');
                 if (btnTodosOsDias) {
                     btnTodosOsDias.classList.remove('hidden');
@@ -3124,6 +3219,7 @@ function updateSidebarVisibility() {
                 }
                 if (btnDirectory) btnDirectory.classList.remove('hidden');
                 if (btnUnidadesAgendadas) btnUnidadesAgendadas.classList.remove('hidden');
+                if (btnListasRealizadas) btnListasRealizadas.classList.remove('hidden');
                 if (labelMonitoramento) labelMonitoramento.classList.remove('hidden');
                 if (btnGlobal) {
                     btnGlobal.classList.add('hidden');
@@ -3295,7 +3391,11 @@ function updateSidebarVisibility() {
 
         const { data: obsData } = await supabaseClient.from('observacoes_unidades').select('*');
         if (obsData) { 
-            obsData.forEach(o => { appData.observacoes[o.op] = o.observacao; }); 
+            obsData.forEach(o => { 
+                appData.observacoes[o.op] = o.observacao;
+                appData.observacoes[String(o.op)] = o.observacao;
+            }); 
+            try { localStorage.setItem('app_observacoes', JSON.stringify(appData.observacoes)); } catch(e) {}
         }
 
         const { data: statusData } = await supabaseClient.from('status_operacional_unidades').select('*');
@@ -3328,6 +3428,7 @@ function updateSidebarVisibility() {
     renderDirectory();
     renderScheduling();
     renderUnidadesAgendadas();
+    if (typeof renderListasRealizadas === 'function') renderListasRealizadas();
     renderLogs();
     renderWiki();
     updateStats();
@@ -3344,6 +3445,10 @@ function updateSidebarVisibility() {
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamento_participantes' }, () => {
                     console.log('[Realtime] Participantes atualizados na nuvem, sincronizando...');
+                    loadDataFromCloud();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'observacoes_unidades' }, () => {
+                    console.log('[Realtime] Observações atualizadas na nuvem, sincronizando...');
                     loadDataFromCloud();
                 })
                 .subscribe();
@@ -3549,7 +3654,7 @@ function updateSidebarVisibility() {
                     if (filter && !`${op} ${unit.unidade} ${unit.cidade}`.toLowerCase().includes(filter)) return;
                     matchCount++;
                     
-                    const obsText = appData.observacoes[op];
+                    const obsText = appData.observacoes[op] || appData.observacoes[String(op)] || appData.observacoes[parseInt(op, 10)];
                     const obsBadge = obsText ? `
                         <div class="relative group/tooltip inline-flex items-center shrink-0 mt-0.5 ml-2 z-10">
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 cursor-help transition-all group-hover/tooltip:bg-amber-500/20">
@@ -4061,25 +4166,76 @@ function updateSidebarVisibility() {
             setElementText('det-acad', unit.respAcad);
             setElementText('det-email-acad', unit.emailAcad);
             setElementText('det-historico', unit.historico || 'Nenhum histórico disponível cadastrado para esta unidade.');
-            setElementValue('det-obs', appData.observacoes?.[op] || '');
+            
+            const currentObs = appData.observacoes?.[op] || appData.observacoes?.[String(op)] || appData.observacoes?.[parseInt(op, 10)] || '';
+            setElementValue('det-obs', currentObs);
+            const statusEl = document.getElementById('det-obs-status');
+            if (statusEl) statusEl.innerHTML = currentObs ? '<span class="text-emerald-400/80"><i class="fa-solid fa-check"></i> Observação carregada</span>' : '<span class="text-slate-500">Nenhuma observação</span>';
+
             const modal = showElement('details-modal');
             if (!modal) { showToast('A janela de detalhes não está disponível nesta versão da página.', 'error'); return; }
             requestAnimationFrame(() => modal.querySelector('button, input, textarea, [tabindex]')?.focus());
         }
 
-        function closeDetailsModal() {
+        let __obsDebounceTimer = null;
+        function debouncedSaveUnitObs() {
+            const statusEl = document.getElementById('det-obs-status');
+            if (statusEl) statusEl.innerHTML = '<span class="text-slate-400 italic">Digitando...</span>';
+            clearTimeout(__obsDebounceTimer);
+            __obsDebounceTimer = setTimeout(() => {
+                saveUnitObs(false);
+            }, 800);
+        }
+
+        async function closeDetailsModal() {
+            if (activeDetailsOp !== null && activeDetailsOp !== undefined) {
+                await saveUnitObs(false);
+            }
             hideElement('details-modal');
             activeDetailsOp = null;
             if (typeof updateStageCounts === 'function') updateStageCounts();
             if (currentStage && typeof renderStageTable === 'function') renderStageTable();
         }
 
-        async function saveUnitObs() {
-            if (activeDetailsOp === null) return;
-            const obsText = document.getElementById('det-obs').value;
-            appData.observacoes[activeDetailsOp] = obsText;
-            await supabaseClient.from('observacoes_unidades').upsert({ op: activeDetailsOp, observacao: obsText }, { onConflict: 'op' });
+        async function saveUnitObs(showFeedback = false) {
+            if (activeDetailsOp === null || activeDetailsOp === undefined) return;
+            const opVal = activeDetailsOp;
+            const cleanOpMatch = String(opVal).match(/\d+/);
+            const opNum = cleanOpMatch ? parseInt(cleanOpMatch[0], 10) : parseInt(opVal, 10);
+            if (isNaN(opNum)) return;
+
+            const obsText = document.getElementById('det-obs') ? document.getElementById('det-obs').value : '';
+            appData.observacoes[opNum] = obsText;
+            appData.observacoes[String(opNum)] = obsText;
+            appData.observacoes[opVal] = obsText;
+
+            try {
+                localStorage.setItem('app_observacoes', JSON.stringify(appData.observacoes));
+            } catch(e) {}
+
+            const statusEl = document.getElementById('det-obs-status');
+            if (statusEl) statusEl.innerHTML = '<span class="text-amber-400"><i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...</span>';
+
+            try {
+                const { error } = await supabaseClient.from('observacoes_unidades').upsert({ 
+                    op: opNum, 
+                    observacao: obsText 
+                }, { onConflict: 'op' });
+
+                if (error) throw error;
+
+                if (statusEl) statusEl.innerHTML = '<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Salvo com sucesso</span>';
+                if (showFeedback) showToast('Observação da unidade salva com sucesso!');
+                if (currentStage && typeof renderStageTable === 'function') renderStageTable();
+            } catch (err) {
+                console.error('Erro ao salvar observação da unidade:', err);
+                if (statusEl) statusEl.innerHTML = '<span class="text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> Falha ao salvar</span>';
+                if (showFeedback) showToast('Erro ao salvar observação: ' + err.message, 'error');
+            }
         }
+        window.saveUnitObs = saveUnitObs;
+        window.debouncedSaveUnitObs = debouncedSaveUnitObs;
+        window.closeDetailsModal = closeDetailsModal;
 
         function openAddUnitModal() { document.getElementById('add-unit-form').reset(); document.getElementById('add-unit-modal').classList.remove('hidden'); }
         function closeAddUnitModal() { document.getElementById('add-unit-modal').classList.add('hidden'); }
@@ -4590,12 +4746,13 @@ if (inputBusca) {
             'sig-rpa':'Gestão SIG & Disciplinas','stage-detail':'Central de Agendamentos (Etapa Detalhada)',
             'directory':'Diretório Geral (Unidades)','status-confirmacao':'Status Unidades em Confirmação',
             'presenca-detalhe':'Lista de Presença Dedicada','unidades-agendadas':'Unidades Agendadas',
+            'listas-realizadas':'Unidades com listas realizadas',
             'automations':'Automações UI.Vision','logs':'Logs & Auditoria','comparecimento-global':'Comparecimento Global (Master)','wiki':'Wiki Pessoal'
         };
         const __tabIcons = {
             home:'fa-house','home-visitor':'fa-eye',batch:'fa-calendar-days','sig-rpa':'fa-gears','stage-detail':'fa-list-check',
             directory:'fa-building-columns','status-confirmacao':'fa-envelope-circle-check','presenca-detalhe':'fa-user-check',
-            'unidades-agendadas':'fa-calendar-check',automations:'fa-robot',logs:'fa-shield-halved','comparecimento-global':'fa-chart-column',wiki:'fa-book-open'
+            'unidades-agendadas':'fa-calendar-check','listas-realizadas':'fa-box-archive',automations:'fa-robot',logs:'fa-shield-halved','comparecimento-global':'fa-chart-column',wiki:'fa-book-open'
         };
         let __navTransitionBusy=false;
         let __navDataReadyPromise=Promise.resolve();
@@ -4638,6 +4795,7 @@ if (inputBusca) {
             if(tabId==='stage-detail'&&typeof renderStageTable==='function')renderStageTable();
             if(tabId==='status-confirmacao'&&typeof renderScheduling==='function')renderScheduling();
             if(tabId==='unidades-agendadas'&&typeof renderUnidadesAgendadas==='function')renderUnidadesAgendadas();
+            if(tabId==='listas-realizadas'&&typeof renderListasRealizadas==='function')renderListasRealizadas();
             if(tabId==='comparecimento-global'&&typeof renderComparecimentoGlobal==='function')renderComparecimentoGlobal();
             await __waitForPaint(); __animateTarget(targetTab); __setNavProgress(100,'Seção pronta','Dados sincronizados e interface carregada.','Concluído',tabId); await new Promise(resolve=>setTimeout(resolve,90)); __hideNavLoader();
             return true;
@@ -4764,9 +4922,9 @@ if (inputBusca) {
 
             let schedList;
             if (isMaster) {
-                schedList = appData.scheduling.filter(s => s.status === 'concluido' || (s.agendamento_participantes && s.agendamento_participantes.length > 0));
+                schedList = appData.scheduling.filter(s => (s.status === 'concluido' || (s.agendamento_participantes && s.agendamento_participantes.length > 0)) && s.status !== 'arquivado');
             } else {
-                schedList = appData.scheduling.filter(s => s.status === 'sig' || s.status === 'disciplinas' || s.status === 'concluido' || (s.agendamento_participantes && s.agendamento_participantes.length > 0));
+                schedList = appData.scheduling.filter(s => (s.status === 'sig' || s.status === 'disciplinas' || s.status === 'concluido' || (s.agendamento_participantes && s.agendamento_participantes.length > 0)) && s.status !== 'arquivado');
             }
             
             tbody.innerHTML = '';
@@ -4824,6 +4982,16 @@ if (inputBusca) {
                 // Convertemos para String no parâmetro para evitar qualquer perda de precisão do BigInt no JS
                 const safeId = `'${s.id}'`;
 
+                let arquivarBtn = '';
+                if (listaRealizada) {
+                    arquivarBtn = `
+                        <button onclick="arquivarUnidadeAgendada(${safeId})" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" title="Arquivar unidade e mover para 'Unidades com listas realizadas'">
+                            <i class="fa-solid fa-box-archive text-cyan-400"></i>
+                            <span>Arquivar</span>
+                        </button>
+                    `;
+                }
+
                 if (isMaster) {
                     actionHtml = `
                         <div class="flex items-center justify-end gap-1.5 flex-wrap">
@@ -4831,6 +4999,7 @@ if (inputBusca) {
                                 <i class="fa-solid ${btnIcon}"></i> 
                                 <span>${btnText}</span>
                             </a>
+                            ${arquivarBtn}
                             <button onclick="openColaboradoresMasterModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="Gerenciar Colaboradores (Master)"><i class="fa-solid fa-users-gear"></i></button>
                             <button onclick="openConfirmEmailModal(${safeId})" class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="E-mail Confirmação"><i class="fa-solid fa-envelope-circle-check"></i></button>
                             <button onclick="openExcelRowModal(${safeId})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="Linha Excel"><i class="fa-solid fa-file-excel"></i></button>
@@ -4847,6 +5016,7 @@ if (inputBusca) {
                                 <i class="fa-solid ${btnIcon}"></i> 
                                 <span>${btnText}</span>
                             </a>
+                            ${arquivarBtn}
                         </div>
                     `;
                 }
@@ -4891,12 +5061,291 @@ if (inputBusca) {
                 updateStageCounts();
                 renderScheduling();
                 renderUnidadesAgendadas();
+                if (typeof renderListasRealizadas === 'function') renderListasRealizadas();
                 const stageDetail = document.getElementById('tab-stage-detail');
                 if (stageDetail && !stageDetail.classList.contains('hidden')) renderStageTable();
                 updateStats();
                 showToast('Agendamento excluído com sucesso.');
             });
         }
+
+        // =========================================================================
+        // ARQUIVAMENTO E GESTÃO DE UNIDADES COM LISTAS REALIZADAS
+        // =========================================================================
+
+        async function arquivarUnidadeAgendada(id) {
+            const item = appData.scheduling.find(s => String(s.id) === String(id));
+            const op = item?.op || id;
+            const nome = item?.instituicao || item?.cidade || '';
+            
+            showConfirm(
+                'Arquivar Unidade',
+                `Deseja arquivar a OP ${op} (${nome})? Ela será movida para a aba "Unidades com listas realizadas", mantendo todos os dados de comparecimento e faltantes intactos e acessíveis.`,
+                async () => {
+                    try {
+                        const { error } = await supabaseClient
+                            .from('agendamentos')
+                            .update({ status: 'arquivado' })
+                            .eq('id', id);
+
+                        if (error) throw error;
+
+                        if (item) item.status = 'arquivado';
+
+                        if (typeof logAction === 'function') {
+                            logAction('Arquivamento de Unidade', `OP ${op} (${nome}) arquivada com lista realizada.`);
+                        }
+
+                        showToast(`OP ${op} arquivada com sucesso! Movida para 'Unidades com listas realizadas'.`);
+                        renderUnidadesAgendadas();
+                        if (typeof renderListasRealizadas === 'function') renderListasRealizadas();
+                        updateStageCounts();
+                    } catch (err) {
+                        console.error('Erro ao arquivar unidade:', err);
+                        showToast('Erro ao arquivar a unidade. Verifique sua conexão e tente novamente.', 'error');
+                    }
+                }
+            );
+        }
+        window.arquivarUnidadeAgendada = arquivarUnidadeAgendada;
+
+        async function desarquivarUnidade(id) {
+            const item = appData.scheduling.find(s => String(s.id) === String(id));
+            const op = item?.op || id;
+            const nome = item?.instituicao || item?.cidade || '';
+
+            showConfirm(
+                'Desarquivar Unidade',
+                `Deseja retornar a OP ${op} (${nome}) para a aba de "Unidades Agendadas"?`,
+                async () => {
+                    try {
+                        const novoStatus = (item && item.lista_presenca_salva) ? 'concluido' : 'sig';
+                        const { error } = await supabaseClient
+                            .from('agendamentos')
+                            .update({ status: novoStatus })
+                            .eq('id', id);
+
+                        if (error) throw error;
+
+                        if (item) item.status = novoStatus;
+
+                        if (typeof logAction === 'function') {
+                            logAction('Desarquivamento de Unidade', `OP ${op} (${nome}) retornada para Unidades Agendadas.`);
+                        }
+
+                        showToast(`OP ${op} retornada para Unidades Agendadas.`);
+                        renderUnidadesAgendadas();
+                        if (typeof renderListasRealizadas === 'function') renderListasRealizadas();
+                        updateStageCounts();
+                    } catch (err) {
+                        console.error('Erro ao desarquivar unidade:', err);
+                        showToast('Erro ao desarquivar a unidade.', 'error');
+                    }
+                }
+            );
+        }
+        window.desarquivarUnidade = desarquivarUnidade;
+
+        function renderListasRealizadas() {
+            const tbody = document.getElementById('listas-realizadas-table-body');
+            if (!tbody) return;
+
+            const searchInput = document.getElementById('search-listas-realizadas');
+            const filter = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            const nivel = appData.currentUserProfile && appData.currentUserProfile.nivel_acesso 
+                ? appData.currentUserProfile.nivel_acesso.trim().toLowerCase() 
+                : '';
+            const isMaster = (nivel === 'master');
+
+            // Filtra as unidades arquivadas
+            const arquivadas = (appData.scheduling || []).filter(s => s.status === 'arquivado');
+
+            // Atualiza KPIs
+            let totalConvocados = 0;
+            let totalPresentes = 0;
+            let totalFaltantes = 0;
+
+            arquivadas.forEach(s => {
+                const participantes = s.agendamento_participantes || [];
+                const qtd = Number(s.qtd || 0);
+                const conv = participantes.length > 0 ? participantes.length : qtd;
+                const pres = participantes.filter(p => p.compareceu === true).length;
+                const falt = participantes.filter(p => p.compareceu === false).length;
+                totalConvocados += conv;
+                totalPresentes += pres;
+                totalFaltantes += falt;
+            });
+
+            const kpiTotal = document.getElementById('kpi-arquivadas-total');
+            const kpiConv = document.getElementById('kpi-arquivadas-convocados');
+            const kpiPres = document.getElementById('kpi-arquivadas-presentes');
+            const kpiFalt = document.getElementById('kpi-arquivadas-faltantes');
+
+            if (kpiTotal) kpiTotal.innerText = arquivadas.length;
+            if (kpiConv) kpiConv.innerText = totalConvocados;
+            if (kpiPres) kpiPres.innerText = totalPresentes;
+            if (kpiFalt) kpiFalt.innerText = totalFaltantes;
+
+            tbody.innerHTML = '';
+
+            // Ordena crescente por OP
+            const arquivadasOrdenadas = [...arquivadas].sort((a, b) => Number(a.op || 0) - Number(b.op || 0));
+
+            const filtered = arquivadasOrdenadas.filter(s => 
+                `${s.cidade || ''} ${s.instituicao || ''} ${s.medico || ''} ${s.op || ''}`.toLowerCase().includes(filter)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8">${getEmptyStateHtml('fa-box-archive', 'Nenhuma unidade arquivada', filter ? 'Nenhum resultado corresponde ao termo pesquisado.' : 'Nenhuma unidade com lista realizada foi arquivada ainda.')}</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(s => {
+                const participantes = s.agendamento_participantes || [];
+                const convCount = participantes.length > 0 ? participantes.length : Number(s.qtd || 0);
+                const presCount = participantes.filter(p => p.compareceu === true).length;
+                const faltCount = participantes.filter(p => p.compareceu === false).length;
+                const safeId = `'${s.id}'`;
+
+                // Nomes dos faltantes para tooltip e visualização rápida
+                const faltantesNomes = participantes
+                    .filter(p => p.compareceu === false)
+                    .map(p => (p.colaboradores && p.colaboradores.nome) ? p.colaboradores.nome : 'Colaborador')
+                    .join(', ');
+
+                let attendanceBadge = '';
+                if (participantes.length === 0) {
+                    attendanceBadge = `
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-400">
+                            <span>Previstos: <strong class="text-slate-200">${convCount}</strong></span>
+                        </div>
+                    `;
+                } else {
+                    attendanceBadge = `
+                        <div class="flex flex-col items-center justify-center gap-1">
+                            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono font-bold">
+                                <span class="text-emerald-400" title="Presentes"><i class="fa-solid fa-user-check text-[10px]"></i> ${presCount} pres.</span>
+                                <span class="text-slate-600">/</span>
+                                <span class="text-rose-400" title="Faltantes"><i class="fa-solid fa-user-xmark text-[10px]"></i> ${faltCount} falt.</span>
+                                <span class="text-slate-500 text-[10px]">(${convCount} tot)</span>
+                            </div>
+                            ${faltCount > 0 
+                                ? `<div class="text-[10px] text-rose-300/80 font-medium max-w-[220px] truncate" title="Faltantes: ${faltantesNomes}">Faltantes: ${faltantesNomes}</div>` 
+                                : `<div class="text-[10px] text-emerald-400/80 font-medium">100% de Presença</div>`}
+                        </div>
+                    `;
+                }
+
+                let actionHtml = '';
+                if (isMaster) {
+                    actionHtml = `
+                        <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                            <a href="presenca.html?id=${s.id}" target="_blank" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 no-underline shadow-sm" title="Ver Lista de Presença Completa">
+                                <i class="fa-solid fa-file-lines text-emerald-400"></i>
+                                <span>Ver Lista</span>
+                            </a>
+                            <button onclick="openColaboradoresMasterModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1" title="Gerenciar Colaboradores (Master)">
+                                <i class="fa-solid fa-users-gear"></i>
+                            </button>
+                            <button onclick="desarquivarUnidade(${safeId})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" title="Desarquivar e retornar para Unidades Agendadas">
+                                <i class="fa-solid fa-arrow-rotate-left text-amber-400"></i>
+                                <span>Desarquivar</span>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="openVisitorDetailsModal(${safeId})" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-magnifying-glass"></i> Ver Dados
+                            </button>
+                            <a href="presenca.html?id=${s.id}" target="_blank" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 no-underline shadow-sm">
+                                <i class="fa-solid fa-file-lines text-emerald-400"></i>
+                                <span>Ver Lista</span>
+                            </a>
+                            <button onclick="desarquivarUnidade(${safeId})" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer" title="Desarquivar e retornar para Unidades Agendadas">
+                                <i class="fa-solid fa-arrow-rotate-left text-amber-400"></i>
+                                <span>Desarquivar</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-950/60 transition-all border-b border-slate-800/50 last:border-0 group">
+                        <td class="p-4 align-middle">
+                            <div class="inline-flex items-center bg-slate-900 text-cyan-400 font-mono text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-700/50 shadow-inner">
+                                OP ${s.op}
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center gap-1.5 mt-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                    <i class="fa-solid fa-box-archive text-[10px]"></i> Arquivada
+                                </span>
+                            </div>
+                        </td>
+                        <td class="p-4 align-middle">
+                            <div class="font-bold text-slate-100 text-sm group-hover:text-white transition-colors">${s.cidade || ''}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">${s.instituicao || ''}</div>
+                        </td>
+                        <td class="p-4 align-middle text-xs">
+                            <div class="text-slate-200 font-medium">${s.data || '-'}</div>
+                            <div class="text-slate-400 font-mono text-[11px] mt-0.5">${s.horario || ''}</div>
+                        </td>
+                        <td class="p-4 align-middle text-xs font-medium text-slate-300">
+                            ${s.medico && s.medico !== 'NÃO INFORMADO' ? s.medico : '<span class="text-slate-400">Não informado</span>'}
+                        </td>
+                        <td class="p-4 align-middle text-center">
+                            ${attendanceBadge}
+                        </td>
+                        <td class="p-4 align-middle text-right whitespace-nowrap">${actionHtml}</td>
+                    </tr>
+                `;
+            });
+        }
+        window.renderListasRealizadas = renderListasRealizadas;
+
+        function exportarListasRealizadasCSV() {
+            const arquivadas = (appData.scheduling || []).filter(s => s.status === 'arquivado');
+            if (arquivadas.length === 0) {
+                showToast('Não há unidades arquivadas para exportar.', 'error');
+                return;
+            }
+
+            let csv = '\uFEFFOP;CIDADE;INSTITUICAO;DATA;HORARIO;MEDICO;CONVOCADOS;PRESENTES;FALTANTES;NOMES_FALTANTES\n';
+
+            arquivadas.forEach(s => {
+                const participantes = s.agendamento_participantes || [];
+                const convCount = participantes.length > 0 ? participantes.length : Number(s.qtd || 0);
+                const presCount = participantes.filter(p => p.compareceu === true).length;
+                const faltantes = participantes.filter(p => p.compareceu === false);
+                const faltCount = faltantes.length;
+                const nomesFaltantes = faltantes
+                    .map(p => (p.colaboradores && p.colaboradores.nome) ? p.colaboradores.nome.replace(/"/g, '""') : 'Colaborador')
+                    .join(' | ');
+
+                const op = (s.op || '').toString().replace(/"/g, '""');
+                const cidade = (s.cidade || '').replace(/"/g, '""');
+                const instituicao = (s.instituicao || '').replace(/"/g, '""');
+                const data = (s.data || '').replace(/"/g, '""');
+                const horario = (s.horario || '').replace(/"/g, '""');
+                const medico = (s.medico || '').replace(/"/g, '""');
+
+                csv += `"${op}";"${cidade}";"${instituicao}";"${data}";"${horario}";"${medico}";${convCount};${presCount};${faltCount};"${nomesFaltantes}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `unidades_listas_realizadas_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Arquivo CSV exportado com sucesso!');
+        }
+        window.exportarListasRealizadasCSV = exportarListasRealizadasCSV;
 
         // Função para carregar e renderizar os dados na tabela da nova etapa
         function renderParametrizacaoTable() {
@@ -6908,7 +7357,7 @@ window.switchTab = async function(tabId, salvarNoHistorico = true) {
             'home': 'Sala ADM / Dashboard', 'home-visitor': 'Portal de Acompanhamento', 'batch': 'Central de Agendamentos',
             'sig-rpa': 'Gestão SIG & Disciplinas', 'stage-detail': 'Central de Agendamentos (Etapa Detalhada)',
             'directory': 'Diretório Geral (Unidades)', 'status-confirmacao': 'Status Unidades em Confirmação',
-            'unidades-agendadas': 'Unidades Agendadas', 'automations': 'Automações UI.Vision', 'logs': 'Logs & Auditoria', 'comparecimento-global': 'Comparecimento Global (Master)', 'wiki': 'Wiki Pessoal'
+            'unidades-agendadas': 'Unidades Agendadas', 'listas-realizadas': 'Unidades com listas realizadas', 'automations': 'Automações UI.Vision', 'logs': 'Logs & Auditoria', 'comparecimento-global': 'Comparecimento Global (Master)', 'wiki': 'Wiki Pessoal'
         };
         if (pageTitleEl) pageTitleEl.innerText = titulos[tabId] || 'Painel Operacional';
 
@@ -6918,6 +7367,7 @@ window.switchTab = async function(tabId, salvarNoHistorico = true) {
         if (tabId === 'stage-detail' && typeof renderStageTable === 'function') renderStageTable();
         if (tabId === 'status-confirmacao' && typeof renderScheduling === 'function') renderScheduling();
         if (tabId === 'unidades-agendadas' && typeof renderUnidadesAgendadas === 'function') renderUnidadesAgendadas();
+        if (tabId === 'listas-realizadas' && typeof renderListasRealizadas === 'function') renderListasRealizadas();
         if (tabId === 'comparecimento-global' && typeof renderComparecimentoGlobal === 'function') renderComparecimentoGlobal();
 
         if (typeof __setNavProgress === 'function') __setNavProgress(100, 'Seção pronta', 'Interface carregada com sucesso.', 'Concluído', tabId);
