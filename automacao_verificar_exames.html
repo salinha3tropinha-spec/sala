@@ -86,10 +86,44 @@
   .history-table tr:hover td { background: rgba(6,182,212,.08); }
 
   /* Seção Fixa e Salva de Exames */
-  .exam-result-item { background: rgba(15,23,42,.55); border: 1px solid rgba(6,182,212,.22); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+  .exam-result-item { background: rgba(15,23,42,.55); border: 1px solid rgba(6,182,212,.22); border-radius: 12px; overflow: hidden; margin-bottom: 10px; transition: border-color .2s, transform .2s; }
+  .exam-result-item:hover { border-color: rgba(6,182,212,.4); }
   .exam-result-item.failed { border-color: rgba(225,29,72,.3); background: rgba(225,29,72,.06); }
   .exam-result-top { padding: 10px 14px; background: rgba(6,182,212,.08); border-bottom: 1px solid rgba(148,163,184,.1); display: flex; justify-content: space-between; align-items: center; }
   .exam-pill { display: inline-block; padding: 3px 9px; background: rgba(6,182,212,.12); border: 1px solid rgba(6,182,212,.25); border-radius: 6px; color: #a5f3fc; font-size: 10px; margin: 3px; font-weight: 600; }
+
+  /* Botão Premium de Exportar Excel */
+  .btn-excel-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #06b6d4 100%);
+    color: #ffffff !important;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 7px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    outline: none;
+  }
+  .btn-excel-export:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 50%, #0891b2 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    transform: translateY(-1px);
+    color: #ffffff !important;
+  }
+  .btn-excel-export:active {
+    transform: translateY(0);
+  }
+  .btn-excel-export i {
+    font-size: 13px;
+    color: #a7f3d0;
+  }
 
   @media(max-width: 1024px) {
     .cockpit-grid { grid-template-columns: 1fr; }
@@ -97,6 +131,7 @@
     .workspace-hero { flex-direction: column; align-items: flex-start; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 <body data-automation="VERIFICAR EXAMES">
 <div class="page-bg"></div>
@@ -255,9 +290,39 @@
           <p id="relatorioExamesMeta" style="font-size:11px; color:#94a3b8; margin:2px 0 0;">Resumo das consultas e fichas associadas no SOC.</p>
         </div>
       </div>
-      <div id="relatorioExamesBadges" style="display:flex; gap:8px; align-items:center;"></div>
+      <div id="relatorioExamesBadges" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"></div>
     </div>
-    <div id="relatorioExamesCards" style="margin-top:14px; display:flex; flex-direction:column; gap:10px;"></div>
+
+    <!-- Barra de Ações Rápidas: Filtro instantâneo e botão de Exportação -->
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; margin-bottom:4px; flex-wrap:wrap;">
+      <div style="position:relative; flex:1; min-width:240px;">
+        <i class="fa-solid fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#64748b; font-size:11px;"></i>
+        <input type="text" id="filtroCardsExames" oninput="filtrarCardsExames(this.value)" placeholder="Filtrar colaboradores ou exames nos resultados..." style="width:100%; background:rgba(2,6,23,0.7); border:1px solid rgba(148,163,184,0.18); border-radius:8px; padding:7px 10px 7px 32px; font-size:11px; color:#f8fafc; outline:none;" />
+      </div>
+      <button type="button" onclick="exportarExcelExames()" class="btn-excel-export" title="Gerar e baixar planilha Excel (.xlsx)">
+        <i class="fa-solid fa-file-excel"></i>
+        <span>Gerar Excel (.xlsx)</span>
+      </button>
+    </div>
+
+    <div id="relatorioExamesCards" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+
+    <!-- Rodapé de Exportação da Seção -->
+    <div id="relatorioExamesFooter" style="margin-top:14px; padding:12px 16px; background:rgba(2,6,23,0.6); border:1px solid rgba(6,182,212,0.22); border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:34px; height:34px; border-radius:8px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; justify-content:center; color:#34d399; font-size:15px;">
+          <i class="fa-solid fa-file-excel"></i>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:800; color:#f1f5f9;">Exportação Oficial dos Exames em Excel</div>
+          <div style="font-size:10px; color:#94a3b8;">Planilha completa com 2 abas: resumo por colaborador e lista itemizada de todos os exames.</div>
+        </div>
+      </div>
+      <button type="button" onclick="exportarExcelExames()" class="btn-excel-export" style="padding:9px 18px; font-size:11px;">
+        <i class="fa-solid fa-download"></i>
+        <span>Baixar Planilha Excel (.xlsx)</span>
+      </button>
+    </div>
   </section>
 </div>
 
@@ -274,6 +339,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="automacoes_uivision.js?v=1004"></script>
+<script src="automacoes_uivision.js?v=1005"></script>
 </body>
 </html>

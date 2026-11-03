@@ -262,27 +262,52 @@
       if (!chave) return;
       const existente = mapaUnico.get(chave);
       if (!existente || (!existente.sucesso && item.sucesso) || ((item.exames?.length || 0) > (existente.exames?.length || 0))) {
-        mapaUnico.set(chave, item);
+        mapaUnico.set(chave, {
+          nome: item.nome || item.id_colaborador || chave,
+          tipoFicha: item.tipoFicha || 'Admissional',
+          sucesso: item.sucesso ?? true,
+          exames: Array.isArray(item.exames) ? item.exames : [],
+          erro: item.erro || ''
+        });
       }
     });
     const dadosFiltrados = Array.from(mapaUnico.values());
 
+    // Guarda no estado global da janela e no localStorage para recuperação e exportação
+    window.ultimoRelatorioExames = {
+      report: dadosFiltrados,
+      runId: runId || 'Local',
+      dateStr: dateStr || new Date().toLocaleString('pt-BR')
+    };
+    try {
+      storageSet('uivision_ultimo_relatorio_exames', JSON.stringify(window.ultimoRelatorioExames));
+    } catch (e) {}
+
     const totalOk = dadosFiltrados.filter(r => r.sucesso).length;
     const totalFalhas = dadosFiltrados.filter(r => !r.sucesso).length;
+    const totalExames = dadosFiltrados.reduce((acc, curr) => acc + (curr.exames?.length || 0), 0);
 
-    if (meta) meta.textContent = `Consulta em ${dateStr || new Date().toLocaleString('pt-BR')} (Execução: ${runId || 'Local'})`;
+    if (meta) meta.textContent = `Consulta em ${dateStr || new Date().toLocaleString('pt-BR')} (Execução: ${runId || 'Local'}) · ${totalExames} exame(s) vinculado(s)`;
 
     if (badgesBox) {
       badgesBox.innerHTML = `
-        <span style="padding:5px 10px;border-radius:20px;font-size:10px;font-weight:900;background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25);">${totalOk} CONSULTADO(S)</span>
-        ${totalFalhas > 0 ? `<span style="padding:5px 10px;border-radius:20px;font-size:10px;font-weight:900;background:rgba(244,63,94,0.15);color:#fda4af;border:1px solid rgba(244,63,94,0.25);">${totalFalhas} FALHA(S)</span>` : ''}
+        <span style="padding:5px 10px;border-radius:20px;font-size:10px;font-weight:900;background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25);"><i class="fa-solid fa-circle-check"></i> ${totalOk} OK</span>
+        ${totalFalhas > 0 ? `<span style="padding:5px 10px;border-radius:20px;font-size:10px;font-weight:900;background:rgba(244,63,94,0.15);color:#fda4af;border:1px solid rgba(244,63,94,0.25);"><i class="fa-solid fa-circle-xmark"></i> ${totalFalhas} FALHA(S)</span>` : ''}
+        <span style="padding:5px 10px;border-radius:20px;font-size:10px;font-weight:900;background:rgba(6,182,212,0.15);color:#67e8f9;border:1px solid rgba(6,182,212,0.25);"><i class="fa-solid fa-stethoscope"></i> ${totalExames} EXAMES</span>
+        <button type="button" onclick="exportarExcelExames()" class="btn-excel-export" title="Gerar e baixar planilha Excel (.xlsx)">
+          <i class="fa-solid fa-file-excel"></i>
+          <span>Gerar Excel (.xlsx)</span>
+        </button>
       `;
     }
+
+    const filtroInput = $('filtroCardsExames');
+    if (filtroInput) filtroInput.value = '';
 
     container.innerHTML = dadosFiltrados.map(item => {
       if (!item.sucesso) {
         return `
-          <div class="exam-result-item failed">
+          <div class="exam-result-item failed" data-colab="${esc(item.nome || item.id_colaborador)}">
             <div class="exam-result-top" style="background:rgba(225,29,72,0.12);">
               <strong style="color:#fda4af;font-size:12px;"><i class="fa-solid fa-circle-xmark"></i> ${esc(item.nome || item.id_colaborador)}</strong>
               <span style="font-size:9px;font-weight:900;color:#fb7185;background:rgba(225,29,72,0.2);padding:2px 8px;border-radius:6px;">FALHA</span>
@@ -297,7 +322,7 @@
         : '<span style="color:#64748b;font-size:10px;">Nenhum exame vinculado automaticamente para esta ficha.</span>';
 
       return `
-        <div class="exam-result-item">
+        <div class="exam-result-item" data-colab="${esc(item.nome || item.id_colaborador)}">
           <div class="exam-result-top">
             <strong style="color:#e2e8f0;font-size:12px;"><i class="fa-solid fa-user-check" style="color:#22d3ee;margin-right:6px;"></i>${esc(item.nome || item.id_colaborador)}</strong>
             <span style="font-size:9px;font-weight:800;color:#67e8f9;padding:2px 8px;border-radius:6px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);">${esc(item.tipoFicha || 'Admissional')}</span>
@@ -313,6 +338,581 @@
     section.style.display = 'block';
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  // Filtro instantâneo dos cards na tela
+  window.filtrarCardsExames = function(termo) {
+    const container = $('relatorioExamesCards');
+    if (!container) return;
+    const q = String(termo || '').trim().toLowerCase();
+    const cards = container.querySelectorAll('.exam-result-item');
+    let visiveis = 0;
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      if (!q || text.includes(q)) {
+        card.style.display = '';
+        visiveis++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    let emptyMsg = container.querySelector('.filtro-empty-msg');
+    if (visiveis === 0) {
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.className = 'filtro-empty-msg';
+        emptyMsg.style.cssText = 'padding:18px;text-align:center;color:#94a3b8;font-size:11px;background:rgba(2,6,23,0.4);border:1px dashed rgba(148,163,184,0.15);border-radius:10px;';
+        emptyMsg.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="margin-right:6px;"></i> Nenhum colaborador ou exame corresponde ao filtro digitado.';
+        container.appendChild(emptyMsg);
+      }
+    } else if (emptyMsg) {
+      emptyMsg.remove();
+    }
+  };
+
+  // =========================================================================
+  // EXPORTAÇÃO EXCEL PROFISSIONAL DOS EXAMES (BEM BONITO)
+  // =========================================================================
+  window.exportarExcelExames = async function(customData, customFilename) {
+    let dataToExport = null;
+    let runId = 'Local';
+    let dateStr = new Date().toLocaleString('pt-BR');
+
+    if (Array.isArray(customData) && customData.length > 0) {
+      dataToExport = customData;
+      if (customFilename) runId = customFilename;
+    } else if (window.ultimoRelatorioExames && Array.isArray(window.ultimoRelatorioExames.report) && window.ultimoRelatorioExames.report.length > 0) {
+      dataToExport = window.ultimoRelatorioExames.report;
+      runId = window.ultimoRelatorioExames.runId || 'Local';
+      dateStr = window.ultimoRelatorioExames.dateStr || dateStr;
+    } else {
+      try {
+        const salvo = JSON.parse(storageGet('uivision_ultimo_relatorio_exames') || 'null');
+        if (salvo && Array.isArray(salvo.report) && salvo.report.length > 0) {
+          dataToExport = salvo.report;
+          runId = salvo.runId || 'Local';
+          dateStr = salvo.dateStr || dateStr;
+        }
+      } catch (e) {}
+    }
+
+    if (!dataToExport || dataToExport.length === 0) {
+      toast('Nenhum resultado de verificação disponível para exportar.', 'error');
+      return;
+    }
+
+    // Normalização e deduplicação
+    const mapaUnico = new Map();
+    dataToExport.forEach(item => {
+      const chave = String(item.nome || item.id_colaborador || '').trim().toUpperCase();
+      if (!chave) return;
+      const existente = mapaUnico.get(chave);
+      if (!existente || (!existente.sucesso && item.sucesso) || ((item.exames?.length || 0) > (existente.exames?.length || 0))) {
+        mapaUnico.set(chave, {
+          nome: item.nome || item.id_colaborador || chave,
+          tipoFicha: item.tipoFicha || 'Admissional',
+          sucesso: item.sucesso ?? true,
+          exames: Array.isArray(item.exames) ? item.exames : [],
+          erro: item.erro || ''
+        });
+      }
+    });
+
+    const lista = Array.from(mapaUnico.values());
+    const totalConsultados = lista.length;
+    const totalSucessos = lista.filter(x => x.sucesso).length;
+    const totalFalhas = lista.filter(x => !x.sucesso).length;
+    const totalExames = lista.reduce((acc, curr) => acc + (curr.exames?.length || 0), 0);
+
+    const agora = new Date();
+    const dataArquivo = agora.toISOString().slice(0, 10);
+    const horaArquivo = agora.toTimeString().slice(0, 5).replace(':', 'h');
+    const nomeArquivo = customFilename || `Conferencia_Exames_SOC_${dataArquivo}_${horaArquivo}.xlsx`;
+
+    const btns = document.querySelectorAll('.btn-excel-export');
+    btns.forEach(b => {
+      b.dataset.prevHtml = b.innerHTML;
+      b.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Gerando Excel...';
+      b.disabled = true;
+    });
+
+    const info = {
+      totalConsultados,
+      totalSucessos,
+      totalFalhas,
+      totalExames,
+      runId,
+      dateStr,
+      nomeArquivo
+    };
+
+    try {
+      if (window.ExcelJS) {
+        await gerarExcelComExcelJS(lista, info);
+      } else {
+        gerarExcelFallbackHTML(lista, { ...info, nomeArquivo: nomeArquivo.replace(/\.xlsx$/, '.xls') });
+      }
+      toast('Planilha Excel gerada com sucesso!');
+    } catch (err) {
+      console.error('Erro na exportação ExcelJS, acionando fallback:', err);
+      try {
+        gerarExcelFallbackHTML(lista, { ...info, nomeArquivo: nomeArquivo.replace(/\.xlsx$/, '.xls') });
+        toast('Planilha gerada com sucesso via modo compatibilidade!');
+      } catch (e2) {
+        toast('Falha ao exportar Excel: ' + err.message, 'error');
+      }
+    } finally {
+      btns.forEach(b => {
+        if (b.dataset.prevHtml) b.innerHTML = b.dataset.prevHtml;
+        b.disabled = false;
+      });
+    }
+  };
+
+  async function gerarExcelComExcelJS(lista, info) {
+    const workbook = new window.ExcelJS.Workbook();
+    workbook.creator = 'Ambiental - Workspace RPA UI.Vision';
+    workbook.lastModifiedBy = 'Workspace RPA UI.Vision';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    // -------------------------------------------------------------
+    // ABA 1: RESUMO POR COLABORADOR
+    // -------------------------------------------------------------
+    const ws1 = workbook.addWorksheet('Resumo por Colaborador', {
+      views: [{ showGridLines: true, state: 'frozen', ySplit: 7, activeCell: 'A8' }]
+    });
+
+    ws1.columns = [
+      { key: 'num', width: 7 },
+      { key: 'nome', width: 40 },
+      { key: 'tipoFicha', width: 25 },
+      { key: 'status', width: 22 },
+      { key: 'qtdExames', width: 16 },
+      { key: 'exames', width: 58 },
+      { key: 'obs', width: 36 }
+    ];
+
+    // Banner de Título (A2:G2)
+    ws1.mergeCells('A2:G2');
+    const titleCell = ws1.getCell('A2');
+    titleCell.value = 'RELATÓRIO CONSOLIDADO — CONFERÊNCIA DE EXAMES OCUPACIONAIS (SOC)';
+    titleCell.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FF22D3EE' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws1.getRow(2).height = 32;
+
+    // Subtítulo / Metadados (A3:G3)
+    ws1.mergeCells('A3:G3');
+    const subCell = ws1.getCell('A3');
+    subCell.value = `Ambiente: RPA UI.Vision · AUT-002: VERIFICAR EXAMES  |  Emissão: ${info.dateStr}  |  Execução ID: ${info.runId}`;
+    subCell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
+    subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    subCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws1.getRow(3).height = 20;
+
+    // Cards / Indicadores em Linha (Linha 5)
+    ws1.getRow(5).height = 28;
+    const kpisConfig = [
+      { col: 'B', label: `TOTAL CONSULTADOS: ${info.totalConsultados}`, fg: 'FFE0F2FE', fontColor: 'FF0369A1', border: 'FF7DD3FC' },
+      { col: 'C', label: `COM EXAMES OK: ${info.totalSucessos}`, fg: 'FFDCFCE7', fontColor: 'FF15803D', border: 'FF86EFAC' },
+      { col: 'D', label: `COM FALHAS / ERROS: ${info.totalFalhas}`, fg: 'FFFEE2E2', fontColor: 'FFB91C1C', border: 'FFFCA5A5' },
+      { col: 'E', label: `TOTAL EXAMES IDENTIFICADOS: ${info.totalExames}`, fg: 'FFF0FDFA', fontColor: 'FF0F766E', border: 'FF5EEAD4' }
+    ];
+
+    kpisConfig.forEach(k => {
+      const cell = ws1.getCell(`${k.col}5`);
+      cell.value = k.label;
+      cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: k.fontColor } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: k.fg } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: k.border } },
+        bottom: { style: 'thin', color: { argb: k.border } },
+        left: { style: 'thin', color: { argb: k.border } },
+        right: { style: 'thin', color: { argb: k.border } }
+      };
+    });
+
+    // Cabeçalho da Tabela Principal (Linha 7)
+    ws1.getRow(7).height = 26;
+    const headers1 = [
+      { col: 1, text: '#' },
+      { col: 2, text: 'COLABORADOR' },
+      { col: 3, text: 'TIPO DE FICHA' },
+      { col: 4, text: 'STATUS DA CONSULTA' },
+      { col: 5, text: 'QTD. EXAMES' },
+      { col: 6, text: 'EXAMES IDENTIFICADOS NO SOC' },
+      { col: 7, text: 'OBSERVAÇÕES / DETALHES' }
+    ];
+
+    headers1.forEach(h => {
+      const cell = ws1.getRow(7).getCell(h.col);
+      cell.value = h.text;
+      cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0891B2' } };
+      cell.alignment = {
+        horizontal: (h.col === 2 || h.col === 6 || h.col === 7) ? 'left' : 'center',
+        vertical: 'middle'
+      };
+      cell.border = {
+        top: { style: 'medium', color: { argb: 'FF0E7490' } },
+        bottom: { style: 'medium', color: { argb: 'FF0E7490' } },
+        left: { style: 'thin', color: { argb: 'FF0E7490' } },
+        right: { style: 'thin', color: { argb: 'FF0E7490' } }
+      };
+    });
+
+    // Linhas de Dados (Linha 8 em diante)
+    let rowIndex = 8;
+    lista.forEach((item, idx) => {
+      const row = ws1.getRow(rowIndex);
+      const isEven = (idx % 2 === 0);
+      const bgZebra = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+
+      const qtdExames = Array.isArray(item.exames) ? item.exames.length : 0;
+      let examesFormatados = 'Nenhum exame identificado.';
+      if (qtdExames > 0) {
+        examesFormatados = item.exames.map(e => `• ${e}`).join('\n');
+      }
+
+      let obsTexto = item.sucesso
+        ? (qtdExames > 0 ? 'Ficha e exames identificados com sucesso no SOC.' : 'Ficha localizada, porém sem exames vinculados.')
+        : (item.erro || 'Colaborador não localizado ou erro na consulta.');
+
+      row.getCell(1).value = idx + 1;
+      row.getCell(2).value = item.nome;
+      row.getCell(3).value = item.tipoFicha || 'Admissional';
+      row.getCell(4).value = item.sucesso ? 'OK / CONSULTADO' : 'FALHA NA BUSCA';
+      row.getCell(5).value = qtdExames;
+      row.getCell(6).value = examesFormatados;
+      row.getCell(7).value = obsTexto;
+
+      row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(1).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF64748B' } };
+
+      row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+      row.getCell(2).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+
+      row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(3).font = { name: 'Segoe UI', size: 9.5, color: { argb: 'FF334155' } };
+
+      row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+      if (item.sucesso) {
+        row.getCell(4).font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF065F46' } };
+        row.getCell(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
+      } else {
+        row.getCell(4).font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF991B1B' } };
+        row.getCell(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF2F2' } };
+      }
+
+      row.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(5).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: qtdExames > 0 ? 'FF0F172A' : 'FF94A3B8' } };
+
+      row.getCell(6).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+      row.getCell(6).font = { name: 'Segoe UI', size: 9, color: { argb: qtdExames > 0 ? 'FF1E293B' : 'FF94A3B8' }, italic: qtdExames === 0 };
+
+      row.getCell(7).alignment = { horizontal: 'left', vertical: 'middle' };
+      row.getCell(7).font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: item.sucesso ? 'FF64748B' : 'FFDC2626' } };
+
+      [1, 2, 3, 5, 6, 7].forEach(c => {
+        row.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgZebra } };
+      });
+
+      for (let c = 1; c <= 7; c++) {
+        row.getCell(c).border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+        };
+      }
+
+      if (qtdExames > 3) {
+        row.height = Math.min(18 + (qtdExames * 14), 160);
+      } else {
+        row.height = 24;
+      }
+
+      rowIndex++;
+    });
+
+    ws1.autoFilter = {
+      from: { row: 7, column: 1 },
+      to: { row: 7, column: 7 }
+    };
+
+    // -------------------------------------------------------------
+    // ABA 2: DETALHAMENTO ITEMIZADO DE EXAMES
+    // -------------------------------------------------------------
+    const ws2 = workbook.addWorksheet('Detalhamento de Exames', {
+      views: [{ showGridLines: true, state: 'frozen', ySplit: 5, activeCell: 'A6' }]
+    });
+
+    ws2.columns = [
+      { key: 'num', width: 7 },
+      { key: 'colaborador', width: 40 },
+      { key: 'tipoFicha', width: 25 },
+      { key: 'codigo', width: 14 },
+      { key: 'exame', width: 52 },
+      { key: 'status', width: 22 }
+    ];
+
+    ws2.mergeCells('A2:F2');
+    const titleCell2 = ws2.getCell('A2');
+    titleCell2.value = 'LISTA ITEMIZADA DE EXAMES OCUPACIONAIS IDENTIFICADOS (SOC)';
+    titleCell2.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FF5EEAD4' } };
+    titleCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF042F2E' } };
+    titleCell2.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws2.getRow(2).height = 32;
+
+    ws2.mergeCells('A3:F3');
+    const subCell2 = ws2.getCell('A3');
+    subCell2.value = `Visão por Item individual (ideal para filtros e tabelas dinâmicas)  |  Total de Exames: ${info.totalExames}  |  Emissão: ${info.dateStr}`;
+    subCell2.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF99F6E4' } };
+    subCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF134E4A' } };
+    subCell2.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws2.getRow(3).height = 20;
+
+    ws2.getRow(5).height = 26;
+    const headers2 = [
+      { col: 1, text: '#' },
+      { col: 2, text: 'COLABORADOR' },
+      { col: 3, text: 'TIPO DE FICHA' },
+      { col: 4, text: 'CÓDIGO' },
+      { col: 5, text: 'NOME DO EXAME OCUPACIONAL' },
+      { col: 6, text: 'STATUS' }
+    ];
+
+    headers2.forEach(h => {
+      const cell = ws2.getRow(5).getCell(h.col);
+      cell.value = h.text;
+      cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+      cell.alignment = {
+        horizontal: (h.col === 2 || h.col === 5) ? 'left' : 'center',
+        vertical: 'middle'
+      };
+      cell.border = {
+        top: { style: 'medium', color: { argb: 'FF115E59' } },
+        bottom: { style: 'medium', color: { argb: 'FF115E59' } },
+        left: { style: 'thin', color: { argb: 'FF115E59' } },
+        right: { style: 'thin', color: { argb: 'FF115E59' } }
+      };
+    });
+
+    let rowIdx2 = 6;
+    let itemCounter = 1;
+
+    lista.forEach((item) => {
+      const exames = Array.isArray(item.exames) && item.exames.length > 0 ? item.exames : null;
+      if (exames) {
+        exames.forEach(exameStr => {
+          const row = ws2.getRow(rowIdx2);
+          const isEven = (itemCounter % 2 === 0);
+          const bgZebra = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+
+          let codigo = '-';
+          let nomeExame = exameStr;
+          const match = exameStr.match(/^(\d+)\s*[-–—]\s*(.+)$/);
+          if (match) {
+            codigo = match[1];
+            nomeExame = match[2];
+          }
+
+          row.getCell(1).value = itemCounter;
+          row.getCell(2).value = item.nome;
+          row.getCell(3).value = item.tipoFicha || 'Admissional';
+          row.getCell(4).value = codigo;
+          row.getCell(5).value = nomeExame;
+          row.getCell(6).value = 'IDENTIFICADO';
+
+          row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+          row.getCell(1).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF64748B' } };
+
+          row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+          row.getCell(2).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+
+          row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+          row.getCell(3).font = { name: 'Segoe UI', size: 9.5, color: { argb: 'FF334155' } };
+
+          row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+          row.getCell(4).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF0891B2' } };
+
+          row.getCell(5).alignment = { horizontal: 'left', vertical: 'middle' };
+          row.getCell(5).font = { name: 'Segoe UI', size: 9.5, color: { argb: 'FF1E293B' } };
+
+          row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+          row.getCell(6).font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF065F46' } };
+          row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
+
+          [1, 2, 3, 4, 5].forEach(c => {
+            row.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgZebra } };
+          });
+
+          for (let c = 1; c <= 6; c++) {
+            row.getCell(c).border = {
+              top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+              bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+              left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+              right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+            };
+          }
+          row.height = 22;
+
+          rowIdx2++;
+          itemCounter++;
+        });
+      } else {
+        const row = ws2.getRow(rowIdx2);
+        const isEven = (itemCounter % 2 === 0);
+        const bgZebra = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+
+        row.getCell(1).value = itemCounter;
+        row.getCell(2).value = item.nome;
+        row.getCell(3).value = item.tipoFicha || 'Admissional';
+        row.getCell(4).value = '-';
+        row.getCell(5).value = item.sucesso ? 'Nenhum exame vinculado nesta ficha' : (item.erro || 'Falha ao consultar no SOC');
+        row.getCell(6).value = item.sucesso ? 'SEM EXAMES' : 'FALHA';
+
+        row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(1).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF64748B' } };
+
+        row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+        row.getCell(2).font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+
+        row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(3).font = { name: 'Segoe UI', size: 9.5, color: { argb: 'FF334155' } };
+
+        row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(4).font = { name: 'Segoe UI', size: 9.5, color: { argb: 'FF94A3B8' } };
+
+        row.getCell(5).alignment = { horizontal: 'left', vertical: 'middle' };
+        row.getCell(5).font = { name: 'Segoe UI', size: 9.5, italic: true, color: { argb: item.sucesso ? 'FF64748B' : 'FFDC2626' } };
+
+        row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+        row.getCell(6).font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: item.sucesso ? 'FFD97706' : 'FF991B1B' } };
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.sucesso ? 'FFFFFBEB' : 'FFFEF2F2' } };
+
+        [1, 2, 3, 4, 5].forEach(c => {
+          row.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgZebra } };
+        });
+
+        for (let c = 1; c <= 6; c++) {
+          row.getCell(c).border = {
+            top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+          };
+        }
+        row.height = 22;
+
+        rowIdx2++;
+        itemCounter++;
+      }
+    });
+
+    ws2.autoFilter = {
+      from: { row: 5, column: 1 },
+      to: { row: 5, column: 6 }
+    };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = info.nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function gerarExcelFallbackHTML(lista, info) {
+    let rowsHtml = '';
+    lista.forEach((item, idx) => {
+      const qtdExames = Array.isArray(item.exames) ? item.exames.length : 0;
+      const examesFormatados = qtdExames > 0
+        ? item.exames.map(e => `• ${esc(e)}`).join('<br/>')
+        : '<i>Nenhum exame identificado</i>';
+      const statusClass = item.sucesso ? 'status-ok' : 'status-fail';
+      const statusText = item.sucesso ? 'OK / CONSULTADO' : 'FALHA NA BUSCA';
+      const obs = item.sucesso
+        ? (qtdExames > 0 ? 'Ficha e exames identificados com sucesso no SOC.' : 'Ficha localizada, porém sem exames vinculados.')
+        : (item.erro || 'Não localizado no SOC');
+
+      rowsHtml += `
+        <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+          <td style="text-align:center;font-weight:bold;color:#64748b;border:1px solid #cbd5e1;">${idx + 1}</td>
+          <td style="font-weight:bold;color:#0f172a;border:1px solid #cbd5e1;">${esc(item.nome)}</td>
+          <td style="text-align:center;color:#334155;border:1px solid #cbd5e1;">${esc(item.tipoFicha || 'Admissional')}</td>
+          <td class="${statusClass}" style="text-align:center;border:1px solid #cbd5e1;">${statusText}</td>
+          <td style="text-align:center;font-weight:bold;border:1px solid #cbd5e1;">${qtdExames}</td>
+          <td style="border:1px solid #cbd5e1;">${examesFormatados}</td>
+          <td style="font-style:italic;color:#64748b;border:1px solid #cbd5e1;">${esc(obs)}</td>
+        </tr>
+      `;
+    });
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="UTF-8">
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Conferência de Exames</x:Name>
+                <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; }
+          table { border-collapse: collapse; width: 100%; }
+          th { background-color: #0891b2; color: #ffffff; padding: 10px; font-size: 11px; font-weight: bold; border: 1px solid #0e7490; }
+          td { padding: 8px 10px; font-size: 11px; vertical-align: middle; }
+          .title { background-color: #0f172a; color: #22d3ee; font-size: 14px; font-weight: bold; text-align: center; padding: 14px; }
+          .subtitle { background-color: #1e293b; color: #94a3b8; font-size: 10px; font-style: italic; text-align: center; padding: 6px; }
+          .status-ok { background-color: #ecfdf5; color: #065f46; font-weight: bold; }
+          .status-fail { background-color: #fef2f2; color: #991b1b; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <tr><td colspan="7" class="title">RELATÓRIO CONSOLIDADO — CONFERÊNCIA DE EXAMES OCUPACIONAIS (SOC)</td></tr>
+          <tr><td colspan="7" class="subtitle">Emissão: ${info.dateStr} | Execução ID: ${info.runId} | Consultados: ${info.totalConsultados} | Sucessos: ${info.totalSucessos} | Falhas: ${info.totalFalhas} | Total Exames: ${info.totalExames}</td></tr>
+          <tr><td colspan="7" style="height:12px;"></td></tr>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th style="width:240px;">COLABORADOR</th>
+            <th style="width:160px;">TIPO DE FICHA</th>
+            <th style="width:140px;">STATUS DA CONSULTA</th>
+            <th style="width:100px;">QTD. EXAMES</th>
+            <th style="width:360px;">EXAMES IDENTIFICADOS NO SOC</th>
+            <th style="width:240px;">OBSERVAÇÕES / DETALHES</th>
+          </tr>
+          ${rowsHtml}
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\uFEFF' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = info.nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 
   async function renderCentral() {
     const box = $('activityList');
@@ -847,7 +1447,19 @@
         });
         const dadosUnicos = Array.from(mapaUnico.values());
 
-        box.innerHTML = dadosUnicos.map(item => {
+        window.__historicoExamesCache = window.__historicoExamesCache || {};
+        window.__historicoExamesCache[runId] = dadosUnicos;
+
+        const topBarHist = `
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:8px 12px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:8px;">
+            <span style="font-size:11px;font-weight:800;color:#67e8f9;"><i class="fa-solid fa-list-check"></i> ${dadosUnicos.length} colaborador(es)</span>
+            <button type="button" onclick="exportarExcelExamesHistorico('${runId}')" class="btn-excel-export" style="padding:5px 12px;font-size:10px;">
+              <i class="fa-solid fa-file-excel"></i> Exportar Histórico (.xlsx)
+            </button>
+          </div>
+        `;
+
+        box.innerHTML = topBarHist + dadosUnicos.map(item => {
           const d = item.dados || {};
           const tags = (d.exames && d.exames.length > 0)
             ? d.exames.map(e => `<span style="display:inline-block;padding:2px 8px;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);border-radius:6px;color:#a5f3fc;font-size:9px;margin:2px;">${esc(e)}</span>`).join('')
@@ -871,6 +1483,22 @@
       box.style.display = 'block';
       btn.disabled = false;
     }
+  };
+
+  window.exportarExcelExamesHistorico = function(runId) {
+    const rawList = window.__historicoExamesCache?.[runId] || [];
+    if (!rawList.length) {
+      toast('Nenhum dado encontrado para este histórico.', 'error');
+      return;
+    }
+    const formatted = rawList.map(item => ({
+      nome: item.id_colaborador || item.nome || 'COLABORADOR',
+      tipoFicha: item.dados?.tipoFicha || 'Admissional',
+      sucesso: item.dados?.sucesso ?? true,
+      exames: Array.isArray(item.dados?.exames) ? item.dados.exames : [],
+      erro: item.dados?.erro || ''
+    }));
+    window.exportarExcelExames(formatted, `Conferencia_Exames_Historico_${runId}.xlsx`);
   };
 
   function closeHistory() { $('historyModal')?.classList.remove('show'); }
