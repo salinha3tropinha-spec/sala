@@ -218,7 +218,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within:text-sky-400 transition-colors">
                     <i class="fa-solid fa-magnifying-glass text-xs"></i>
                 </span>
-                <input type="text" id="input-busca" placeholder="Pesquisar instituição, cidade, OP... (Ctrl+K)" 
+                <input type="text" id="input-busca" placeholder="Pesquisar instituição, cidade, clínica, OP... (Ctrl+K)" 
                     class="w-full bg-dark-950 border border-dark-700/80 rounded-xl pl-11 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition shadow-inner">
                 <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <kbd class="bg-dark-800 text-slate-400 text-[10px] px-1.5 py-0.5 rounded border border-dark-700 font-mono">/K</kbd>
@@ -549,7 +549,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             const tbody = document.getElementById('tabela-todos-dias');
             
             const dadosFiltrados = dadosGlobais.filter(item => {
-                const textoBusca = `${item.instituicao || ''} ${item.cidade || ''} ${item.op || ''} ${item.status || ''}`.toLowerCase();
+                const textoBusca = `${item.instituicao || ''} ${item.cidade || ''} ${item.op || ''} ${item.status || ''} ${item.faturamento || ''} ${item.medico || ''}`.toLowerCase();
                 const matchBusca = textoBusca.includes(termoBusca.toLowerCase());
                 
                 // Nova regra de verificação relacional
@@ -597,6 +597,24 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 const localizacao = item.cidade ? item.cidade : 'Local não informado';
                 const dataFormatada = item.data || 'Não informada';
 
+                // Tratamento e Formatação Modo Prime para Faturamento / Clínica
+                const clinicaRaw = (item.faturamento || '').trim();
+                const temClinica = clinicaRaw && !['NÃO INFORMADO', 'NAO INFORMADO', '-', 'N/A', 'UNDEFINED', 'NULL', 'NONE'].includes(clinicaRaw.toUpperCase());
+
+                const badgeClinica = temClinica ? `
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10.5px] font-semibold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-cyan-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm shadow-emerald-950/40 hover:border-emerald-400/50 transition-colors" title="Faturamento / Clínica: ${clinicaRaw.replace(/"/g, '&quot;')}">
+                        <i class="fa-solid fa-hospital-user text-emerald-400 text-[10.5px]"></i>
+                        <span class="text-emerald-400/70 text-[9px] uppercase tracking-wider font-bold">Clínica:</span>
+                        <strong class="text-emerald-100 font-extrabold tracking-tight">${clinicaRaw}</strong>
+                    </span>
+                ` : `
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-dark-900/80 text-amber-400/90 border border-amber-500/20 shadow-sm" title="Faturamento / Clínica pendente de atribuição">
+                        <i class="fa-solid fa-hospital-user text-amber-400/70 text-[9.5px]"></i>
+                        <span class="text-slate-400 text-[9px] uppercase tracking-wider font-semibold">Clínica:</span>
+                        <span class="italic font-medium text-amber-300/80">Pendente</span>
+                    </span>
+                `;
+
                 // Cores da linha baseadas na regra de negócio
                 let rowClasses = 'transition-all duration-300 group border-b border-dark-800/40 ';
                 if (isEnviado) {
@@ -619,19 +637,32 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                         </div>
                     </td>
                     <td class="p-5 align-middle">
-                        <div class="flex items-start gap-4">
-                            <div class="mt-0.5 w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center text-slate-500 group-hover:bg-sky-500/10 group-hover:text-sky-400 transition-colors shrink-0">
+                        <div class="flex items-start gap-3.5">
+                            <div class="mt-0.5 w-10 h-10 rounded-xl bg-dark-800 flex items-center justify-center text-slate-400 group-hover:bg-sky-500/10 group-hover:text-sky-400 border border-dark-700/60 transition-colors shrink-0 shadow-inner">
                                 <i class="fa-solid fa-hospital text-sm"></i>
                             </div>
-                            <div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h3 class="text-sm font-bold text-white tracking-tight leading-none">${nomeExibicao}</h3>
-                                    ${emAlertaUrgente ? '<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 animate-pulse"><i class="fa-solid fa-clock"></i> Prazo Curto</span>' : ''}
+                            <div class="space-y-1.5 min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-sm font-bold text-white tracking-tight leading-snug group-hover:text-sky-300 transition-colors">${nomeExibicao}</h3>
+                                    ${emAlertaUrgente ? '<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 animate-pulse shadow-sm shadow-rose-950/40"><i class="fa-solid fa-clock"></i> Prazo Curto</span>' : ''}
                                 </div>
-                                <div class="flex items-center gap-2.5 text-[11px] text-slate-400 font-medium">
-                                    <span class="flex items-center gap-1"><i class="fa-solid fa-map-pin text-slate-500"></i> ${localizacao}</span>
-                                    <span class="w-1 h-1 rounded-full bg-dark-700"></span>
-                                    <span class="font-mono text-sky-400/80">OP ${item.op || 'N/A'}</span>
+                                <div class="flex flex-wrap items-center gap-2 text-[11px]">
+                                    <span class="inline-flex items-center gap-1.5 text-slate-300 font-medium bg-dark-900/80 px-2.5 py-0.5 rounded-md border border-dark-700/60 shadow-sm" title="Localidade / Cidade">
+                                        <i class="fa-solid fa-map-pin text-sky-400 text-[10px]"></i>
+                                        <span>${localizacao}</span>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 font-mono text-slate-400 bg-dark-900/80 px-2.5 py-0.5 rounded-md border border-dark-700/60 shadow-sm" title="Ordem de Produção">
+                                        <span class="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">OP</span>
+                                        <strong class="text-sky-400/90 font-bold">${item.op || 'N/A'}</strong>
+                                    </span>
+                                    ${badgeClinica}
+                                    ${item.medico ? `
+                                    <span class="inline-flex items-center gap-1.5 text-slate-300 text-[10.5px] bg-dark-900/60 px-2.5 py-0.5 rounded-md border border-dark-800 text-slate-400" title="Médico Responsável: ${item.medico}">
+                                        <i class="fa-solid fa-user-doctor text-sky-400/80 text-[10px]"></i>
+                                        <span class="text-slate-400 text-[9px] uppercase tracking-wider font-semibold">Dr(a):</span>
+                                        <span class="text-slate-200 font-semibold truncate max-w-[120px]">${item.medico}</span>
+                                    </span>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -678,6 +709,18 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             acaoPendenteCheckbox = checkbox;
             acaoPendenteId = id;
             acaoPendenteNome = nome;
+
+            const item = dadosGlobais.find(i => i.id == id);
+            const clinicaTxt = (item && item.faturamento && item.faturamento !== 'NÃO INFORMADO') 
+                ? `<span class="inline-flex items-center gap-1 text-emerald-400 font-bold ml-1"><i class="fa-solid fa-hospital-user text-[10px]"></i> Clínica: ${item.faturamento}</span>` 
+                : '';
+
+            const confirmText = document.getElementById('modal-confirm-text');
+            if (confirmText) {
+                confirmText.innerHTML = `
+                    Você está prestes a registrar na auditoria o envio de insumos para <strong class="text-white">${nome}</strong>${clinicaTxt ? ' &bull; ' + clinicaTxt : ''}. <br><strong class="text-amber-400">Verificou o endereço de entrega e a maleta?</strong>
+                `;
+            }
 
             const modal = document.getElementById('modal-confirmacao');
             const box = document.getElementById('modal-confirm-box');
@@ -1144,10 +1187,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                 return;
             }
             
-            let csvContent = "data:text/csv;charset=utf-8,ID,Instituicao,Cidade,OP,Status,Data,Possui Despacho\n";
+            let csvContent = "data:text/csv;charset=utf-8,ID,Instituicao,Cidade,Clinica_Faturamento,OP,Status,Data,Possui Despacho\n";
             dadosGlobais.forEach(row => {
                 const temDespacho = row.agendamento_despachos && row.agendamento_despachos.length > 0 ? 'SIM' : 'NAO';
-                const linha = [row.id, `"${row.instituicao || ''}"`, `"${row.cidade || ''}"`, row.op || '', row.status || '', `"${row.data || ''}"`, temDespacho];
+                const linha = [row.id, `"${row.instituicao || ''}"`, `"${row.cidade || ''}"`, `"${row.faturamento || ''}"`, row.op || '', row.status || '', `"${row.data || ''}"`, temDespacho];
                 csvContent += linha.join(",") + "\r\n";
             });
 
@@ -1168,6 +1211,9 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
             const isEnviado = item.agendamento_despachos && item.agendamento_despachos.length > 0;
             const dataDespacho = isEnviado ? new Date(item.agendamento_despachos[0].confirmado_em).toLocaleString('pt-BR') : 'Ainda não registrado';
 
+            const clinicaRaw = (item.faturamento || '').trim();
+            const temClinica = clinicaRaw && !['NÃO INFORMADO', 'NAO INFORMADO', '-', 'N/A', 'UNDEFINED', 'NULL', 'NONE'].includes(clinicaRaw.toUpperCase());
+
             const modalBody = document.getElementById('modal-body-data');
             modalBody.innerHTML = `
                 <div class="grid grid-cols-2 gap-4 bg-dark-950/60 p-5 rounded-2xl border border-dark-800 shadow-inner">
@@ -1180,17 +1226,34 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(56,189,248,.08
                         <span class="text-white font-bold text-sm leading-tight block">${item.cidade || 'Não informada'}</span>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-emerald-950/30 to-dark-950/60 p-4 rounded-2xl border border-emerald-500/25 shadow-inner flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shadow-sm shrink-0"><i class="fa-solid fa-hospital-user text-base"></i></div>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-emerald-400/80 block text-[10px] uppercase tracking-widest font-bold mb-0.5">Faturamento / Clínica</span>
+                            <span class="text-white font-extrabold text-sm truncate block" title="${clinicaRaw}">${temClinica ? clinicaRaw : '<span class="text-amber-400/80 font-normal italic text-xs">Pendente de atribuição</span>'}</span>
+                        </div>
+                    </div>
+                    <div class="bg-dark-950/60 p-4 rounded-2xl border border-dark-800 shadow-inner flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 shrink-0"><i class="fa-solid fa-user-doctor text-base"></i></div>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-slate-500 block text-[10px] uppercase tracking-widest font-bold mb-0.5">Médico Responsável</span>
+                            <span class="text-slate-200 font-bold text-sm truncate block" title="${item.medico || ''}">${item.medico || '<span class="text-slate-500 font-normal italic text-xs">Não atribuído</span>'}</span>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-dark-950/60 p-4 rounded-2xl border border-dark-800 shadow-inner flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20"><i class="fa-solid fa-fingerprint"></i></div>
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0"><i class="fa-solid fa-fingerprint"></i></div>
                         <div>
                             <span class="text-slate-500 block text-[10px] uppercase tracking-widest font-bold mb-0.5">Ordem de Produção</span>
                             <span class="text-indigo-400 font-mono font-black text-base">${item.op || 'N/A'}</span>
                         </div>
                     </div>
                     <div class="bg-dark-950/60 p-4 rounded-2xl border border-dark-800 shadow-inner flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20"><i class="fa-regular fa-calendar"></i></div>
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0"><i class="fa-regular fa-calendar"></i></div>
                         <div>
                             <span class="text-slate-500 block text-[10px] uppercase tracking-widest font-bold mb-0.5">Data Base</span>
                             <span class="text-slate-200 font-bold text-sm">${item.data || 'N/A'}</span>
