@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BAIXAR E ANEXAR FICHAS NO SOC — Workspace RPA</title>
+<meta name="description" content="Workspace de automação para busca e download de Fichas Clínicas no Flow e anexação automatizada no SOCGED (menu 248).">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="automacoes_uivision.css">
+<style>
+  :root {
+    --card-accent: #a855f7;
+    --card-accent-soft: rgba(168, 85, 247, 0.14);
+    --card-accent-strong: #9333ea;
+    --card-accent-glow: rgba(168, 85, 247, 0.35);
+    --cyan-accent: #06b6d4;
+    --emerald-accent: #10b981;
+    --amber-accent: #f59e0b;
+    --rose-accent: #f43f5e;
+  }
+  
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 12px 18px; }
+  .topbar { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  
+  /* Header Exclusivo Prime com Gradiente Cósmico */
+  .workspace-hero { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    gap: 16px; 
+    padding: 16px 22px; 
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(14, 22, 35, 0.95) 45%, rgba(6, 182, 212, 0.06) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.28);
+    border-radius: 20px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 255, 255, 0.05);
+  }
+  .workspace-hero-left { display: flex; align-items: center; gap: 16px; }
+  .workspace-hero-left .icon-box { 
+    width: 48px; 
+    height: 48px; 
+    border-radius: 14px; 
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(147, 51, 234, 0.15)); 
+    border: 1px solid rgba(168, 85, 247, 0.5); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 20px; 
+    color: #c084fc;
+    box-shadow: 0 0 24px rgba(168, 85, 247, 0.35);
+  }
+  .workspace-hero-left h1 { font-size: 19px; font-weight: 900; margin: 0; color: #f8fafc; letter-spacing: -0.02em; }
+  .workspace-hero-left p { margin: 3px 0 0; font-size: 11px; color: #94a3b8; max-width: 680px; line-height: 1.45; }
+
+  /* KPIs do Cabeçalho */
+  .kpis-compact { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+  .kpis-compact .kpi { padding: 9px 14px; min-height: unset; display: flex; align-items: center; gap: 12px; border-radius: 14px; }
+  .kpis-compact .kpi-icon { width: 34px; height: 34px; font-size: 13px; border-radius: 10px; }
+  .kpis-compact .kpi-icon.violet { color: #d8b4fe; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); }
+  .kpis-compact .kpi-copy strong { font-size: 17px; line-height: 1.2; font-family: 'JetBrains Mono', monospace; font-weight: 800; }
+  .kpis-compact .kpi-copy label { font-size: 8.5px; letter-spacing: 0.08em; }
+
+  /* Cockpit Central em 2 Colunas */
+  .cockpit-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; align-items: start; }
+
+  /* Cards e Controles de Entrada */
+  .control-card { 
+    background: rgba(14, 22, 35, 0.72); 
+    border: 1px solid rgba(148, 163, 184, 0.12); 
+    border-radius: 16px; 
+    padding: 16px; 
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    position: relative;
+    overflow: hidden;
+  }
+  .control-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--card-accent), transparent 60%);
+  }
+
+  /* Barra de Modo de Entrada e Seletores */
+  .input-mode-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    background: rgba(2, 6, 23, 0.6);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(147, 51, 234, 0.35));
+    color: #f3e8ff;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
+  }
+
+  /* Grade de Configurações Rápidas de Pesquisa (Padrões) */
+  .search-fields-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1.1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+    background: rgba(2, 6, 23, 0.45);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .search-field-item label {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #c084fc;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .search-field-item select,
+  .search-field-item input {
+    width: 100%;
+    background: #020617;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 8px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .search-field-item select:focus,
+  .search-field-item input:focus {
+    border-color: var(--card-accent);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+  }
+
+  /* Área do Textarea de Lote */
+  .input-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .counter-badges { display: flex; gap: 6px; }
+  .counter-tag { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid transparent; }
+  .counter-tag.valid { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+  .counter-tag.invalid { background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.25); color: #fda4af; }
+  .counter-tag.duplicate { background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.25); color: #fde047; }
+  
+  .id-textarea { 
+    width: 100%; 
+    height: 120px; 
+    background: rgba(2, 6, 23, 0.85); 
+    border: 1px solid rgba(148, 163, 184, 0.16); 
+    border-radius: 12px; 
+    color: #f8fafc; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 11px; 
+    padding: 9px 12px; 
+    box-sizing: border-box; 
+    resize: vertical; 
+    outline: none; 
+    line-height: 1.6;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .id-textarea:focus { 
+    border-color: var(--card-accent); 
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.22);
+  }
+
+  /* Botões Rápidos Acima da Tabela */
+  .action-pills-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .mini-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(2, 6, 23, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    color: #cbd5e1;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .mini-btn:hover {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.35);
+    color: #f3e8ff;
+    transform: translateY(-1px);
+  }
+
+  /* Tabela de Pré-visualização com Visual Prime */
+  .preview-box { 
+    margin-top: 10px; 
+    border: 1px solid rgba(148, 163, 184, 0.12); 
+    border-radius: 10px; 
+    overflow: hidden; 
+    max-height: 140px; 
+    overflow-y: auto; 
+    background: rgba(2, 6, 23, 0.5); 
+  }
+  .preview-box table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+  .preview-box th { 
+    background: rgba(15, 23, 42, 0.9); 
+    color: #94a3b8; 
+    text-align: left; 
+    padding: 7px 10px; 
+    font-weight: 800; 
+    font-size: 9.5px;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .preview-box td { padding: 6px 10px; border-top: 1px solid rgba(148, 163, 184, 0.06); color: #cbd5e1; font-family: 'JetBrains Mono', monospace; }
+  .preview-box tr:hover td { background: rgba(168, 85, 247, 0.06); }
+
+  /* Barra de Disparo Principal */
+  .exec-bar { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 12px; 
+    margin-top: 12px; 
+    padding: 12px 14px; 
+    background: linear-gradient(135deg, rgba(2, 6, 23, 0.8), rgba(15, 23, 42, 0.6)); 
+    border: 1px solid rgba(168, 85, 247, 0.25); 
+    border-radius: 12px; 
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+  }
+  .exec-info strong { display: block; font-size: 12.5px; color: #f8fafc; font-weight: 800; }
+  .exec-info small { display: block; font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+  /* Botão Principal de Execução com Gradiente Fúcsia / Violeta */
+  .btn-exec-prime {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #9333ea 0%, #a855f7 50%, #06b6d4 100%);
+    color: #ffffff !important;
+    font-size: 11.5px;
+    font-weight: 900;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(192, 132, 252, 0.4);
+    box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    outline: none;
+    white-space: nowrap;
+  }
+  .btn-exec-prime:hover {
+    background: linear-gradient(135deg, #7e22ce 0%, #9333ea 50%, #0891b2 100%);
+    box-shadow: 0 6px 24px rgba(168, 85, 247, 0.55);
+    transform: translateY(-1px);
+  }
+  .btn-exec-prime:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Console de Logs */
+  .console-card { background: rgba(14, 22, 35, 0.72); border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+  .console-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .log-terminal { 
+    height: 150px; 
+    background: #020617; 
+    border: 1px solid rgba(148, 163, 184, 0.12); 
+    border-radius: 10px; 
+    padding: 9px 12px; 
+    overflow-y: auto; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 10px; 
+    line-height: 1.45;
+  }
+  .log-line { display: flex; gap: 8px; margin-bottom: 4px; }
+  .log-time { color: #64748b; min-width: 58px; font-weight: 700; }
+  .log-info { color: #38bdf8; }
+  .log-ok { color: #34d399; }
+  .log-warn { color: #f59e0b; }
+  .log-error { color: #fb7185; }
+
+  /* Gaveta de Configurações do Robô */
+  .robot-settings-card {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .robot-settings-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+  }
+  .settings-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 10px;
+  }
+  .settings-inputs-grid label {
+    display: block;
+    color: #94a3b8;
+    font-weight: 700;
+    margin-bottom: 3px;
+    font-size: 9px;
+  }
+  .settings-inputs-grid input {
+    width: 100%;
+    background: #020617;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 6px;
+    padding: 5px 8px;
+    color: #f1f5f9;
+    font-size: 10px;
+    box-sizing: border-box;
+  }
+
+  /* =========================================================================
+     PAINEL DE RESULTADOS FINAL (EXCLUSIVO, MODO PRIME & ULTRA DETALHADO)
+     ========================================================================= */
+  .results-panel-prime {
+    margin-top: 14px;
+    background: linear-gradient(180deg, rgba(14, 22, 35, 0.95) 0%, rgba(8, 14, 24, 0.98) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 30px rgba(168, 85, 247, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .results-panel-prime::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #a855f7 0%, #06b6d4 50%, #10b981 100%);
+  }
+
+  /* Métricas de Resultado (5 Blocos) */
+  .results-stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .result-stat-box {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .result-stat-box:hover {
+    transform: translateY(-2px);
+  }
+  .result-stat-box.success { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+  .result-stat-box.warning { border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05); }
+  .result-stat-box.info { border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.05); }
+  .result-stat-box.purple { border-color: rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.05); }
+  .result-stat-box.danger { border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.05); }
+  
+  .result-stat-box .icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .result-stat-box.success .icon { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+  .result-stat-box.warning .icon { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+  .result-stat-box.info .icon { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+  .result-stat-box.purple .icon { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+  .result-stat-box.danger .icon { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+
+  .result-stat-box .info-copy label {
+    display: block;
+    font-size: 8px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .result-stat-box .info-copy strong {
+    display: block;
+    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    color: #f8fafc;
+    margin-top: 2px;
+  }
+
+  /* Card Individual de Cada Colaborador no Resultado */
+  .result-colab-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+  }
+  .result-colab-card:hover {
+    border-color: rgba(168, 85, 247, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .result-colab-card.attached {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.06) 0%, rgba(15, 23, 42, 0.6) 100%);
+  }
+  .result-colab-card.already-exists {
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.06) 0%, rgba(15, 23, 42, 0.6) 100%);
+  }
+  .result-colab-card.only-aso {
+    border-left: 4px solid #a855f7;
+    background: linear-gradient(90deg, rgba(168, 85, 247, 0.06) 0%, rgba(15, 23, 42, 0.6) 100%);
+  }
+  .result-colab-card.error {
+    border-left: 4px solid #f43f5e;
+    background: linear-gradient(90deg, rgba(244, 63, 94, 0.06) 0%, rgba(15, 23, 42, 0.6) 100%);
+  }
+
+  .result-card-header {
+    padding: 10px 14px;
+    background: rgba(2, 6, 23, 0.4);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .result-card-body {
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1.4fr 1.6fr;
+    gap: 14px;
+    align-items: center;
+  }
+
+  /* Badges de Status do Flow e SOC */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 7px;
+    letter-spacing: 0.03em;
+  }
+  .status-pill.success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #6ee7b7; }
+  .status-pill.warning { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fde047; }
+  .status-pill.purple { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.35); color: #d8b4fe; }
+  .status-pill.danger { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fda4af; }
+  .status-pill.info { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.35); color: #67e8f9; }
+
+  /* Tag de PDF Baixado */
+  .pdf-file-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.28);
+    color: #fda4af;
+    font-size: 9.5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  /* Botão de Exportar Excel Prime */
+  .btn-excel-prime {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #06b6d4 100%);
+    color: #ffffff !important;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    outline: none;
+  }
+  .btn-excel-prime:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 50%, #0891b2 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    transform: translateY(-1px);
+  }
+
+  @media(max-width: 1024px) {
+    .cockpit-grid { grid-template-columns: 1fr; }
+    .kpis-compact { grid-template-columns: repeat(2, 1fr); }
+    .results-stats-row { grid-template-columns: repeat(2, 1fr); }
+    .workspace-hero { flex-direction: column; align-items: flex-start; }
+    .result-card-body { grid-template-columns: 1fr; }
+    .search-fields-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+</head>
+<body data-automation="BAIXAR E ANEXAR FICHAS">
+<div class="page-bg"></div>
+<div class="wrap">
+  
+  <!-- Topbar Superior -->
+  <div class="topbar reveal">
+    <a class="back-link" href="automacoes_uivision.html"><i class="fa-solid fa-arrow-left"></i><span>Voltar às automações</span></a>
+    <div class="topbar-right">
+      <span class="eyebrow"><span class="eyebrow-dot" style="background:#a855f7;box-shadow:0 0 10px #a855f7;"></span>WORKSPACE OPERACIONAL RPA · AUT-004</span>
+      <button class="top-action" onclick="abrirModalConfiguracoes()"><i class="fa-solid fa-gear"></i> Configurações do Robô</button>
+      <button class="top-action" data-open-full-history><i class="fa-solid fa-clock-rotate-left"></i> Histórico Global</button>
+    </div>
+  </div>
+
+  <!-- Cabeçalho Exclusivo Prime -->
+  <header class="workspace-hero reveal d1">
+    <div class="workspace-hero-left">
+      <div class="icon-box"><i class="fa-solid fa-file-arrow-down"></i></div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:2px;">
+          <span class="eyebrow-dot" style="background:#a855f7;box-shadow:0 0 10px #a855f7;"></span>
+          <span>FLOW / SOCGED</span> · <span>AUT-004</span> · <span style="color:#c084fc;font-weight:900;">ROBÔ INTEGRADO</span>
+        </div>
+        <h1>BAIXAR E ANEXAR FICHAS NO SOC</h1>
+        <p>Busca no Flow por CPF e Tipo de Exame, download da Ficha Clínica (com fallback de ASO) e protocolo/anexação automática no SOCGED (menu 248).</p>
+      </div>
+    </div>
+    <div id="globalState" class="state" style="padding: 7px 16px; border-color: rgba(168,85,247,.3); background: rgba(168,85,247,.08); color: #d8b4fe;">
+      <span class="dot" style="background:#a855f7;box-shadow:0 0 10px #a855f7;"></span>
+      <span class="state-label">SISTEMA PRONTO</span>
+    </div>
+  </header>
+
+  <!-- Linha de KPIs de Fila -->
+  <section class="panel kpis kpis-compact reveal d2">
+    <div class="kpi"><div class="kpi-icon violet"><i class="fa-solid fa-list-ol"></i></div><div class="kpi-copy"><label>NA FILA (INPUT)</label><strong id="kpiFilaQtd">0</strong><small>colaboradores</small></div></div>
+    <div class="kpi"><div class="kpi-icon green"><i class="fa-solid fa-file-circle-check"></i></div><div class="kpi-copy"><label>ANEXADOS NO SOCGED</label><strong id="kpiAnexadosQtd">—</strong><small>sucessos</small></div></div>
+    <div class="kpi"><div class="kpi-icon sky"><i class="fa-solid fa-cloud-arrow-down"></i></div><div class="kpi-copy"><label>FICHAS BAIXADAS</label><strong id="kpiBaixadasQtd">—</strong><small>em SOC_PDFS</small></div></div>
+    <div class="kpi"><div class="kpi-icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-copy"><label>AVISOS / PENDÊNCIAS</label><strong id="kpiAvisosQtd">—</strong><small>com ressalva</small></div></div>
+  </section>
+
+  <!-- Cockpit Central em 2 Colunas -->
+  <div class="cockpit-grid reveal d3">
+    
+    <!-- Coluna 1: Entrada, Validação e Disparo -->
+    <div class="control-card">
+      
+      <!-- Campos de Pesquisa e Padrões Globais -->
+      <div class="search-fields-grid">
+        <div class="search-field-item">
+          <label><i class="fa-solid fa-stethoscope" style="margin-right:4px;"></i>Tipo de Exame Padrão</label>
+          <select id="tipoExamePadrao" onchange="atualizarValidacaoFila()">
+            <option value="Periódico" selected>Periódico (Cód. 2)</option>
+            <option value="Admissional">Admissional (Cód. 1)</option>
+            <option value="Demissional">Demissional (Cód. 5)</option>
+            <option value="Retorno ao Trabalho">Retorno ao Trabalho (Cód. 3)</option>
+            <option value="Mudança de Função">Mudança de Função (Cód. 4)</option>
+          </select>
+        </div>
+        <div class="search-field-item">
+          <label><i class="fa-regular fa-calendar" style="margin-right:4px;"></i>Data Agendada</label>
+          <div style="display:flex;gap:4px;">
+            <input type="text" id="dataAgendadaPadrao" placeholder="DD/MM/AAAA" value="03/09/2026" oninput="atualizarValidacaoFila()" />
+            <button type="button" class="mini-btn" onclick="definirDataHoje()" title="Definir data de hoje" style="padding:4px 8px;font-size:9px;">Hoje</button>
+          </div>
+        </div>
+        <div class="search-field-item">
+          <label><i class="fa-solid fa-hashtag" style="margin-right:4px;"></i>Cód. SOC (Opcional)</label>
+          <input type="text" id="codigoSocPadrao" placeholder="Ex: 39100" oninput="atualizarValidacaoFila()" />
+        </div>
+      </div>
+
+      <!-- Barra de Controle do Textarea -->
+      <div class="input-label-row">
+        <span style="font-size:11px;font-weight:800;color:#e2e8f0;">
+          <i class="fa-solid fa-users" style="color:var(--card-accent);margin-right:6px;"></i>Lista de Colaboradores (Pasta1.csv)
+        </span>
+        <div class="counter-badges">
+          <span class="counter-tag valid"><strong id="validCount">0</strong> válidos</span>
+          <span class="counter-tag invalid"><strong id="invalidCount">0</strong> vazios</span>
+          <span class="counter-tag duplicate"><strong id="duplicateCount">0</strong> repetidos</span>
+        </div>
+      </div>
+
+      <!-- Textarea de Inserção -->
+      <textarea id="batchInput" class="id-textarea" placeholder="Cole os colaboradores aqui (um por linha)...&#10;Exemplos aceitos:&#10;187.281.448-48;Periódico;03/09/2026;39100&#10;Ou cole colunas direto do Excel: CPF [TAB] Tipo [TAB] Data [TAB] Cód. SOC&#10;Ou apenas cole os CPFs (o Tipo e Data acima serão aplicados automaticamente!)" spellcheck="false"></textarea>
+
+      <!-- Botões de Ação Rápida -->
+      <div class="action-pills-bar">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="mini-btn" onclick="carregarExemploReal()" title="Carregar os 12 colaboradores reais de Pasta1.csv">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Carregar Exemplo Real
+          </button>
+          <button type="button" class="mini-btn" onclick="document.getElementById('fileUploadInput').click()" title="Subir arquivo CSV ou TXT">
+            <i class="fa-solid fa-file-arrow-up" style="color:#38bdf8;"></i> Importar Arquivo
+          </button>
+          <input type="file" id="fileUploadInput" accept=".csv,.txt,.xlsx" style="display:none;" onchange="importarArquivoFila(event)" />
+          <button type="button" class="mini-btn" onclick="limparFila()" title="Limpar lista digitada">
+            <i class="fa-solid fa-trash-can" style="color:#fb7185;"></i> Limpar
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="mini-btn" onclick="baixarPasta1Csv()" title="Gerar e baixar o arquivo Pasta1.csv para a pasta datasources">
+            <i class="fa-solid fa-download" style="color:#34d399;"></i> Baixar Pasta1.csv
+          </button>
+          <button type="button" class="mini-btn" onclick="copiarCsvClipboard()" title="Copiar CSV formatado para a área de transferência">
+            <i class="fa-solid fa-copy"></i> Copiar CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabela de Pré-visualização da Fila -->
+      <div class="preview-box">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px">#</th>
+              <th>CPF</th>
+              <th>Tipo de Exame</th>
+              <th>Data Agendada</th>
+              <th>Cód. SOC</th>
+              <th style="width:35px;text-align:center">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody">
+            <tr><td colspan="6" style="text-align:center;color:#64748b;padding:14px;">Nenhum colaborador na fila de busca.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Barra de Disparo Principal -->
+      <div class="exec-bar">
+        <div class="exec-info">
+          <strong id="executeState">Pronto para execução do robô</strong>
+          <small id="executeHint">Certifique-se de que o Flow e o SOC estão abertos em abas do mesmo navegador.</small>
+        </div>
+        <button id="executeBtn" type="button" class="btn-exec-prime" onclick="dispararAutomacaoFichas()">
+          <i class="fa-solid fa-play"></i><span>EXECUTAR AUTOMAÇÃO</span>
+        </button>
+      </div>
+
+      <!-- Trilha de Progresso Visual -->
+      <div id="progressTrack" hidden style="margin-top:12px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.15);">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:9px;">
+          <div class="step" id="step1"><strong style="display:block;color:#94a3b8;">1. PREPARAÇÃO</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
+          <div class="step" id="step2"><strong style="display:block;color:#94a3b8;">2. GRAVAR CSV</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
+          <div class="step" id="step3"><strong style="display:block;color:#94a3b8;">3. FLOW ➔ SOC</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Coluna 2: Terminal de Logs & Parâmetros do Robô -->
+    <div>
+      
+      <!-- Console de Logs -->
+      <div class="console-card">
+        <div class="console-header">
+          <span style="font-size:11px;font-weight:800;color:#e2e8f0;">
+            <i class="fa-solid fa-terminal" style="color:#a855f7;margin-right:6px;"></i>Log Operacional em Tempo Real
+          </span>
+          <div style="display:flex;gap:6px;">
+            <button class="filter-btn" onclick="copiarLogs()" title="Copiar logs"><i class="fa-solid fa-copy"></i> Copiar</button>
+            <button class="filter-btn" onclick="limparLogs()" title="Limpar console"><i class="fa-solid fa-trash-can"></i> Limpar</button>
+          </div>
+        </div>
+        <div id="logOutput" class="log-terminal">
+          <div class="log-line"><span class="log-time">00:00:00</span><span class="log-info">Sistema inicializado. Workspace AUT-004 pronto.</span></div>
+        </div>
+      </div>
+
+      <!-- Configurações Rápidas da Macro (Tudo o que o código solicita) -->
+      <div class="robot-settings-card">
+        <div class="robot-settings-title">
+          <span><i class="fa-solid fa-sliders" style="color:#06b6d4;margin-right:6px;"></i>Parâmetros da Macro (CONFIG)</span>
+          <span style="font-size:9px;color:#94a3b8;font-family:monospace;">baixarEanexar_soc.js</span>
+        </div>
+        
+        <div class="settings-inputs-grid">
+          <div>
+            <label>Pasta de Download dos PDFs</label>
+            <input type="text" id="cfgDownloadFolder" value="C:\Users\maykon.moraes\Downloads\SOC_PDFS" />
+          </div>
+          <div>
+            <label>CSV Entrada / Saída</label>
+            <input type="text" id="cfgCsvNames" value="Pasta1.csv ➔ resultado_busca_fichas.csv" readonly style="opacity:0.8;" />
+          </div>
+          <div>
+            <label>Espera pós-download (ms)</label>
+            <input type="number" id="cfgDownloadWaitMs" value="3000" />
+          </div>
+          <div>
+            <label>Tentativas Popup sis212b</label>
+            <input type="number" id="cfgPopupWaitAttempts" value="40" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(148,163,184,0.1);display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:9.5px;color:#94a3b8;">
+            <i class="fa-solid fa-circle-info" style="color:#38bdf8;margin-right:4px;"></i>
+            Pasta de Datasources: <code style="color:#c084fc;">uivision/datasources</code>
+          </div>
+          <button type="button" class="mini-btn" onclick="copiarCaminhoPdf()" style="font-size:9px;">
+            <i class="fa-regular fa-copy"></i> Copiar Pasta PDFs
+          </button>
+        </div>
+      </div>
+
+      <!-- Checklist Operacional -->
+      <div style="margin-top:10px;padding:10px 14px;background:rgba(2,6,23,0.4);border:1px solid rgba(148,163,184,0.1);border-radius:12px;font-size:10px;color:#94a3b8;line-height:1.5;">
+        <strong style="color:#f1f5f9;display:block;margin-bottom:4px;"><i class="fa-solid fa-list-check" style="color:#34d399;margin-right:5px;"></i>Checklist antes de disparar:</strong>
+        <div style="display:grid;gap:4px;">
+          <div><i class="fa-solid fa-check text-emerald-400" style="color:#34d399;margin-right:4px;"></i> 1. Aba <strong>"Tela de Controle - Flow"</strong> aberta no navegador.</div>
+          <div><i class="fa-solid fa-check text-emerald-400" style="color:#34d399;margin-right:4px;"></i> 2. Aba principal do <strong>SOC (Menu 248)</strong> aberta e conectada.</div>
+          <div><i class="fa-solid fa-check text-emerald-400" style="color:#34d399;margin-right:4px;"></i> 3. Popups liberados no SOC para permitir o popup <code>sis212b</code>.</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       PAINEL DE RESULTADOS FINAL (EXCLUSIVO, MODO PRIME & ULTRA DETALHADO)
+       ========================================================================= -->
+  <section id="resultsSection" class="results-panel-prime reveal">
+    
+    <!-- Cabeçalho do Painel de Resultados -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:14px;border-bottom:1px solid rgba(168,85,247,0.2);">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(6,182,212,0.2));border:1px solid rgba(168,85,247,0.4);display:flex;align-items:center;justify-content:center;color:#d8b4fe;font-size:20px;box-shadow:0 0 20px rgba(168,85,247,0.25);">
+          <i class="fa-solid fa-square-poll-vertical"></i>
+        </div>
+        <div>
+          <h2 style="font-size:16px;font-weight:900;color:#f8fafc;margin:0;letter-spacing:-0.01em;">
+            AUDITORIA & RESULTADO FINAL DA OPERAÇÃO
+          </h2>
+          <p id="resultsMetaText" style="font-size:11px;color:#94a3b8;margin:2px 0 0;">
+            Relatório consolidado de buscas no Flow, downloads de Fichas Clínicas e protocolos no SOCGED.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="mini-btn" onclick="carregarResultadosPadrao()" title="Recarregar resultados do arquivo resultado_busca_fichas.csv">
+          <i class="fa-solid fa-rotate" style="color:#38bdf8;"></i> Recarregar CSV
+        </button>
+        <button type="button" class="mini-btn" onclick="document.getElementById('resultUploadInput').click()" title="Subir outro arquivo de resultado (.csv)">
+          <i class="fa-solid fa-file-import" style="color:#a855f7;"></i> Subir CSV Resultado
+        </button>
+        <input type="file" id="resultUploadInput" accept=".csv,.txt" style="display:none;" onchange="importarArquivoResultado(event)" />
+        <button type="button" onclick="exportarExcelFichas()" class="btn-excel-prime" title="Gerar e baixar relatório oficial em Excel com formatação Prime">
+          <i class="fa-solid fa-file-excel"></i>
+          <span>Gerar Excel (.xlsx) Prime</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5 Caixas de Estatísticas do Resultado Final -->
+    <div class="results-stats-row">
+      <div class="result-stat-box purple">
+        <div class="icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+        <div class="info-copy">
+          <label>Total Processado</label>
+          <strong id="statTotalProc">0</strong>
+        </div>
+      </div>
+      <div class="result-stat-box success">
+        <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="info-copy">
+          <label>Anexados SOCGED</label>
+          <strong id="statAnexados">0</strong>
+        </div>
+      </div>
+      <div class="result-stat-box warning">
+        <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="info-copy">
+          <label>Já Tinha Ficha SOC</label>
+          <strong id="statJaExistia">0</strong>
+        </div>
+      </div>
+      <div class="result-stat-box info">
+        <div class="icon"><i class="fa-solid fa-file-waveform"></i></div>
+        <div class="info-copy">
+          <label>Apenas ASO (Sem Ficha)</label>
+          <strong id="statApenasAso">0</strong>
+        </div>
+      </div>
+      <div class="result-stat-box danger">
+        <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="info-copy">
+          <label>Erros / Bloqueios</label>
+          <strong id="statErros">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Filtros e Busca em Tempo Real no Resultado -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0 10px;flex-wrap:wrap;">
+      <div style="position:relative;flex:1;min-width:260px;">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#64748b;font-size:11px;"></i>
+        <input type="text" id="filtroResultadosInput" oninput="filtrarCardsResultados(this.value)" placeholder="Buscar por Colaborador, CPF, Unidade/OP (ex: OP 306) ou Status..." style="width:100%;background:rgba(2,6,23,0.7);border:1px solid rgba(148,163,184,0.18);border-radius:10px;padding:8px 12px 8px 34px;font-size:11px;color:#f8fafc;outline:none;box-sizing:border-box;" />
+      </div>
+
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="filter-btn active" data-res-filter="all" onclick="aplicarFiltroStatus('all', this)">TODOS (<span id="countFilterAll">0</span>)</button>
+        <button class="filter-btn" data-res-filter="anexado" onclick="aplicarFiltroStatus('anexado', this)">ANEXADOS (<span id="countFilterAnexados">0</span>)</button>
+        <button class="filter-btn" data-res-filter="ja_possui" onclick="aplicarFiltroStatus('ja_possui', this)">JÁ EXISTIA (<span id="countFilterJaPossui">0</span>)</button>
+        <button class="filter-btn" data-res-filter="apenas_aso" onclick="aplicarFiltroStatus('apenas_aso', this)">APENAS ASO (<span id="countFilterApenasAso">0</span>)</button>
+        <button class="filter-btn" data-res-filter="erro" onclick="aplicarFiltroStatus('erro', this)">ERROS (<span id="countFilterErros">0</span>)</button>
+      </div>
+    </div>
+
+    <!-- Lista de Cards de Colaboradores Processados -->
+    <div id="resultsCardsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+      <!-- Preenchido dinamicamente via JS -->
+    </div>
+
+    <!-- Rodapé do Painel com Exportações -->
+    <div style="margin-top:16px;padding:14px 18px;background:rgba(2,6,23,0.6);border:1px solid rgba(168,85,247,0.25);border-radius:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center;color:#34d399;font-size:16px;">
+          <i class="fa-solid fa-file-excel"></i>
+        </div>
+        <div>
+          <div style="font-size:12.5px;font-weight:800;color:#f1f5f9;">Exportação Oficial Auditada dos Resultados</div>
+          <div style="font-size:10px;color:#94a3b8;">Gera uma planilha em Excel com abas separadas: Resumo Executivo e Tabela Itemizada com status de cada Ficha Clínica.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button type="button" onclick="exportarCsvResultados()" class="mini-btn" style="padding:9px 14px;">
+          <i class="fa-solid fa-file-csv"></i> Baixar CSV
+        </button>
+        <button type="button" onclick="exportarExcelFichas()" class="btn-excel-prime" style="padding:9px 18px;font-size:11px;">
+          <i class="fa-solid fa-download"></i> Baixar Excel (.xlsx) Prime
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<!-- Modal de Configurações Avançadas -->
+<div id="configModal" class="detail-modal" role="dialog" aria-modal="true" aria-label="Configurações do Robô">
+  <div class="modal-card" style="max-width:540px;">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title"><i class="fa-solid fa-gear" style="color:#a855f7;margin-right:6px;"></i>Configurações do Robô UI.Vision</div>
+        <div class="modal-sub">Parâmetros de execução da macro <code>baixarEanexar_soc.js</code>.</div>
+      </div>
+      <button class="icon-btn" onclick="fecharModalConfiguracoes()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;gap:12px;">
+        <div>
+          <label style="font-size:10px;font-weight:800;color:#c084fc;display:block;margin-bottom:4px;">Pasta de Download dos PDFs (Windows)</label>
+          <input type="text" id="modalCfgDownloadFolder" class="input" value="C:\Users\maykon.moraes\Downloads\SOC_PDFS" />
+          <small style="color:#64748b;font-size:9px;margin-top:2px;display:block;">O robô busca o arquivo baixado neste diretório para anexar no SOCGED.</small>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:10px;font-weight:800;color:#c084fc;display:block;margin-bottom:4px;">Arquivo CSV de Entrada</label>
+            <input type="text" id="modalCfgInputCsv" class="input" value="Pasta1.csv" />
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:800;color:#c084fc;display:block;margin-bottom:4px;">Arquivo CSV de Saída</label>
+            <input type="text" id="modalCfgOutputCsv" class="input" value="resultado_busca_fichas.csv" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:10px;font-weight:800;color:#c084fc;display:block;margin-bottom:4px;">Espera pós-download (ms)</label>
+            <input type="number" id="modalCfgWaitMs" class="input" value="3000" />
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:800;color:#c084fc;display:block;margin-bottom:4px;">Tentativas Popup sis212b</label>
+            <input type="number" id="modalCfgAttempts" class="input" value="40" />
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+        <button type="button" class="btn" onclick="fecharModalConfiguracoes()">Cancelar</button>
+        <button type="button" class="btn primary" onclick="salvarModalConfiguracoes()" style="background:linear-gradient(135deg,#9333ea,#a855f7);border-color:#c084fc;color:#fff;">
+          <i class="fa-solid fa-check"></i> Salvar Parâmetros
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Histórico Padrão -->
+<div id="historyModal" class="detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes da execução">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><div class="modal-title">Detalhes da execução</div><div class="modal-sub">Registro selecionado no histórico desta rotina.</div></div>
+      <button class="icon-btn" onclick="closeHistory()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body"><div id="historyDetail" class="detail-grid"></div></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<!-- Lógica Exclusiva e Robusta do Workspace AUT-004 -->
+<script>
+// =========================================================================
+// BANCO DE DADOS LOCAL E ESTADO DO WORKSPACE
+// =========================================================================
+let filaColaboradores = [];
+let listaResultadosGlobais = [];
+let filtroStatusAtual = 'all';
+
+// 12 Colaboradores Reais de Exemplo (Pasta1.csv)
+const EXEMPLO_PASTA1_CSV = `187.281.448-48;Periódico;03/09/2026;39100
+186.102.248-48;Periódico;03/09/2026;39102
+318.658.718-26;Periódico;03/09/2026;39103
+444.316.598-38;Periódico;03/09/2026;39104
+221.879.268-00;Periódico;09/09/2026;16712
+326.025.548-63;Periódico;09/09/2026;16722
+150.346.518-74;Periódico;09/09/2026;16723
+398.329.278-03;Periódico;09/09/2026;16730
+353.965.788-66;Periódico;09/09/2026;16731
+414.692.488-08;Periódico;09/09/2026;16735
+536.806.678-33;Periódico;09/09/2026;16740
+408.731.828-12;Periódico;09/09/2026;16743`;
+
+// 18 Registros Reais de Auditoria de resultado_busca_fichas.csv
+const DADOS_INICIAIS_RESULTADO_CSV = `Data_Hora,CPF,Codigo_SOC,Tipo_Exame,Data_Agendada,ID_Flow,Colaborador,Unidade_SOC,Status_Flow,Arquivo_Baixado,Status_SOCGED,Detalhes
+"10/11/2026, 08:18:55",383.097.178-81,31808,Periódico,03/09/2026,80527,GIANCARLO AQUILA,-,BAIXADO,FichaClinica__GIANCARLO AQUILA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Campo de pesquisa do Zoom de Funcionário (#nomeSeach / #radioPesFunc_1) não localizado.
+"10/11/2026, 10:39:04",383.097.178-81,31808,Periódico,03/09/2026,80527,GIANCARLO AQUILA,-,BAIXADO,FichaClinica__GIANCARLO AQUILA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Campo de pesquisa do Zoom de Funcionário (#nomeSeach / #radioPesFunc_1) não localizado.
+"10/11/2026, 10:45:06",383.097.178-81,31808,Periódico,03/09/2026,80527,GIANCARLO AQUILA,-,BAIXADO,FichaClinica__GIANCARLO AQUILA.pdf,ERRO_SOCGED,"Ficha Clínica localizada e baixada com sucesso. | Erro SOC: O Popup sis212b abriu, mas o campo de pesquisa (#nomeSeach / #radioPesFunc_1) demorou demais para carregar."
+"10/11/2026, 11:57:24",383.097.178-81,31808,Periódico,03/09/2026,80527,GIANCARLO AQUILA,-,BAIXADO,FichaClinica__GIANCARLO AQUILA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: timeout reached when looking for element 'id=filesToUpload_1'
+"10/11/2026, 12:03:46",970.046.770-87,39099,Periódico,03/09/2026,80511,CAMILA CORNETET PEREIRA,-,BAIXADO,FichaClinica__CAMILA CORNETET PEREIRA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: timeout reached when looking for element 'id=filesToUpload_1'
+"10/11/2026, 12:04:40",187.281.448-48,39100,Periódico,03/09/2026,80519,DANILO PEREIRA PINSETA,-,BAIXADO,FichaClinica__DANILO PEREIRA PINSETA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Campo nomeSeach ou botão Procurar não encontrado na aba do SOC.
+"10/11/2026, 12:14:05",187.281.448-48,39100,Periódico,03/09/2026,80519,DANILO PEREIRA PINSETA,OP 306,BAIXADO,FichaClinica__DANILO PEREIRA PINSETA.pdf,ANEXADO_COM_SUCESSO,Ficha Clínica localizada e baixada com sucesso. | SOCGED: ANEXADO_COM_SUCESSO
+"10/11/2026, 12:15:04",186.102.248-48,39102,Periódico,03/09/2026,80514,ROBSON APARECIDO GOMES,-,BAIXADO,FichaClinica__ROBSON APARECIDO GOMES.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:15:15",318.658.718-26,39103,Periódico,03/09/2026,80517,VAGNER RIBEIRO DOS SANTOS,-,BAIXADO,FichaClinica__VAGNER RIBEIRO DOS SANTOS.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:15:25",444.316.598-38,39104,Periódico,03/09/2026,80520,SIMÃO MARCOS APOCALYPSE,-,BAIXADO,FichaClinica__SIMÃO MARCOS APOCALYPSE.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:15:34",221.879.268-00,16712,Periódico,09/09/2026,80824,LUIS RENATO DAMAZIO,-,BAIXADO,FichaClinica__LUIS RENATO DAMAZIO.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:15:45",326.025.548-63,16722,Periódico,09/09/2026,80834,EDINEI OLIVEIRA CHAGAS,-,BAIXADO,FichaClinica__EDINEI OLIVEIRA CHAGAS.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:15:55",150.346.518-74,16723,Periódico,09/09/2026,80835,FERNANDO CESAR LOPES,-,BAIXADO,FichaClinica__FERNANDO CESAR LOPES.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:16:05",398.329.278-03,16730,Periódico,09/09/2026,80839,VANESSA DE SOUZA GABRIEL ROSA,-,BAIXADO,FichaClinica__VANESSA DE SOUZA GABRIEL ROSA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:16:15",353.965.788-66,16731,Periódico,09/09/2026,80840,WILLIAN THOMAS BORGES SILVA,-,BAIXADO,FichaClinica__WILLIAN THOMAS BORGES SILVA.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:16:25",414.692.488-08,16735,Periódico,09/09/2026,80842,ROMARIO OLIVEIRA DE VASCONCELOS,-,BAIXADO,FichaClinica__ROMARIO OLIVEIRA DE VASCONCELOS.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:16:35",536.806.678-33,16740,Periódico,09/09/2026,80844,MATHEUS GABRIEL DE MELO TESCH,-,BAIXADO,FichaClinica__MATHEUS GABRIEL DE MELO TESCH.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.
+"10/11/2026, 12:16:45",408.731.828-12,16743,Periódico,09/09/2026,80845,HADRIEN SANCHES PANCIERI,-,BAIXADO,FichaClinica__HADRIEN SANCHES PANCIERI.pdf,ERRO_SOCGED,Ficha Clínica localizada e baixada com sucesso. | Erro SOC: Aba principal do SOC não encontrada aberta no navegador.`;
+
+// Utilitários de escape e formatação
+function esc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function formatarCpf(v) {
+  const digitos = String(v || '').replace(/\D/g, '');
+  if (digitos.length === 11) {
+    return digitos.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  }
+  return v || '';
+}
+
+function toast(msg, type = 'success') {
+  const box = document.getElementById('toast');
+  if (!box) return;
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(5px)'; }, 2600);
+  setTimeout(() => el.remove(), 2900);
+}
+
+function addLog(type, msg) {
+  const host = document.getElementById('logOutput');
+  if (!host) return;
+  const hora = new Date().toLocaleTimeString('pt-BR');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${hora}</span><span class="log-${type || 'info'}">${esc(msg)}</span>`;
+  host.appendChild(line);
+  host.scrollTop = host.scrollHeight;
+}
+
+function limparLogs() {
+  const host = document.getElementById('logOutput');
+  if (host) host.innerHTML = '';
+}
+
+async function copiarLogs() {
+  const host = document.getElementById('logOutput');
+  if (host) {
+    try {
+      await navigator.clipboard.writeText(host.innerText);
+      toast('Logs copiados!');
+    } catch {
+      toast('Não foi possível copiar.', 'error');
+    }
+  }
+}
+
+function definirDataHoje() {
+  const hoje = new Date();
+  const dia = String(hoje.getDate()).padStart(2, '0');
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const ano = hoje.getFullYear();
+  document.getElementById('dataAgendadaPadrao').value = `${dia}/${mes}/${ano}`;
+  atualizarValidacaoFila();
+  toast('Data de hoje aplicada!');
+}
+
+// =========================================================================
+// PARSER INTELIGENTE DA FILA (TEXTAREA ➔ TABELA)
+// =========================================================================
+function atualizarValidacaoFila() {
+  const input = document.getElementById('batchInput');
+  if (!input) return;
+
+  const tipoPadrao = document.getElementById('tipoExamePadrao')?.value || 'Periódico';
+  const dataPadrao = document.getElementById('dataAgendadaPadrao')?.value?.trim() || '03/09/2026';
+  const codPadrao = document.getElementById('codigoSocPadrao')?.value?.trim() || '';
+
+  const rawLines = input.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const rows = [];
+  const seenCpfs = new Set();
+  let invalid = 0, duplicate = 0;
+
+  rawLines.forEach((line, idx) => {
+    // Ignora linha de cabeçalho
+    if (/^cpf/i.test(line)) return;
+
+    let parts = [];
+    if (line.includes('\t')) parts = line.split('\t').map(s => s.trim());
+    else if (line.includes(';')) parts = line.split(';').map(s => s.trim());
+    else if (line.includes(',')) parts = line.split(',').map(s => s.trim());
+    else parts = [line.trim()];
+
+    const rawCpf = (parts[0] || '').replace(/[\uFEFF"']/g, '').trim();
+    const cleanCpfDigits = rawCpf.replace(/\D/g, '');
+
+    if (!cleanCpfDigits || cleanCpfDigits.length < 9 || cleanCpfDigits.length > 11) {
+      invalid++;
+      return;
+    }
+
+    if (seenCpfs.has(cleanCpfDigits)) {
+      duplicate++;
+      return;
+    }
+    seenCpfs.add(cleanCpfDigits);
+
+    const tipoExame = (parts[1] && parts[1].length > 2) ? parts[1].replace(/[\uFEFF"']/g, '').trim() : tipoPadrao;
+    const dataAgendada = (parts[2] && /\d{1,2}\/\d{1,2}\/\d{2,4}/.test(parts[2])) ? parts[2].replace(/[\uFEFF"']/g, '').trim() : dataPadrao;
+    const codigoSoc = (parts[3] && parts[3].length > 0) ? parts[3].replace(/[\uFEFF"']/g, '').trim() : codPadrao;
+
+    rows.push({
+      index: idx + 1,
+      cpf: formatarCpf(rawCpf),
+      tipoExame: tipoExame,
+      dataAgendada: dataAgendada,
+      codigoSoc: codigoSoc || '-'
+    });
+  });
+
+  filaColaboradores = rows;
+
+  // Atualiza contadores
+  document.getElementById('validCount').textContent = rows.length;
+  document.getElementById('invalidCount').textContent = invalid;
+  document.getElementById('duplicateCount').textContent = duplicate;
+  document.getElementById('kpiFilaQtd').textContent = rows.length;
+
+  // Renderiza tabela de pré-visualização
+  const tbody = document.getElementById('previewBody');
+  if (tbody) {
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:14px;">Nenhum colaborador na fila de busca.</td></tr>';
+    } else {
+      tbody.innerHTML = rows.slice(0, 50).map((r, i) => `
+        <tr>
+          <td style="color:#64748b;font-size:9.5px;">${i + 1}</td>
+          <td style="font-weight:700;color:#f1f5f9;"><i class="fa-regular fa-id-card" style="color:#a855f7;margin-right:4px;"></i>${esc(r.cpf)}</td>
+          <td><span style="display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:#d8b4fe;font-size:9px;font-weight:800;">${esc(r.tipoExame)}</span></td>
+          <td style="color:#cbd5e1;">${esc(r.dataAgendada)}</td>
+          <td style="font-family:monospace;color:#38bdf8;">${esc(r.codigoSoc)}</td>
+          <td style="text-align:center;">
+            <button type="button" onclick="removerItemFila(${i})" style="background:transparent;border:none;color:#fb7185;cursor:pointer;padding:2px 6px;" title="Remover item"><i class="fa-solid fa-xmark"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Salva no storage local
+  try {
+    localStorage.setItem('uivision_fichas_batch_input', input.value);
+  } catch(e) {}
+}
+
+function removerItemFila(idx) {
+  const input = document.getElementById('batchInput');
+  if (!input) return;
+  const lines = input.value.split(/\r?\n/).filter(Boolean);
+  if (idx >= 0 && idx < lines.length) {
+    lines.splice(idx, 1);
+    input.value = lines.join('\n');
+    atualizarValidacaoFila();
+    toast('Item removido da fila!');
+  }
+}
+
+function limparFila() {
+  document.getElementById('batchInput').value = '';
+  atualizarValidacaoFila();
+  toast('Fila limpa com sucesso!');
+}
+
+function carregarExemploReal() {
+  document.getElementById('batchInput').value = EXEMPLO_PASTA1_CSV;
+  atualizarValidacaoFila();
+  toast('12 colaboradores reais carregados na fila!');
+  addLog('info', 'Exemplo real de Pasta1.csv carregado com 12 registros.');
+}
+
+function importarArquivoFila(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    document.getElementById('batchInput').value = text;
+    atualizarValidacaoFila();
+    toast(`Arquivo ${file.name} importado com sucesso!`);
+    addLog('ok', `Arquivo importado: ${file.name} (${filaColaboradores.length} registros válidos).`);
+  };
+  reader.readAsText(file);
+}
+
+// =========================================================================
+// GERAÇÃO E DOWNLOAD DO Pasta1.csv PARA O UI.VISION
+// =========================================================================
+function gerarConteudoPasta1Csv() {
+  if (filaColaboradores.length === 0) return '';
+  return filaColaboradores.map(r => {
+    const cod = (r.codigoSoc && r.codigoSoc !== '-') ? r.codigoSoc : '';
+    return `${r.cpf};${r.tipoExame};${r.dataAgendada};${cod}`;
+  }).join('\r\n');
+}
+
+function baixarPasta1Csv() {
+  const conteudo = gerarConteudoPasta1Csv();
+  if (!conteudo) {
+    toast('A fila está vazia. Insira colaboradores primeiro.', 'error');
+    return;
+  }
+
+  const blob = new Blob([conteudo], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Pasta1.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast('Arquivo Pasta1.csv baixado! Salve na pasta uivision/datasources.');
+  addLog('ok', 'Arquivo Pasta1.csv gerado e baixado para o computador.');
+}
+
+async function copiarCsvClipboard() {
+  const conteudo = gerarConteudoPasta1Csv();
+  if (!conteudo) {
+    toast('A fila está vazia.', 'error');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(conteudo);
+    toast('Conteúdo do Pasta1.csv copiado!');
+  } catch {
+    toast('Erro ao copiar.', 'error');
+  }
+}
+
+function copiarCaminhoPdf() {
+  const pasta = document.getElementById('cfgDownloadFolder').value;
+  navigator.clipboard.writeText(pasta).then(() => {
+    toast('Caminho da pasta copiado!');
+  });
+}
+
+// =========================================================================
+// DISPARO DA AUTOMAÇÃO (UI.VISION RPA)
+// =========================================================================
+function dispararAutomacaoFichas() {
+  if (filaColaboradores.length === 0) {
+    toast('Insira ao menos um colaborador na fila para executar.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('executeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>DISPARANDO MOTOR RPA...</span>';
+
+  document.getElementById('progressTrack').removeAttribute('hidden');
+  document.getElementById('step1').classList.add('done');
+  document.getElementById('step1').querySelector('.step-state').textContent = 'OK';
+  document.getElementById('step2').classList.add('active');
+  document.getElementById('step2').querySelector('.step-state').textContent = 'GRAVANDO';
+
+  addLog('info', `Iniciando disparo do robô para ${filaColaboradores.length} colaboradores...`);
+
+  // Baixa o Pasta1.csv automaticamente para garantir que a pasta do robô fique atualizada
+  baixarPasta1Csv();
+
+  setTimeout(() => {
+    document.getElementById('step2').classList.replace('active', 'done');
+    document.getElementById('step2').querySelector('.step-state').textContent = 'OK';
+    document.getElementById('step3').classList.add('active');
+    document.getElementById('step3').querySelector('.step-state').textContent = 'EXECUTANDO';
+
+    addLog('ok', 'Arquivo Pasta1.csv preparado. Abrindo Ui.Vision para a macro baixarEanexar_soc.js...');
+
+    // URL direta do UI.Vision
+    const urlUiVision = `ui.vision.html?macro=baixarEanexar_soc.js&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0`;
+    window.open(urlUiVision, '_blank');
+
+    toast('Robô acionado! Acompanhe a execução no navegador.', 'success');
+    addLog('ok', 'Aba do UI.Vision acionada. O robô está processando o Flow e o SOC.');
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-play"></i><span>EXECUTAR AUTOMAÇÃO</span>';
+      document.getElementById('executeState').textContent = 'Execução em andamento no navegador';
+      document.getElementById('executeHint').textContent = 'Quando o robô finalizar, clique em "Recarregar CSV" para inspecionar os resultados.';
+    }, 3000);
+  }, 1200);
+}
+
+// =========================================================================
+// PARSER E RENDERIZAÇÃO DO RELATÓRIO FINAL (resultado_busca_fichas.csv)
+// =========================================================================
+function parseCsvResultados(csvText) {
+  const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length <= 1) return [];
+
+  // Remove cabeçalho
+  const dataLines = lines.slice(1);
+  const items = [];
+
+  dataLines.forEach(line => {
+    // Regex robusta para CSV com campos entre aspas
+    const regex = /(?:,|\n|^)("(?:(?:"")*[^"]*)*"|[^",\n]*|(?:\n|$))/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+      let val = match[1] || '';
+      if (val.startsWith('"') && val.endsWith('"')) {
+        val = val.substring(1, val.length - 1).replace(/""/g, '"');
+      }
+      matches.push(val.trim());
+      if (regex.lastIndex >= line.length) break;
+    }
+
+    if (matches.length < 5) return;
+
+    items.push({
+      dataHora: matches[0] || '',
+      cpf: matches[1] || '',
+      codigoSoc: matches[2] || '',
+      tipoExame: matches[3] || '',
+      dataAgendada: matches[4] || '',
+      idFlow: matches[5] || '',
+      colaborador: matches[6] || '',
+      unidadeSoc: matches[7] || '',
+      statusFlow: matches[8] || '',
+      arquivoBaixado: matches[9] || '',
+      statusSocged: matches[10] || '',
+      detalhes: matches[11] || ''
+    });
+  });
+
+  return items;
+}
+
+function carregarResultadosPadrao() {
+  const items = parseCsvResultados(DADOS_INICIAIS_RESULTADO_CSV);
+  renderizarPainelResultados(items);
+  toast('Resultados auditados carregados!');
+  addLog('info', `Relatório carregado com ${items.length} registros de auditoria.`);
+}
+
+function importarArquivoResultado(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const items = parseCsvResultados(text);
+    if (items.length === 0) {
+      toast('Nenhum registro localizado no arquivo selecionado.', 'error');
+      return;
+    }
+    renderizarPainelResultados(items);
+    toast(`${items.length} registros carregados do arquivo ${file.name}!`);
+    addLog('ok', `Relatório importado de ${file.name} com ${items.length} registros.`);
+  };
+  reader.readAsText(file);
+}
+
+function renderizarPainelResultados(items) {
+  listaResultadosGlobais = items;
+
+  // Atualiza métricas
+  const total = items.length;
+  const anexados = items.filter(x => x.statusSocged === 'ANEXADO_COM_SUCESSO').length;
+  const jaExistia = items.filter(x => x.statusSocged === 'JA_POSSUI_FICHA_SOCGED').length;
+  const apenasAso = items.filter(x => x.statusFlow === 'FICHA_NAO_LOCALIZADA_APENAS_ASO').length;
+  const erros = items.filter(x => x.statusSocged.includes('ERRO') || x.statusFlow.includes('ERRO') || x.statusSocged === 'SEM_FICHA_PARA_ANEXAR').length;
+
+  document.getElementById('statTotalProc').textContent = total;
+  document.getElementById('statAnexados').textContent = anexados;
+  document.getElementById('statJaExistia').textContent = jaExistia;
+  document.getElementById('statApenasAso').textContent = apenasAso;
+  document.getElementById('statErros').textContent = erros;
+
+  // Atualiza KPIs da barra de topo
+  document.getElementById('kpiAnexadosQtd').textContent = anexados;
+  document.getElementById('kpiBaixadasQtd').textContent = items.filter(x => x.statusFlow.startsWith('BAIXADO')).length;
+  document.getElementById('kpiAvisosQtd').textContent = (jaExistia + apenasAso + erros);
+
+  // Contadores dos botões de filtro
+  document.getElementById('countFilterAll').textContent = total;
+  document.getElementById('countFilterAnexados').textContent = anexados;
+  document.getElementById('countFilterJaPossui').textContent = jaExistia;
+  document.getElementById('countFilterApenasAso').textContent = apenasAso;
+  document.getElementById('countFilterErros').textContent = erros;
+
+  // Renderiza cards de acordo com o filtro atual
+  filtrarECriarCards();
+
+  // Salva no storage local
+  try {
+    localStorage.setItem('uivision_fichas_ultimos_resultados', JSON.stringify(items));
+  } catch(e) {}
+}
+
+function filtrarECriarCards() {
+  const container = document.getElementById('resultsCardsContainer');
+  if (!container) return;
+
+  const termoBusca = (document.getElementById('filtroResultadosInput')?.value || '').toLowerCase().trim();
+
+  const filtrados = listaResultadosGlobais.filter(item => {
+    // Filtro por categoria de status
+    if (filtroStatusAtual === 'anexado' && item.statusSocged !== 'ANEXADO_COM_SUCESSO') return false;
+    if (filtroStatusAtual === 'ja_possui' && item.statusSocged !== 'JA_POSSUI_FICHA_SOCGED') return false;
+    if (filtroStatusAtual === 'apenas_aso' && item.statusFlow !== 'FICHA_NAO_LOCALIZADA_APENAS_ASO') return false;
+    if (filtroStatusAtual === 'erro' && !(item.statusSocged.includes('ERRO') || item.statusFlow.includes('ERRO') || item.statusSocged === 'SEM_FICHA_PARA_ANEXAR')) return false;
+
+    // Filtro por texto
+    if (termoBusca) {
+      const haystack = `${item.colaborador} ${item.cpf} ${item.unidadeSoc} ${item.codigoSoc} ${item.statusFlow} ${item.statusSocged} ${item.arquivoBaixado}`.toLowerCase();
+      if (!haystack.includes(termoBusca)) return false;
+    }
+
+    return true;
+  });
+
+  if (filtrados.length === 0) {
+    container.innerHTML = `
+      <div style="padding:28px;text-align:center;color:#94a3b8;font-size:11px;background:rgba(2,6,23,0.4);border:1px dashed rgba(148,163,184,0.15);border-radius:12px;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size:18px;color:#64748b;margin-bottom:6px;display:block;"></i>
+        Nenhum registro corresponde aos filtros selecionados.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtrados.map(r => {
+    let cardClass = 'result-colab-card';
+    if (r.statusSocged === 'ANEXADO_COM_SUCESSO') cardClass += ' attached';
+    else if (r.statusSocged === 'JA_POSSUI_FICHA_SOCGED') cardClass += ' already-exists';
+    else if (r.statusFlow === 'FICHA_NAO_LOCALIZADA_APENAS_ASO') cardClass += ' only-aso';
+    else if (r.statusSocged.includes('ERRO') || r.statusFlow.includes('ERRO')) cardClass += ' error';
+
+    // Badge Flow
+    let flowBadge = `<span class="status-pill info"><i class="fa-solid fa-check"></i> Flow: ${esc(r.statusFlow)}</span>`;
+    if (r.statusFlow === 'BAIXADO' || r.statusFlow === 'BAIXADO_JUNTO_ASO') {
+      flowBadge = `<span class="status-pill success"><i class="fa-solid fa-cloud-arrow-down"></i> Flow: ${esc(r.statusFlow)}</span>`;
+    } else if (r.statusFlow.includes('ERRO') || r.statusFlow.includes('NAO_LOCALIZADO')) {
+      flowBadge = `<span class="status-pill danger"><i class="fa-solid fa-xmark"></i> Flow: ${esc(r.statusFlow)}</span>`;
+    } else if (r.statusFlow === 'FICHA_NAO_LOCALIZADA_APENAS_ASO') {
+      flowBadge = `<span class="status-pill purple"><i class="fa-solid fa-file-waveform"></i> Flow: Apenas ASO</span>`;
+    }
+
+    // Badge SOCGED
+    let socBadge = `<span class="status-pill info">SOCGED: ${esc(r.statusSocged)}</span>`;
+    if (r.statusSocged === 'ANEXADO_COM_SUCESSO') {
+      socBadge = `<span class="status-pill success"><i class="fa-solid fa-circle-check"></i> SOCGED: ANEXADO COM SUCESSO</span>`;
+    } else if (r.statusSocged === 'JA_POSSUI_FICHA_SOCGED') {
+      socBadge = `<span class="status-pill warning"><i class="fa-solid fa-shield-halved"></i> SOCGED: JÁ POSSUI FICHA</span>`;
+    } else if (r.statusSocged.includes('ERRO')) {
+      socBadge = `<span class="status-pill danger"><i class="fa-solid fa-triangle-exclamation"></i> SOCGED: ${esc(r.statusSocged)}</span>`;
+    } else if (r.statusSocged === 'SEM_FICHA_PARA_ANEXAR') {
+      socBadge = `<span class="status-pill warning">SOCGED: SEM FICHA</span>`;
+    }
+
+    // Tag do Arquivo
+    const temArquivo = r.arquivoBaixado && r.arquivoBaixado !== '-';
+    const arquivoHtml = temArquivo ? `
+      <span class="pdf-file-tag" title="Arquivo PDF salvo em SOC_PDFS">
+        <i class="fa-solid fa-file-pdf"></i> ${esc(r.arquivoBaixado)}
+      </span>
+    ` : '<span style="color:#64748b;font-size:9.5px;font-style:italic;">Nenhum arquivo baixado</span>';
+
+    // Tag de Unidade / OP
+    const temUnidade = r.unidadeSoc && r.unidadeSoc !== '-';
+    const unidadeBadge = temUnidade ? `
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;font-size:9px;font-weight:800;">
+        <i class="fa-solid fa-building"></i> ${esc(r.unidadeSoc)}
+      </span>
+    ` : '';
+
+    return `
+      <div class="${cardClass}">
+        <div class="result-card-header">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <strong style="color:#f8fafc;font-size:12px;font-weight:900;">
+              <i class="fa-solid fa-user-check" style="color:#a855f7;margin-right:5px;"></i>${esc(r.colaborador || 'COLABORADOR')}
+            </strong>
+            ${unidadeBadge}
+            <span style="font-size:9px;color:#94a3b8;font-family:monospace;">ID Flow: <strong>#${esc(r.idFlow)}</strong></span>
+            <span style="font-size:9px;color:#94a3b8;font-family:monospace;">Cód. SOC: <strong>${esc(r.codigoSoc)}</strong></span>
+          </div>
+          <div style="font-size:9px;color:#64748b;font-family:monospace;">
+            <i class="fa-regular fa-clock" style="margin-right:4px;"></i>${esc(r.dataHora)}
+          </div>
+        </div>
+
+        <div class="result-card-body">
+          <div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+              <span style="font-size:10px;font-weight:800;color:#e2e8f0;font-family:monospace;"><i class="fa-regular fa-id-card" style="color:#c084fc;margin-right:4px;"></i>${esc(r.cpf)}</span>
+              <span style="font-size:9.5px;color:#94a3b8;">&bull;</span>
+              <span style="font-size:9.5px;color:#cbd5e1;font-weight:700;">${esc(r.tipoExame)}</span>
+              <span style="font-size:9.5px;color:#94a3b8;">&bull;</span>
+              <span style="font-size:9.5px;color:#cbd5e1;"><i class="fa-regular fa-calendar" style="margin-right:3px;"></i>${esc(r.dataAgendada)}</span>
+            </div>
+            <div style="margin-top:4px;">
+              ${arquivoHtml}
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+              ${flowBadge}
+              ${socBadge}
+            </div>
+            <div style="font-size:9.5px;color:#94a3b8;line-height:1.4;background:rgba(2,6,23,0.5);padding:6px 10px;border-radius:8px;border:1px solid rgba(148,163,184,0.08);">
+              <i class="fa-solid fa-circle-info" style="color:#a855f7;margin-right:4px;"></i>
+              ${esc(r.detalhes)}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function aplicarFiltroStatus(status, btnElement) {
+  filtroStatusAtual = status;
+  document.querySelectorAll('[data-res-filter]').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+  filtrarECriarCards();
+}
+
+function filtrarCardsResultados(termo) {
+  filtrarECriarCards();
+}
+
+// =========================================================================
+// EXPORTAÇÃO EXCEL (.XLSX) PROFISSIONAL EM MODO PRIME COM EXCELJS
+// =========================================================================
+async function exportarExcelFichas() {
+  if (!listaResultadosGlobais || listaResultadosGlobais.length === 0) {
+    toast('Nenhum resultado carregado para exportar.', 'error');
+    return;
+  }
+
+  try {
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Central RPA — UI.Vision';
+    wb.created = new Date();
+
+    // -----------------------------------------------------------------------
+    // ABA 1: RESUMO EXECUTIVO
+    // -----------------------------------------------------------------------
+    const wsResumo = wb.addWorksheet('Resumo_Executivo', { views: [{ showGridLines: true }] });
+    wsResumo.columns = [
+      { width: 4 },
+      { width: 32 },
+      { width: 22 },
+      { width: 4 }
+    ];
+
+    // Banner de Título
+    wsResumo.mergeCells('B2:C2');
+    const titleCell = wsResumo.getCell('B2');
+    titleCell.value = 'RELATÓRIO AUDITADO — DOWNLOADS & ANEXAÇÕES NO SOCGED';
+    titleCell.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF581C87' } }; // Deep Purple
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    wsResumo.getRow(2).height = 36;
+
+    wsResumo.mergeCells('B3:C3');
+    const subCell = wsResumo.getCell('B3');
+    subCell.value = `Ambiente: RPA UI.Vision · AUT-004 · Emissão: ${new Date().toLocaleString('pt-BR')}`;
+    subCell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FFCBD5E1' } };
+    subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E1B4B' } };
+    subCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    wsResumo.getRow(3).height = 20;
+
+    const total = listaResultadosGlobais.length;
+    const anexados = listaResultadosGlobais.filter(x => x.statusSocged === 'ANEXADO_COM_SUCESSO').length;
+    const jaExistia = listaResultadosGlobais.filter(x => x.statusSocged === 'JA_POSSUI_FICHA_SOCGED').length;
+    const apenasAso = listaResultadosGlobais.filter(x => x.statusFlow === 'FICHA_NAO_LOCALIZADA_APENAS_ASO').length;
+    const erros = listaResultadosGlobais.filter(x => x.statusSocged.includes('ERRO') || x.statusFlow.includes('ERRO')).length;
+
+    const kpisRows = [
+      ['Total de Colaboradores Processados', total, 'FF38BDF8'],
+      ['Fichas Anexadas com Sucesso no SOCGED', anexados, 'FF34D399'],
+      ['Fichas Pré-existentes no SOCGED (Sem Duplicar)', jaExistia, 'FFFBBF24'],
+      ['Apenas ASO Anexado no Flow (Sem Ficha)', apenasAso, 'FFC084FC'],
+      ['Erros Operacionais / Timeouts de Popup', erros, 'FFFB7185']
+    ];
+
+    let currRow = 5;
+    kpisRows.forEach(([lbl, val, colorHex]) => {
+      wsResumo.getCell(`B${currRow}`).value = lbl;
+      wsResumo.getCell(`B${currRow}`).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF334155' } };
+      wsResumo.getCell(`B${currRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+
+      const cVal = wsResumo.getCell(`C${currRow}`);
+      cVal.value = val;
+      cVal.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: colorHex } };
+      cVal.alignment = { horizontal: 'center', vertical: 'middle' };
+      cVal.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+
+      wsResumo.getRow(currRow).height = 26;
+      currRow++;
+    });
+
+    // -----------------------------------------------------------------------
+    // ABA 2: DETALHAMENTO COMPLETO
+    // -----------------------------------------------------------------------
+    const wsDetalhes = wb.addWorksheet('Detalhamento_Fichas', { views: [{ showGridLines: true }] });
+    
+    wsDetalhes.columns = [
+      { header: 'Data / Hora', key: 'dataHora', width: 20 },
+      { header: 'CPF', key: 'cpf', width: 16 },
+      { header: 'Cód. SOC', key: 'codigoSoc', width: 12 },
+      { header: 'Tipo Exame', key: 'tipoExame', width: 18 },
+      { header: 'Data Agendada', key: 'dataAgendada', width: 14 },
+      { header: 'ID Flow', key: 'idFlow', width: 12 },
+      { header: 'Colaborador', key: 'colaborador', width: 32 },
+      { header: 'Unidade SOC', key: 'unidadeSoc', width: 15 },
+      { header: 'Status Flow', key: 'statusFlow', width: 22 },
+      { header: 'Arquivo Baixado (PDF)', key: 'arquivoBaixado', width: 38 },
+      { header: 'Status SOCGED', key: 'statusSocged', width: 24 },
+      { header: 'Detalhes / Auditoria', key: 'detalhes', width: 65 }
+    ];
+
+    // Estilização do cabeçalho
+    const headerRow = wsDetalhes.getRow(1);
+    headerRow.height = 30;
+    headerRow.eachCell(cell => {
+      cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF6B21A8' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF9333EA' } },
+        bottom: { style: 'medium', color: { argb: 'FFA855F7' } }
+      };
+    });
+
+    // Adiciona as linhas
+    listaResultadosGlobais.forEach((r, idx) => {
+      const row = wsDetalhes.addRow(r);
+      row.height = 24;
+
+      const isEven = idx % 2 === 0;
+      const baseBg = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+
+      row.eachCell((cell, colNum) => {
+        cell.font = { name: 'Segoe UI', size: 9 };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: baseBg } };
+        cell.alignment = { vertical: 'middle', horizontal: [1, 2, 3, 5, 6, 8].includes(colNum) ? 'center' : 'left' };
+        cell.border = {
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+        };
+      });
+
+      // Destaque colorido no Status SOCGED
+      const cellSoc = row.getCell('statusSocged');
+      if (r.statusSocged === 'ANEXADO_COM_SUCESSO') {
+        cellSoc.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF065F46' } };
+        cellSoc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+      } else if (r.statusSocged === 'JA_POSSUI_FICHA_SOCGED') {
+        cellSoc.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF92400E' } };
+        cellSoc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+      } else if (r.statusSocged.includes('ERRO')) {
+        cellSoc.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF991B1B' } };
+        cellSoc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+      }
+    });
+
+    // Gera arquivo
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dataHoraStr = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `Relatorio_Fichas_Clinicas_SOC_${dataHoraStr}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast('Planilha Excel (.xlsx) Prime gerada com sucesso!', 'success');
+    addLog('ok', 'Relatório Excel (.xlsx) baixado com 2 abas estruturadas.');
+  } catch(err) {
+    console.error(err);
+    toast('Erro ao gerar planilha Excel: ' + err.message, 'error');
+  }
+}
+
+function exportarCsvResultados() {
+  if (!listaResultadosGlobais || listaResultadosGlobais.length === 0) {
+    toast('Nenhum resultado para exportar.', 'error');
+    return;
+  }
+
+  const cabecalho = "Data_Hora,CPF,Codigo_SOC,Tipo_Exame,Data_Agendada,ID_Flow,Colaborador,Unidade_SOC,Status_Flow,Arquivo_Baixado,Status_SOCGED,Detalhes\n";
+  const linhas = listaResultadosGlobais.map(r => {
+    return [
+      `"${r.dataHora}"`,
+      r.cpf,
+      r.codigoSoc,
+      `"${r.tipoExame}"`,
+      r.dataAgendada,
+      r.idFlow,
+      `"${r.colaborador}"`,
+      `"${r.unidadeSoc}"`,
+      r.statusFlow,
+      `"${r.arquivoBaixado}"`,
+      r.statusSocged,
+      `"${r.detalhes.replace(/"/g, '""')}"`
+    ].join(',');
+  }).join('\r\n');
+
+  const blob = new Blob([cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `resultado_busca_fichas_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast('Arquivo CSV baixado com sucesso!');
+}
+
+// =========================================================================
+// MODAL DE CONFIGURAÇÕES AVANÇADAS
+// =========================================================================
+function abrirModalConfiguracoes() {
+  document.getElementById('modalCfgDownloadFolder').value = document.getElementById('cfgDownloadFolder').value;
+  document.getElementById('modalCfgWaitMs').value = document.getElementById('cfgDownloadWaitMs').value;
+  document.getElementById('modalCfgAttempts').value = document.getElementById('cfgPopupWaitAttempts').value;
+  document.getElementById('configModal').classList.add('show');
+}
+
+function fecharModalConfiguracoes() {
+  document.getElementById('configModal').classList.remove('show');
+}
+
+function salvarModalConfiguracoes() {
+  document.getElementById('cfgDownloadFolder').value = document.getElementById('modalCfgDownloadFolder').value;
+  document.getElementById('cfgDownloadWaitMs').value = document.getElementById('modalCfgWaitMs').value;
+  document.getElementById('cfgPopupWaitAttempts').value = document.getElementById('modalCfgAttempts').value;
+  
+  fecharModalConfiguracoes();
+  toast('Configurações salvas!');
+  addLog('info', 'Parâmetros da macro atualizados no painel.');
+}
+
+// =========================================================================
+// INICIALIZAÇÃO DO WORKSPACE
+// =========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Listener do textarea
+  const input = document.getElementById('batchInput');
+  if (input) {
+    const salvo = localStorage.getItem('uivision_fichas_batch_input');
+    if (salvo && salvo.trim().length > 0) {
+      input.value = salvo;
+    } else {
+      input.value = EXEMPLO_PASTA1_CSV;
+    }
+    input.addEventListener('input', atualizarValidacaoFila);
+    atualizarValidacaoFila();
+  }
+
+  // Carrega resultados iniciais salvos ou de exemplo
+  try {
+    const salvosRes = localStorage.getItem('uivision_fichas_ultimos_resultados');
+    if (salvosRes) {
+      const items = JSON.parse(salvosRes);
+      if (Array.isArray(items) && items.length > 0) {
+        renderizarPainelResultados(items);
+      } else {
+        carregarResultadosPadrao();
+      }
+    } else {
+      carregarResultadosPadrao();
+    }
+  } catch(e) {
+    carregarResultadosPadrao();
+  }
+});
+</script>
+</body>
+</html>

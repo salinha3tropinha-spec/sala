@@ -24,6 +24,17 @@
       macro: 'BUSCAR_EXAMES',
       endpoint: 'exames'
     },
+    'BAIXAR E ANEXAR FICHAS': {
+      id: 'AUT-004',
+      title: 'BAIXAR E ANEXAR FICHAS',
+      category: 'FLOW / SOCGED',
+      icon: 'fa-file-arrow-down',
+      accent: '#a855f7',
+      soft: 'rgba(168,85,247,.12)',
+      description: 'Download automatizado de Fichas Clínicas no Flow e anexação direta no SOCGED (menu 248).',
+      macro: 'baixarEanexar_soc.js',
+      endpoint: 'fichas'
+    },
     'ATIVAR_FUNCIONARIOS': {
       id: 'AUT-003',
       title: 'ATIVAR FUNCIONÁRIOS',
