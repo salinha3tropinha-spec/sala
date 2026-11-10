@@ -671,19 +671,19 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 16px;
+    padding: 8px 16px;
     border-radius: 10px;
-    border: 1px solid rgba(16, 185, 129, 0.35);
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border: 1px solid rgba(52, 211, 153, 0.28);
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
     color: #ffffff;
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16);
     transition: all 0.2s ease;
   }
-  .btn-excel:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4); }
+  .btn-excel:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(5, 150, 105, 0.42); }
 
   /* Barra Única de Filtros + Busca (Substitui as 9 caixas de KPIs antigas!) */
   .filter-toolbar {
@@ -764,12 +764,17 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 540px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+    scrollbar-width: thin;
   }
 
   .res-row {
     display: grid;
-    grid-template-columns: 1.5fr 1fr auto;
-    gap: 14px;
+    grid-template-columns: 1.35fr 1.25fr auto;
+    gap: 16px;
     align-items: center;
     padding: 13px 16px;
     border-radius: var(--radius-md);
@@ -820,26 +825,32 @@
   .pdf-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     max-width: 100%;
     padding: 4px 10px;
     border-radius: 8px;
-    background: rgba(244, 63, 94, 0.09);
-    border: 1px solid rgba(244, 63, 94, 0.22);
-    color: #fda4af;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: #e2e8f0;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10.5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .pdf-chip i { color: #f87171; flex-shrink: 0; }
   .res-detail-note {
-    margin-top: 4px;
+    margin-top: 5px;
     font-size: 10.5px;
     color: var(--text-muted);
-    white-space: nowrap;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+  }
+  .res-detail-note.is-error {
+    color: #fda4af;
   }
 
   .res-badges {
@@ -1627,6 +1638,12 @@ function filtrarECriarCards() {
       ? `<span class="pdf-chip" title="${esc(r.arquivoBaixado)}"><i class="fa-solid fa-file-pdf"></i> ${esc(r.arquivoBaixado)}</span>`
       : `<span style="color:var(--text-muted);font-size:11px;">Sem PDF baixado</span>`;
 
+    const isErro = (r.statusSocged || '').includes('ERRO') || (r.statusFlow || '').includes('ERRO') || (r.statusFlow || '').includes('NAO_LOCALIZADO');
+    const isSucesso = r.statusSocged === 'ANEXADO_COM_SUCESSO';
+    const metaExtra = [r.dataHora ? r.dataHora : '', (r.codigoSoc && r.codigoSoc !== '-') ? `SOC #${r.codigoSoc}` : ''].filter(Boolean).join(' · ');
+    const noteText = isSucesso ? (metaExtra || 'Protocolado no SOCGED') : (r.detalhes || metaExtra || '');
+    const tipoLimpo = normalizarTipoExameLimpo(r.tipoExame);
+
     return `
       <div class="${rowClass}">
         <div class="res-main">
@@ -1634,7 +1651,7 @@ function filtrarECriarCards() {
           <div class="res-sub">
             <span>${esc(r.cpf)}</span>
             <span>·</span>
-            <span>${esc(r.tipoExame)}</span>
+            <span>${esc(tipoLimpo)}</span>
             <span>·</span>
             <span>${esc(r.dataAgendada)}</span>
             ${opHtml}
@@ -1643,7 +1660,7 @@ function filtrarECriarCards() {
 
         <div class="res-file">
           ${pdfHtml}
-          <div class="res-detail-note" title="${esc(r.detalhes)}">${esc(r.detalhes)}</div>
+          ${noteText ? `<div class="res-detail-note ${isErro ? 'is-error' : ''}" title="${esc(r.detalhes || noteText)}">${esc(noteText)}</div>` : ''}
         </div>
 
         <div class="res-badges">
