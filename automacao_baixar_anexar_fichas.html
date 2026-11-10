@@ -623,7 +623,7 @@
       <!-- Barra de Controle do Textarea -->
       <div class="input-label-row">
         <span style="font-size:11px;font-weight:800;color:#e2e8f0;">
-          <i class="fa-solid fa-users" style="color:var(--card-accent);margin-right:6px;"></i>Lista de Colaboradores (Pasta1.csv)
+          <i class="fa-solid fa-users" style="color:var(--card-accent);margin-right:6px;"></i>Fila de Colaboradores (Envio Direto ao Robô)
         </span>
         <div class="counter-badges">
           <span class="counter-tag valid"><strong id="validCount">0</strong> válidos</span>
@@ -633,12 +633,12 @@
       </div>
 
       <!-- Textarea de Inserção -->
-      <textarea id="batchInput" class="id-textarea" placeholder="Cole os colaboradores aqui (um por linha)...&#10;Exemplos aceitos:&#10;187.281.448-48;Periódico;03/09/2026;39100&#10;Ou cole colunas direto do Excel: CPF [TAB] Tipo [TAB] Data [TAB] Cód. SOC&#10;Ou apenas cole os CPFs (o Tipo e Data acima serão aplicados automaticamente!)" spellcheck="false"></textarea>
+      <textarea id="batchInput" class="id-textarea" placeholder="Cole os colaboradores aqui (um por linha)...&#10;Exemplos aceitos:&#10;423.851.088-79&#10;Ou: 42385108879;Periódico;14/10/2026;936998&#10;Ou cole colunas direto do Excel: CPF [TAB] Tipo [TAB] Data [TAB] Cód. SOC&#10;✨ Os dados inseridos aqui são enviados diretamente ao robô, sem necessidade de mexer em arquivos CSV!" spellcheck="false"></textarea>
 
       <!-- Botões de Ação Rápida -->
       <div class="action-pills-bar">
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="mini-btn" onclick="carregarExemploReal()" title="Carregar os 12 colaboradores reais de Pasta1.csv">
+          <button type="button" class="mini-btn" onclick="carregarExemploReal()" title="Carregar os 12 colaboradores reais de exemplo">
             <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Carregar Exemplo Real
           </button>
           <button type="button" class="mini-btn" onclick="document.getElementById('fileUploadInput').click()" title="Subir arquivo CSV ou TXT">
@@ -650,11 +650,11 @@
           </button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="mini-btn" onclick="baixarPasta1Csv()" title="Gerar e baixar o arquivo Pasta1.csv para a pasta datasources">
-            <i class="fa-solid fa-download" style="color:#34d399;"></i> Baixar Pasta1.csv
+          <button type="button" class="mini-btn" onclick="baixarPasta1Csv()" title="Exportar cópia de segurança em CSV (Opcional)">
+            <i class="fa-solid fa-download" style="color:#34d399;"></i> Exportar CSV (Backup)
           </button>
-          <button type="button" class="mini-btn" onclick="copiarCsvClipboard()" title="Copiar CSV formatado para a área de transferência">
-            <i class="fa-solid fa-copy"></i> Copiar CSV
+          <button type="button" class="mini-btn" onclick="copiarCsvClipboard()" title="Copiar lote formatado para a área de transferência">
+            <i class="fa-solid fa-copy"></i> Copiar Linhas
           </button>
         </div>
       </div>
@@ -681,7 +681,7 @@
       <!-- Barra de Disparo Principal -->
       <div class="exec-bar">
         <div class="exec-info">
-          <strong id="executeState">Pronto para execução do robô</strong>
+          <strong id="executeState">Pronto para envio direto ao robô</strong>
           <small id="executeHint">Certifique-se de que o Flow e o SOC estão abertos em abas do mesmo navegador.</small>
         </div>
         <button id="executeBtn" type="button" class="btn-exec-prime" onclick="dispararAutomacaoFichas()">
@@ -692,8 +692,8 @@
       <!-- Trilha de Progresso Visual -->
       <div id="progressTrack" hidden style="margin-top:12px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.15);">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:9px;">
-          <div class="step" id="step1"><strong style="display:block;color:#94a3b8;">1. PREPARAÇÃO</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
-          <div class="step" id="step2"><strong style="display:block;color:#94a3b8;">2. GRAVAR CSV</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
+          <div class="step" id="step1"><strong style="display:block;color:#94a3b8;">1. FILA DE DADOS</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
+          <div class="step" id="step2"><strong style="display:block;color:#94a3b8;">2. ENVIO AUTOMÁTICO</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
           <div class="step" id="step3"><strong style="display:block;color:#94a3b8;">3. FLOW ➔ SOC</strong><span class="step-state" style="color:#6ee7b7;font-weight:800;">AGUARDANDO</span></div>
         </div>
       </div>
@@ -1215,8 +1215,8 @@ function baixarPasta1Csv() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  toast('Arquivo Pasta1.csv baixado! Salve na pasta uivision/datasources.');
-  addLog('ok', 'Arquivo Pasta1.csv gerado e baixado para o computador.');
+  toast('Arquivo CSV baixado como cópia de segurança!');
+  addLog('ok', 'Arquivo Pasta1.csv gerado como cópia de segurança.');
 }
 
 async function copiarCsvClipboard() {
@@ -1227,7 +1227,7 @@ async function copiarCsvClipboard() {
   }
   try {
     await navigator.clipboard.writeText(conteudo);
-    toast('Conteúdo do Pasta1.csv copiado!');
+    toast('Lote copiado para a área de transferência!');
   } catch {
     toast('Erro ao copiar.', 'error');
   }
@@ -1241,9 +1241,9 @@ function copiarCaminhoPdf() {
 }
 
 // =========================================================================
-// DISPARO DA AUTOMAÇÃO (UI.VISION RPA)
+// DISPARO DA AUTOMAÇÃO (ENVIO DIRETO AO ROBÔ SEM PRECISAR DE CSV MANUAL)
 // =========================================================================
-function dispararAutomacaoFichas() {
+async function dispararAutomacaoFichas() {
   if (filaColaboradores.length === 0) {
     toast('Insira ao menos um colaborador na fila para executar.', 'error');
     return;
@@ -1251,41 +1251,114 @@ function dispararAutomacaoFichas() {
 
   const btn = document.getElementById('executeBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>DISPARANDO MOTOR RPA...</span>';
+  btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>ENVIANDO DADOS AO ROBÔ...</span>';
 
-  document.getElementById('progressTrack').removeAttribute('hidden');
-  document.getElementById('step1').classList.add('done');
-  document.getElementById('step1').querySelector('.step-state').textContent = 'OK';
-  document.getElementById('step2').classList.add('active');
-  document.getElementById('step2').querySelector('.step-state').textContent = 'GRAVANDO';
+  const progressTrack = document.getElementById('progressTrack');
+  if (progressTrack) progressTrack.removeAttribute('hidden');
+  
+  const step1 = document.getElementById('step1');
+  const step2 = document.getElementById('step2');
+  const step3 = document.getElementById('step3');
 
-  addLog('info', `Iniciando disparo do robô para ${filaColaboradores.length} colaboradores...`);
+  if (step1) {
+    step1.classList.add('done');
+    step1.querySelector('.step-state').textContent = `${filaColaboradores.length} ITENS`;
+  }
+  if (step2) {
+    step2.classList.add('active');
+    step2.querySelector('.step-state').textContent = 'ENVIANDO...';
+  }
 
-  // Baixa o Pasta1.csv automaticamente para garantir que a pasta do robô fique atualizada
-  baixarPasta1Csv();
+  addLog('info', `Iniciando envio automático de ${filaColaboradores.length} colaborador(es) para o robô...`);
+
+  // Monta os dados formatados
+  const itens = filaColaboradores.map(r => ({
+    cpf: r.cpf,
+    tipoExame: r.tipoExame,
+    dataAgendada: r.dataAgendada,
+    codigoSoc: (r.codigoSoc && r.codigoSoc !== '-') ? r.codigoSoc : ''
+  }));
+
+  const linhasCsv = itens.map(r => `${r.cpf};${r.tipoExame};${r.dataAgendada};${r.codigoSoc}`);
+  const conteudoCsv = linhasCsv.join('\r\n');
+  const dadosVar = linhasCsv.join('|||');
+  const runId = 'run-fichas-' + Date.now();
+
+  let disparadoComSucesso = false;
+
+  // 1. TENTA ENVIAR VIA BRIDGE LOCAL (PORTA 5000)
+  try {
+    addLog('info', 'Tentando envio direto via Bridge local (porta 5000)...');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const resp = await fetch('http://127.0.0.1:5000/executar-baixar-anexar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        itens: itens,
+        csv_content: conteudoCsv,
+        dados_var: dadosVar,
+        run_id: runId
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    const data = await resp.json();
+    if (resp.ok && data.status === 'sucesso') {
+      disparadoComSucesso = true;
+      if (step2) {
+        step2.classList.replace('active', 'done');
+        step2.querySelector('.step-state').textContent = 'AUTO OK';
+      }
+      if (step3) {
+        step3.classList.add('active');
+        step3.querySelector('.step-state').textContent = 'EM ANDAMENTO';
+      }
+
+      toast(data.mensagem || 'Robô acionado com sucesso!', 'success');
+      addLog('ok', `Robô iniciado via Bridge local (PID: ${data.pid || 'N/A'}).`);
+      addLog('ok', `Os dados foram injetados no robô sem necessidade de manipular Pasta1.csv.`);
+    }
+  } catch (errBridge) {
+    addLog('warn', 'Bridge local na porta 5000 indisponível. Acionando Ui.Vision via navegador direto...');
+  }
+
+  // 2. FALLBACK: DISPARO DIRETO VIA URL DO UI.VISION PASSANDO !cmd_var2
+  if (!disparadoComSucesso) {
+    try {
+      const var1Enc = encodeURIComponent(runId);
+      const var2Enc = encodeURIComponent(dadosVar);
+      const urlUiVision = `ui.vision.html?macro=baixarEanexar_soc.js&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0&cmd_var1=${var1Enc}&cmd_var2=${var2Enc}`;
+      
+      window.open(urlUiVision, '_blank');
+
+      if (step2) {
+        step2.classList.replace('active', 'done');
+        step2.querySelector('.step-state').textContent = 'URL OK';
+      }
+      if (step3) {
+        step3.classList.add('active');
+        step3.querySelector('.step-state').textContent = 'NAVEGADOR';
+      }
+
+      toast('Robô acionado no navegador com os dados da fila!', 'success');
+      addLog('ok', `Macro iniciada via URL com ${itens.length} registro(s) em !cmd_var2.`);
+      addLog('ok', 'Dados enviados diretamente, sem precisar de arquivo CSV manual.');
+      disparadoComSucesso = true;
+    } catch (eUrl) {
+      toast('Falha ao acionar robô: ' + eUrl.message, 'error');
+      addLog('error', 'Falha ao acionar: ' + eUrl.message);
+    }
+  }
 
   setTimeout(() => {
-    document.getElementById('step2').classList.replace('active', 'done');
-    document.getElementById('step2').querySelector('.step-state').textContent = 'OK';
-    document.getElementById('step3').classList.add('active');
-    document.getElementById('step3').querySelector('.step-state').textContent = 'EXECUTANDO';
-
-    addLog('ok', 'Arquivo Pasta1.csv preparado. Abrindo Ui.Vision para a macro baixarEanexar_soc.js...');
-
-    // URL direta do UI.Vision
-    const urlUiVision = `ui.vision.html?macro=baixarEanexar_soc.js&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0`;
-    window.open(urlUiVision, '_blank');
-
-    toast('Robô acionado! Acompanhe a execução no navegador.', 'success');
-    addLog('ok', 'Aba do UI.Vision acionada. O robô está processando o Flow e o SOC.');
-
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-play"></i><span>EXECUTAR AUTOMAÇÃO</span>';
-      document.getElementById('executeState').textContent = 'Execução em andamento no navegador';
-      document.getElementById('executeHint').textContent = 'Quando o robô finalizar, clique em "Recarregar CSV" para inspecionar os resultados.';
-    }, 3000);
-  }, 1200);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-play"></i><span>EXECUTAR AUTOMAÇÃO</span>';
+    document.getElementById('executeState').textContent = 'Robô em execução no navegador';
+    document.getElementById('executeHint').textContent = 'Quando o robô finalizar, clique em "Recarregar Resultados" na auditoria.';
+  }, 2500);
 }
 
 // =========================================================================
@@ -1334,7 +1407,23 @@ function parseCsvResultados(csvText) {
   return items;
 }
 
-function carregarResultadosPadrao() {
+async function carregarResultadosPadrao() {
+  try {
+    const resp = await fetch('http://127.0.0.1:5000/obter-resultado-fichas');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.status === 'sucesso' && data.conteudo) {
+        const items = parseCsvResultados(data.conteudo);
+        if (items.length > 0) {
+          renderizarPainelResultados(items);
+          toast(`${items.length} resultados atualizados do robô!`, 'success');
+          addLog('ok', `Resultados atualizados diretamente do robô (${items.length} registros).`);
+          return;
+        }
+      }
+    }
+  } catch(e) {}
+
   const items = parseCsvResultados(DADOS_INICIAIS_RESULTADO_CSV);
   renderizarPainelResultados(items);
   toast('Resultados auditados carregados!');

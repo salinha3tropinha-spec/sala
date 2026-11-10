@@ -485,16 +485,50 @@ def obter_resultado_fichas():
 def executar_baixar_anexar():
     dados = request.get_json(silent=True) or {}
     conteudo = dados.get("csv_content", "")
+    itens = dados.get("itens", [])
+    run_id = dados.get("run_id") or f"run-fichas-{int(time.time()*1000)}"
+    dados_var = dados.get("dados_var")
+
+    # Se não veio conteudo pronto, mas veio itens, formata o CSV
+    if not conteudo and itens:
+        linhas = []
+        for it in itens:
+            cpf = str(it.get("cpf", "")).strip()
+            tipo = str(it.get("tipoExame", it.get("tipo", "Periódico"))).strip()
+            data = str(it.get("dataAgendada", it.get("data", ""))).strip()
+            cod = str(it.get("codigoSoc", it.get("codigo_soc", ""))).strip()
+            if cpf and cpf.lower() != "cpf":
+                linhas.append(f"{cpf};{tipo};{data};{cod}")
+        conteudo = "\n".join(linhas)
+
+    # Grava Pasta1.csv automaticamente na pasta datasources em background
     if conteudo:
         PASTA_DATASOURCES.mkdir(parents=True, exist_ok=True)
-        with open(CSV_PASTA1_PATH, "w", encoding="utf-8", newline="") as f:
+        with open(CSV_PASTA1_PATH, "w", encoding="utf-8-sig", newline="") as f:
             f.write(conteudo.strip() + "\n")
             f.flush()
             os.fsync(f.fileno())
 
+    # Prepara a variável soc_ids / cmd_var2 delimitada por |||
+    if not dados_var:
+        if itens:
+            dados_var = "|||".join([
+                f"{str(it.get('cpf','')).strip()};{str(it.get('tipoExame', it.get('tipo', 'Periódico'))).strip()};{str(it.get('dataAgendada', it.get('data', ''))).strip()};{str(it.get('codigoSoc', it.get('codigo_soc', ''))).strip()}"
+                for it in itens if str(it.get('cpf','')).strip() and str(it.get('cpf','')).strip().lower() != 'cpf'
+            ])
+        elif conteudo:
+            dados_var = "|||".join([l.strip() for l in conteudo.strip().splitlines() if l.strip()])
+
     try:
-        info = disparar_macro(MACRO_FICHAS)
-        return jsonify({"status": "sucesso", "pid": info["pid"], "macro": info["macro"], "mensagem": "Macro baixarEanexar_soc.js enviada."})
+        info = disparar_macro(MACRO_FICHAS, run_id=run_id, soc_ids=dados_var)
+        qtd = len(itens) if itens else (len(dados_var.split("|||")) if dados_var else 0)
+        return jsonify({
+            "status": "sucesso",
+            "pid": info["pid"],
+            "macro": info["macro"],
+            "run_id": run_id,
+            "mensagem": f"Robô iniciado com sucesso! {qtd} registro(s) enviados automaticamente."
+        })
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
 
