@@ -279,6 +279,19 @@
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
+  .clean-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 34px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .clean-select option {
+    background: #0d121f;
+    color: #f1f5f9;
+  }
   .clean-input:focus, .clean-select:focus {
     border-color: var(--border-focus);
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
@@ -365,16 +378,16 @@
 
   .queue-textarea {
     width: 100%;
-    height: 116px;
+    height: 98px;
     background: var(--bg-input);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     color: var(--text-primary);
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
-    line-height: 1.65;
-    padding: 12px 14px;
-    resize: vertical;
+    line-height: 1.6;
+    padding: 10px 14px;
+    resize: none;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
@@ -386,12 +399,14 @@
 
   /* Preview Limpo em Tabela */
   .preview-wrapper {
-    margin-top: 12px;
+    margin-top: 10px;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     background: rgba(8, 11, 19, 0.55);
-    max-height: 158px;
+    max-height: 142px;
     overflow-y: auto;
+    scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+    scrollbar-width: thin;
   }
   .preview-table {
     width: 100%;
@@ -401,7 +416,7 @@
   .preview-table th {
     position: sticky;
     top: 0;
-    background: #0d121f;
+    background: #0c101b;
     color: var(--text-muted);
     font-size: 10px;
     font-weight: 700;
@@ -413,7 +428,7 @@
     z-index: 2;
   }
   .preview-table td {
-    padding: 7px 12px;
+    padding: 6.5px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     color: var(--text-secondary);
     font-family: 'JetBrains Mono', monospace;
@@ -436,7 +451,7 @@
   /* Barra de Execução */
   .launch-bar {
     margin-top: auto;
-    padding-top: 16px;
+    padding-top: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -460,31 +475,31 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 22px;
+    padding: 11px 22px;
     border-radius: 12px;
-    border: none;
-    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #06b6d4 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 55%, #0284c7 100%);
     color: #ffffff;
     font-family: inherit;
     font-size: 12.5px;
     font-weight: 800;
     letter-spacing: 0.02em;
     cursor: pointer;
-    box-shadow: 0 8px 26px rgba(139, 92, 246, 0.38);
+    box-shadow: 0 8px 24px rgba(109, 40, 217, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all 0.2s ease;
     white-space: nowrap;
   }
   .btn-launch:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 12px 32px rgba(139, 92, 246, 0.52);
-    filter: brightness(1.06);
+    box-shadow: 0 12px 30px rgba(109, 40, 217, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    filter: brightness(1.07);
   }
   .btn-launch:disabled { opacity: 0.65; cursor: not-allowed; }
 
   /* Progress Strip minimalista (só aparece ao rodar) */
   .progress-strip {
-    margin-top: 14px;
-    padding-top: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
     border-top: 1px dashed var(--border-subtle);
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -492,7 +507,7 @@
   }
   .progress-strip[hidden] { display: none; }
   .p-step {
-    padding: 8px 10px;
+    padding: 7px 10px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-subtle);
@@ -501,11 +516,40 @@
   .p-step strong { display: block; color: var(--text-muted); font-weight: 700; }
   .p-step .step-state { display: block; margin-top: 2px; color: #6ee7b7; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
 
-  /* Coluna Direita: Console Limpo + Resumo Pasta */
+  /* Coluna Direita: Etapas + Console Proporcional + Pasta */
   .right-rail {
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+
+  .stages-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stage-card {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(8, 11, 19, 0.6);
+    border: 1px solid var(--border-subtle);
+  }
+  .stage-card .st-num {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .stage-card strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   .console-head {
@@ -525,8 +569,8 @@
 
   .terminal {
     flex: 1;
-    min-height: 240px;
-    max-height: 310px;
+    min-height: 155px;
+    max-height: 200px;
     background: #04060b;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
@@ -535,6 +579,8 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     line-height: 1.55;
+    scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+    scrollbar-width: thin;
   }
   .log-line { display: flex; gap: 10px; margin-bottom: 5px; }
   .log-time { color: #475569; flex-shrink: 0; }
@@ -921,22 +967,14 @@
     </div>
   </nav>
 
-  <!-- Hero Enxuto + Fluxo Visual -->
+  <!-- Hero Enxuto -->
   <header class="hero">
     <div class="hero-title-group">
       <div class="hero-icon"><i class="fa-solid fa-file-medical"></i></div>
       <div>
         <h1>Fichas Clínicas · Flow → SOCGED</h1>
-        <p>Busca no Flow, download automático da ficha e upload no SOC (Menu 248) 100% offline.</p>
+        <p>Busca no Flow por CPF, download da ficha e protocolo automático no SOC (Menu 248) 100% offline.</p>
       </div>
-    </div>
-
-    <div class="pipeline-track" aria-label="Fluxo da automação">
-      <span class="pipe-step"><i class="fa-solid fa-magnifying-glass"></i> Flow (CPF)</span>
-      <i class="fa-solid fa-chevron-right pipe-arrow"></i>
-      <span class="pipe-step"><i class="fa-solid fa-file-pdf"></i> PDF Local</span>
-      <i class="fa-solid fa-chevron-right pipe-arrow"></i>
-      <span class="pipe-step"><i class="fa-solid fa-cloud-arrow-up"></i> SOCGED 248</span>
     </div>
   </header>
 
@@ -1026,8 +1064,23 @@
       </div>
     </section>
 
-    <!-- Direita: Console + Pasta Configurada -->
+    <!-- Direita: Etapas + Console + Pasta Configurada -->
     <aside class="right-rail">
+      <div class="stages-mini-grid">
+        <div class="stage-card">
+          <span class="st-num"><i class="fa-solid fa-magnifying-glass"></i> 01 · Flow</span>
+          <strong>Localiza CPF</strong>
+        </div>
+        <div class="stage-card">
+          <span class="st-num"><i class="fa-solid fa-file-pdf" style="color:var(--accent-light);"></i> 02 · PDF</span>
+          <strong>Baixa Ficha</strong>
+        </div>
+        <div class="stage-card">
+          <span class="st-num"><i class="fa-solid fa-cloud-arrow-up" style="color:var(--emerald);"></i> 03 · SOC</span>
+          <strong>Anexa 248</strong>
+        </div>
+      </div>
+
       <div class="surface-card" style="flex:1;">
         <div class="console-head">
           <div class="console-title">
@@ -1220,6 +1273,33 @@ function definirDataHoje() {
   toast('Data de hoje aplicada!');
 }
 
+function normalizarTipoExameLimpo(raw) {
+  const txt = String(raw || '').replace(/[\uFEFF"']/g, '').trim();
+  if (!txt) return '';
+  const low = txt.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (low.startsWith('peri') || /peri.?dico/.test(low)) return 'Periódico';
+  if (low.startsWith('admi')) return 'Admissional';
+  if (low.startsWith('demi')) return 'Demissional';
+  if (low.startsWith('retor')) return 'Retorno ao Trabalho';
+  if (low.startsWith('muda')) return 'Mudança de Função';
+  return txt.replace(/\uFFFD/g, 'ó');
+}
+
+function lerArquivoTextoInteligente(file, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const buf = e.target.result;
+    let text = new TextDecoder('utf-8').decode(buf);
+    if (text.includes('\uFFFD')) {
+      try {
+        text = new TextDecoder('windows-1252').decode(buf);
+      } catch (errDec) {}
+    }
+    callback(text);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function atualizarValidacaoFila() {
   const input = document.getElementById('batchInput');
   if (!input) return;
@@ -1248,7 +1328,7 @@ function atualizarValidacaoFila() {
     if (seenCpfs.has(cleanCpfDigits)) return;
     seenCpfs.add(cleanCpfDigits);
 
-    const tipoExame = (parts[1] && parts[1].length > 2) ? parts[1].replace(/[\uFEFF"']/g, '').trim() : tipoPadrao;
+    const tipoExame = (parts[1] && parts[1].length > 2) ? normalizarTipoExameLimpo(parts[1]) : tipoPadrao;
     const dataAgendada = (parts[2] && /\d{1,2}\/\d{1,2}\/\d{2,4}/.test(parts[2])) ? parts[2].replace(/[\uFEFF"']/g, '').trim() : dataPadrao;
     const codigoSoc = (parts[3] && parts[3].length > 0) ? parts[3].replace(/[\uFEFF"']/g, '').trim() : codPadrao;
 
@@ -1329,14 +1409,12 @@ function carregarExemploReal() {
 function importarArquivoFila(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    document.getElementById('batchInput').value = e.target.result;
+  lerArquivoTextoInteligente(file, (text) => {
+    document.getElementById('batchInput').value = text.replace(/Peri\uFFFDd?ico/gi, 'Periódico');
     atualizarValidacaoFila();
     toast(`${filaColaboradores.length} colaboradores importados!`);
     addLog('ok', `Arquivo ${file.name} importado (${filaColaboradores.length} itens).`);
-  };
-  reader.readAsText(file);
+  });
 }
 
 function copiarCaminhoPdf() {
@@ -1441,9 +1519,8 @@ function parseCsvResultados(csvText) {
 function importarArquivoResultado(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const items = parseCsvResultados(e.target.result);
+  lerArquivoTextoInteligente(file, (text) => {
+    const items = parseCsvResultados(text);
     if (items.length === 0) {
       toast('Nenhum registro válido no CSV.', 'error');
       return;
@@ -1451,8 +1528,7 @@ function importarArquivoResultado(event) {
     renderizarPainelResultados(items);
     toast(`${items.length} registros carregados!`);
     addLog('ok', `Resultados importados de ${file.name}.`);
-  };
-  reader.readAsText(file);
+  });
 }
 
 function limparResultados() {
@@ -1732,7 +1808,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('batchInput');
   if (input) {
     const salvo = localStorage.getItem('uivision_fichas_batch_input');
-    if (salvo && salvo.trim().length > 0) input.value = salvo;
+    if (salvo && salvo.trim().length > 0) {
+      input.value = salvo.replace(/Peri\uFFFDd?ico/gi, 'Periódico').replace(/\uFFFD/g, 'ó');
+    }
     input.addEventListener('input', atualizarValidacaoFila);
     atualizarValidacaoFila();
   }
