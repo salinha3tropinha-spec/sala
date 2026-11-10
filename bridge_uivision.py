@@ -177,7 +177,7 @@ def construir_url_macro(nome_macro, arquivo_macro, log_name=None, incluir_extens
     url_html = HTML_API.as_uri()
     params = [
         f"macro={quote(macro_query, safe='/')}",
-        "direct=1", "storage=xfile", "closeRPA=1", "closeBrowser=0", "bringToFront=0"
+        "direct=1", "storage=xfile", "closeRPA=1", "closeBrowser=0"
     ]
     if run_id: params.append(f"cmd_var1={quote(run_id)}")
     if soc_ids: params.append(f"cmd_var2={quote(soc_ids)}")
@@ -455,11 +455,20 @@ def salvar_pasta1_csv():
     dados = request.get_json(silent=True) or {}
     conteudo = dados.get("csv_content", "")
     linhas = dados.get("linhas", [])
+    itens = dados.get("itens", [])
     try:
         PASTA_DATASOURCES.mkdir(parents=True, exist_ok=True)
-        with open(CSV_PASTA1_PATH, "w", encoding="utf-8", newline="") as f:
-            if conteudo:
-                f.write(conteudo.strip() + "\n")
+        with open(CSV_PASTA1_PATH, "w", encoding="utf-8-sig", newline="") as f:
+            if conteudo and str(conteudo).strip():
+                f.write(str(conteudo).strip() + "\n")
+            elif itens:
+                for it in itens:
+                    cpf = str(it.get("cpf", "")).strip()
+                    tipo = str(it.get("tipoExame", it.get("tipo", "Periódico"))).strip()
+                    data = str(it.get("dataAgendada", it.get("data", ""))).strip()
+                    cod = str(it.get("codigoSoc", it.get("codigo_soc", ""))).strip()
+                    if cpf and cpf.lower() != "cpf":
+                        f.write(f"{cpf};{tipo};{data};{cod}\n")
             elif linhas:
                 for l in linhas:
                     f.write(f"{l.get('cpf', '')};{l.get('tipo', 'Periódico')};{l.get('data', '')};{l.get('codigo_soc', '')}\n")

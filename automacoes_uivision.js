@@ -1197,6 +1197,13 @@
         cmdVar2 = d.valid.map(r => `${r.cpf};${r.cargo};${r.unidade}`).join('|||');
         storageSet('uivision_ultimo_lote', $('batchInput')?.value || '');
         addLog('info', `${d.valid.length} colaborador(es) preparados.`);
+      } else if (cfg.endpoint === 'fichas') {
+        const d = (typeof validateFichas === 'function') ? validateFichas() : { valid: ($('batchInput')?.value || '').split(/\r?\n/).map(s=>s.trim()).filter(Boolean) };
+        if (!d.valid || !d.valid.length) throw new Error('Informe ao menos um colaborador para buscar as fichas.');
+        cmdVar2 = d.valid.map(r => (typeof r === 'object') ? `${r.cpf};${r.tipoExame||'Periódico'};${r.dataAgendada||''};${r.codigoSoc||''}` : String(r)).join('|||');
+        totalEsperado = d.valid.length;
+        storageSet('uivision_fichas_batch_input', $('batchInput')?.value || '');
+        addLog('info', `${d.valid.length} colaborador(es) preparados para busca de fichas.`);
       }
 
       setStep(1, 'active', 'DISPARANDO NAVEGADOR');
@@ -1205,7 +1212,7 @@
       const var1Enc = encodeURIComponent(runId);
       const var2Enc = encodeURIComponent(cmdVar2);
 
-      const url = `ui.vision.html?macro=${macroEnc}&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0&cmd_var1=${var1Enc}&cmd_var2=${var2Enc}`;
+      const url = `ui.vision.html?macro=${macroEnc}&direct=1&closeRPA=0&closeBrowser=0&cmd_var1=${var1Enc}&cmd_var2=${var2Enc}`;
       window.open(url, '_blank');
 
       addLog('ok', 'Aba disparada. O robô assumiu o controle!');

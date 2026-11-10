@@ -1142,9 +1142,20 @@ function atualizarValidacaoFila() {
     }
   }
 
-  // Salva no storage local
+  // Salva no storage local e elemento DOM de ponte para o Ui.Vision
   try {
     localStorage.setItem('uivision_fichas_batch_input', input.value);
+    localStorage.setItem('uivision_fichas_fila_json', JSON.stringify(rows));
+    let elBridge = document.getElementById('uivision_fichas_bridge_data');
+    if (!elBridge) {
+      elBridge = document.createElement('div');
+      elBridge.id = 'uivision_fichas_bridge_data';
+      elBridge.style.display = 'none';
+      document.body.appendChild(elBridge);
+    }
+    elBridge.textContent = JSON.stringify(rows);
+    elBridge.setAttribute('data-lines', rows.map(r => `${r.cpf};${r.tipoExame};${r.dataAgendada};${(r.codigoSoc && r.codigoSoc !== '-') ? r.codigoSoc : ''}`).join('|||'));
+    elBridge.setAttribute('data-timestamp', String(Date.now()));
   } catch(e) {}
 }
 
@@ -1245,6 +1256,9 @@ function copiarCaminhoPdf() {
 // DISPARO DA AUTOMAÇÃO (ENVIO DIRETO AO ROBÔ SEM PRECISAR DE CSV MANUAL)
 // =========================================================================
 async function dispararAutomacaoFichas() {
+  // 1. Força a validação imediata para ler qualquer texto recém-colado ou alterado
+  atualizarValidacaoFila();
+
   if (filaColaboradores.length === 0) {
     toast('Insira ao menos um colaborador na fila para executar.', 'error');
     return;
@@ -1285,80 +1299,54 @@ async function dispararAutomacaoFichas() {
   const dadosVar = linhasCsv.join('|||');
   const runId = 'run-fichas-' + Date.now();
 
-  let disparadoComSucesso = false;
-
-  // 1. TENTA ENVIAR VIA BRIDGE LOCAL (PORTA 5000)
+  // Garante que o elemento de ponte DOM e localStorage estejam atualizados antes do disparo
   try {
-    addLog('info', 'Tentando envio direto via Bridge local (porta 5000)...');
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-    const resp = await fetch('http://127.0.0.1:5000/executar-baixar-anexar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        itens: itens,
-        csv_content: conteudoCsv,
-        dados_var: dadosVar,
-        run_id: runId
-      }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    const data = await resp.json();
-    if (resp.ok && data.status === 'sucesso') {
-      disparadoComSucesso = true;
-      if (step2) {
-        step2.classList.replace('active', 'done');
-        step2.querySelector('.step-state').textContent = 'AUTO OK';
-      }
-      if (step3) {
-        step3.classList.add('active');
-        step3.querySelector('.step-state').textContent = 'EM ANDAMENTO';
-      }
-
-      toast(data.mensagem || 'Robô acionado com sucesso!', 'success');
-      addLog('ok', `Robô iniciado via Bridge local (PID: ${data.pid || 'N/A'}).`);
-      addLog('ok', `Os dados foram injetados no robô sem necessidade de manipular Pasta1.csv.`);
+    let elBridge = document.getElementById('uivision_fichas_bridge_data');
+    if (!elBridge) {
+      elBridge = document.createElement('div');
+      elBridge.id = 'uivision_fichas_bridge_data';
+      elBridge.style.display = 'none';
+      document.body.appendChild(elBridge);
     }
-  } catch (errBridge) {
-    addLog('warn', 'Bridge local na porta 5000 indisponível. Acionando Ui.Vision via navegador direto...');
-  }
+    elBridge.textContent = JSON.stringify(filaColaboradores);
+    elBridge.setAttribute('data-lines', dadosVar);
+    elBridge.setAttribute('data-timestamp', String(Date.now()));
 
-  // 2. FALLBACK: DISPARO DIRETO VIA URL DO UI.VISION PASSANDO !cmd_var2
-  if (!disparadoComSucesso) {
-    try {
-      const var1Enc = encodeURIComponent(runId);
-      const var2Enc = encodeURIComponent(dadosVar);
-      const urlUiVision = `ui.vision.html?macro=baixarEanexar_soc.js&direct=1&closeRPA=0&closeBrowser=0&bringToFront=0&cmd_var1=${var1Enc}&cmd_var2=${var2Enc}`;
-      
-      window.open(urlUiVision, '_blank');
+    localStorage.setItem('uivision_fichas_fila_json', JSON.stringify(filaColaboradores));
+    localStorage.setItem('uivision_fichas_batch_input', document.getElementById('batchInput').value);
+    window.filaColaboradores = filaColaboradores;
+  } catch(e) {}
 
-      if (step2) {
-        step2.classList.replace('active', 'done');
-        step2.querySelector('.step-state').textContent = 'URL OK';
-      }
-      if (step3) {
-        step3.classList.add('active');
-        step3.querySelector('.step-state').textContent = 'NAVEGADOR';
-      }
+  // Disparo 100% Offline via ui.vision.html (mesma arquitetura do SOC - CRIAR CADASTRO e VERIFICAR EXAMES)
+  try {
+    const var1Enc = encodeURIComponent(runId);
+    const var2Enc = encodeURIComponent(dadosVar);
+    const urlUiVision = `ui.vision.html?macro=baixarEanexar_soc.js&direct=1&closeRPA=0&closeBrowser=0&cmd_var1=${var1Enc}&cmd_var2=${var2Enc}`;
+    
+    window.open(urlUiVision, '_blank');
 
-      toast('Robô acionado no navegador com os dados da fila!', 'success');
-      addLog('ok', `Macro iniciada via URL com ${itens.length} registro(s) em !cmd_var2.`);
-      addLog('ok', 'Dados enviados diretamente, sem precisar de arquivo CSV manual.');
-      disparadoComSucesso = true;
-    } catch (eUrl) {
-      toast('Falha ao acionar robô: ' + eUrl.message, 'error');
-      addLog('error', 'Falha ao acionar: ' + eUrl.message);
+    if (step2) {
+      step2.classList.replace('active', 'done');
+      step2.querySelector('.step-state').textContent = 'DIRETO OK';
     }
+    if (step3) {
+      step3.classList.add('active');
+      step3.querySelector('.step-state').textContent = 'EM EXECUÇÃO';
+    }
+
+    toast('Robô acionado diretamente no navegador com os colaboradores da fila!', 'success');
+    addLog('ok', `Macro iniciada de forma 100% offline com ${itens.length} registro(s) via !cmd_var2.`);
+    addLog('ok', 'Dados enviados diretamente ao Ui.Vision (sem necessidade de Bridge ou CSV manual).');
+  } catch (eUrl) {
+    toast('Falha ao acionar robô: ' + eUrl.message, 'error');
+    addLog('error', 'Falha ao acionar: ' + eUrl.message);
   }
 
   setTimeout(() => {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-play"></i><span>EXECUTAR AUTOMAÇÃO</span>';
     document.getElementById('executeState').textContent = 'Robô em execução no navegador';
-    document.getElementById('executeHint').textContent = 'Quando o robô finalizar, clique em "Recarregar Resultados" na auditoria.';
+    document.getElementById('executeHint').textContent = 'Ao finalizar, o robô retornará para esta aba e atualizará os resultados automaticamente.';
   }, 2500);
 }
 
@@ -1408,19 +1396,16 @@ function parseCsvResultados(csvText) {
   return items;
 }
 
-async function carregarResultadosPadrao() {
+function carregarResultadosPadrao() {
   try {
-    const resp = await fetch('http://127.0.0.1:5000/obter-resultado-fichas');
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data.status === 'sucesso' && data.conteudo) {
-        const items = parseCsvResultados(data.conteudo);
-        if (items.length > 0) {
-          renderizarPainelResultados(items);
-          toast(`${items.length} resultados atualizados do robô!`, 'success');
-          addLog('ok', `Resultados atualizados diretamente do robô (${items.length} registros).`);
-          return;
-        }
+    const salvosRes = localStorage.getItem('uivision_fichas_ultimos_resultados');
+    if (salvosRes) {
+      const parsed = JSON.parse(salvosRes);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        renderizarPainelResultados(parsed);
+        toast(`${parsed.length} resultados carregados!`, 'success');
+        addLog('ok', `Painel sincronizado com ${parsed.length} registros processados.`);
+        return;
       }
     }
   } catch(e) {}
@@ -1838,6 +1823,22 @@ function salvarModalConfiguracoes() {
   toast('Configurações salvas!');
   addLog('info', 'Parâmetros da macro atualizados no painel.');
 }
+
+// Expõe funções globalmente para o Ui.Vision invocar via executeScript ao finalizar
+window.renderizarPainelResultados = renderizarPainelResultados;
+window.toast = toast;
+
+// Sincroniza automaticamente se localStorage for atualizado por outra aba
+window.addEventListener('storage', (ev) => {
+  if (ev.key === 'uivision_fichas_ultimos_resultados' && ev.newValue) {
+    try {
+      const items = JSON.parse(ev.newValue);
+      if (Array.isArray(items) && items.length > 0) {
+        renderizarPainelResultados(items);
+      }
+    } catch(e) {}
+  }
+});
 
 // =========================================================================
 // INICIALIZAÇÃO DO WORKSPACE
